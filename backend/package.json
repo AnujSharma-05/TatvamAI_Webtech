@@ -1,0 +1,16 @@
+{
+  "name": "tatvam-ai-backend",
+  "version": "1.0.0",
+  "description": "Backend folder of TatVam-Ai",
+  "license": "ISC",
+  "author": "TatVam",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "prettier": "^3.5.3"
+  }
+}
