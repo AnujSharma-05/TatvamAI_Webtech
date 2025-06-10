@@ -1,0 +1,28 @@
+backend/
+├── config/
+│   └── cloudinary.js       # Cloudinary config
+│   └── db.js               # MongoDB connection
+├── controllers/
+│   ├── authController.js   # Signup/Login logic
+│   ├── userController.js   # User profile & dashboard
+│   ├── audioController.js  # Upload audio, evaluate quality
+│   └── rewardController.js # Handle tokens/incentives
+├── middleware/
+│   ├── auth.js             # JWT/OTP auth middleware
+│   └── upload.js           # Multer config for audio files
+├── models/
+│   ├── User.js             # User schema
+│   ├── Recording.js        # Audio file metadata
+│   └── Token.js            # Incentive/Token history
+├── routes/
+│   ├── authRoutes.js
+│   ├── userRoutes.js
+│   ├── audioRoutes.js
+│   └── rewardRoutes.js
+├── utils/
+│   ├── scoringEngine.js    # Voice quality check stub
+│   └── sendOtp.js          # Optional: OTP sending function
+├── .enve
+├── app.js
+├── package.json
+└── README.md
