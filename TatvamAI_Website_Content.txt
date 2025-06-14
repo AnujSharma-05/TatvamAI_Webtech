@@ -1,0 +1,206 @@
+
+TatvamAI Website Content (Per Page)
+===================================
+
+/app/home/page.tsx
+------------------
+Hero Section:
+  Headline: "Let India Speak. One Voice at a Time."
+  Subtext: "Join the movement to build India’s most powerful multilingual voice dataset."
+  CTAs: [Become a Contributor] [Scan QR to Participate]
+
+Mission Statement:
+  "TatvamAI empowers digital devices to speak the language of a billion hearts."
+
+Languages Mosaic:
+  "नमस्ते | নমস্কার | வணக்கம் | નમસ્તે | ਸਤ ਸ੍ਰੀ ਅਕਾਲ | ನಮಸ್ಕಾರ"
+
+Why It Matters:
+  Heading: "India Speaks. Tech Doesn’t Listen Yet."
+  Text: "90% of Indians prefer regional languages. Let’s fix that with better datasets."
+
+How It Works:
+  1. Scan or Sign Up
+  2. Speak in your language
+  3. Help train inclusive AI + Earn rewards
+
+Voice for Bharat:
+  - Stories from students, farmers, shopkeepers sharing voice data
+
+CTA Strip:
+  "Speak Your Tongue. Shape the Future."
+
+
+/app/about/page.tsx
+--------------------
+Vision:
+  "Every Indian should be able to talk to machines naturally."
+
+Why Voice Tech Needs India:
+  "English-dominant AIs exclude over 900M people. We fix that."
+
+What We Offer:
+  - Domain-specific Speech Datasets (ASR/TTS)
+  - Multilingual Models
+  - Plug-and-Play APIs
+
+Impact:
+  - Uplift communities via inclusive data generation
+  - Create datasets with dignity, ethics, and precision
+
+Stats:
+  - 900M internet users
+  - 54% rural
+  - $12B market by 2030
+
+Team:
+  - Founders & Advisors
+
+Contact Strip:
+  "Join us in building voice tech for Bharat."
+
+
+/app/contact/page.tsx
+----------------------
+Form:
+  - Name
+  - Email
+  - Role (Org, Developer, Contributor, Funder)
+  - Message
+
+Right-side Panel:
+  "Want to deploy TatvamAI or partner with us? Reach out now."
+
+
+/app/products/page.tsx
+-----------------------
+Product Sections:
+  - TatvamAI Device: "ShrutiYantra – A voice gateway from physical world to AI."
+
+  - ASR/TTS APIs: "Custom-trained multilingual speech models for industry use cases."
+
+  - Domain Speech Datasets: "Tailored for healthcare, telecom, FMCG, retail, and more."
+
+
+/app/blogs/page.tsx
+--------------------
+Card Elements:
+  - Blog Title
+  - Summary
+  - Link to Medium/LinkedIn
+
+
+/ app/demo/page.tsx
+-------------------
+Headline:
+  "Request Early Access to Our Voice Dataset & Models"
+
+Text:
+  "We’re in production phase. Be among the first to try TatvamAI’s tools."
+
+Form:
+  - Name, Email, Org, Use Case
+
+
+/ app/auth/signup/page.tsx
+--------------------------
+Step 1:
+  - Name, Gender, DOB, Phone (OTP), Email (OTP), City, Mother Tongue, Known Languages
+
+Step 2:
+  - Set preferences: Preferred Language/Dialect, Contribution Method (QR or Web)
+
+
+/app/auth/signin/page.tsx
+--------------------------
+Form:
+  - Phone or Email (OTP-based login)
+
+
+/app/dashboard/page.tsx
+------------------------
+Hero Section:
+  "Welcome back, Contributor!"
+
+Stats:
+  - "You’ve earned X tokens."
+  - "You’ve helped us collect Y hours of data."
+
+Actions:
+  - [Contribute From Home] [Check History] [About TatvamAI]
+
+
+/app/dashboard/contribute/page.tsx
+-----------------------------------
+Consent Popup:
+  - Options: View Legal Info, Proceed with Consent, Exit
+
+After Consent:
+  - Choose Language/Dialect
+  - Choose Domain (e.g., healthcare, telecoms, sports)
+  - Generate Paragraph Prompt with industry jargon & code mixing
+
+
+/app/dashboard/record/page.tsx
+-------------------------------
+UI:
+  - Display generated paragraph
+  - Microphone button + Waveform
+  - Timer (user set or 2 mins)
+  - Upload audio in 15s chunks
+
+End:
+  "Thanks for your contribution! Your voice is now part of India’s language revolution."
+
+
+/app/dashboard/history/page.tsx
+--------------------------------
+Table View:
+  - Date | Domain | Duration | Source (QR/Web) | Quality Score | Tokens Earned
+
+
+/app/qr/page.tsx
+-----------------
+Headline:
+  "You're About to Power India’s Voice Revolution."
+
+Popup Options:
+  - Learn More (→ /qr/legal)
+  - Proceed with Consent (→ /qr/consent)
+  - Exit
+
+
+/app/qr/legal/page.tsx
+-----------------------
+Content:
+  - Your data helps train AI, but we keep it anonymous.
+  - You can request deletion anytime.
+  - Data is stored securely for academic/industry use.
+
+
+/app/qr/consent/page.tsx
+-------------------------
+Form:
+  - Name, Gender, Phone OTP, Email OTP, City, Language, QR-derived Context
+
+Message:
+  "After consent, we’ll record your voice for 2 minutes to capture natural conversation."
+
+
+/app/qr/record/page.tsx
+------------------------
+UI:
+  - Countdown Timer (2 mins)
+  - Waveform display
+  - Upload chunks every 15s
+
+End Message:
+  "You’ve contributed to the DhvaniKshetra Program. Thank you!"
+
+
+🎯 Global Punchlines
+--------------------
+- “If you can speak it, we can teach machines to understand it.”
+- “Train the next Siri, Alexa, and Bard… to speak like you.”
+- “Your voice can power the next billion-dollar model.”
+- “Don’t just speak — be heard by AI.”
