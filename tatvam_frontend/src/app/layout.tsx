@@ -7,13 +7,17 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata = {
   title: 'TatvamAI - Voice Technology for India',
   description:
     'Join our mission to create comprehensive voice datasets for Indian languages. Help make technology accessible to every corner of India through voice technology.',
   keywords: 'voice technology, Indian languages, AI, machine learning, voice datasets',
   authors: [{ name: 'TatvamAI Team' }],
-  viewport: 'width=device-width, initial-scale=1',
 }
 
 export default function RootLayout({
