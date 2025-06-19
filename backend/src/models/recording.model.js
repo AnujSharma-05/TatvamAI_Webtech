@@ -19,6 +19,7 @@ const recordingSchema = new mongoose.Schema({
     },
     domain: {
         type: String,
+        enum: ['healthcare', 'education', 'fmcg', 'telecom', 'retail', 'technology'],
     },
     duration: {
         type: Number, // from cloud storage url metadata
@@ -28,6 +29,10 @@ const recordingSchema = new mongoose.Schema({
         type: String,
         enum: ['device', 'mobile'],
         required: true,
+    },
+    quality: { // will be set after the model processes the recording
+        type: String,
+        enum: ['bad', 'average', 'good', 'excellent'],
     },
     transcription: {
         type: String, // will store the transcription text after processing

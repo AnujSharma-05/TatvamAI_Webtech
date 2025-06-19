@@ -17,3 +17,16 @@ app.use(express.static('public')); // Serve static files from the 'public' direc
 app.use(cookieParser()); // Parse cookies from request headers
 
 // Import routes
+import userRouter from './routes/user.routes.js';
+import recordingRouter from './routes/recording.routes.js';
+import rewardTokenRouter from './routes/rewardToken.routes.js';
+import e from 'express';
+
+// Use routes
+app.use('/api/v1/users', userRouter);
+
+app.use('/api/v1/recordings', recordingRouter);
+
+app.use('/api/v1/reward-tokens', rewardTokenRouter);
+
+export default app;

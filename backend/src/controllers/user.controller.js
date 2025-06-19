@@ -3,8 +3,10 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Recording } from "../models/recording.model.js";
+import { RewardToken } from "../models/rewardToken.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
+import { RewardToken } from "../models/rewardToken.model.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -247,6 +249,203 @@ const getUserRecordings = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, recordings, "User recordings fetched successfully"));
 });
 
+const refreshAccessToken = asyncHandler(async(req, res) => {
+    
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+    if(!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorized request")
+    }
+
+    // for safety purposes (try-catch) because maybe while decoding token it may throw some error (not neccessary)
+    try { 
+        const decodedToken = jwt.verify(
+            incomingRefreshToken, 
+            process.env.REFRESH_TOKEN_SECRET
+        )
+    
+        const user = await User.findById(decodedToken?._id)
+    
+        if(!user) {
+            throw new ApiError(401, "Invalid Refresh Token")
+        }
+    
+        if(incomingRefreshToken !== user?.refreshToken){
+            throw new ApiError(401, "Refresh Token is expired or used")
+        }
+    
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+    
+        // generate new tokens
+        const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id)
+        
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    accessToken,
+                    refreshToken: newRefreshToken
+                },
+                "Access Token refreshed"
+            )
+        )
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid access token")
+    }
+})
+
+const changeCurrentPassword = asyncHandler(async(req, res) => {
+    
+    const {oldPassword, newPassword, confirmPassword} = req.body
+
+    if(newPassword !== confirmPassword) {
+        throw new ApiError(401, "New and Confirm password should be same")
+    }
+
+    const user = await User.findById(req.user?._id)
+
+    const isOldPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if(!isOldPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password")
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave: false}) // save the new password in the db
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
+
+const getCurrentUser = asyncHandler(async(req, res) => {
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, req.user, "current user fetched successfully")
+    )
+})
+
+const updateAccountDetails = asyncHandler(async(req, res) => {
+    const {name, email, knownLanguages, city} = req.body
+
+    if (!name || !email) {
+        throw new ApiError(400, "Name and email are required")
+    }
+
+    const languagesToAdd = knownLanguages ? knownLanguages.split(",").map(lang => lang.trim()) : [];
+
+    const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+        $addToSet: {
+        knownLanguages: { $each: languagesToAdd }
+        },
+        $set: {
+        name: name,
+        email: email,
+        city: city
+        }
+    },
+    { new: true }
+    ).select("-password");
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"))
+});
+
+const getUserIncentives = asyncHandler(async (req, res) => {
+  const tokens = await RewardToken.find({ userId: req.user?._id }).sort({
+    createdAt: -1,
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, tokens, "Incentive history fetched"));
+});
+
+const getUserContributionStats = asyncHandler(async (req, res) => {
+  const stats = await Recording.aggregate([
+    {
+      $match: {
+        userId: req.user._id,
+      },
+    },
+    {
+      $group: {
+        _id: {
+          domain: "$domain",
+          recordedVia: "$recordedVia",
+        },
+        total: { $sum: 1 },
+        avgQuality: {
+          $avg: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$quality", "bad"] }, then: 1 },
+                { case: { $eq: ["$quality", "average"] }, then: 2 },
+                { case: { $eq: ["$quality", "good"] }, then: 3 },
+                { case: { $eq: ["$quality", "excellent"] }, then: 4 },
+              ],
+              default: 0,
+            },
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalRecordings: { $sum: "$total" },
+        domainWise: {
+          $push: {
+            domain: "$_id.domain",
+            source: "$_id.recordedVia",
+            count: "$total",
+            avgQuality: "$avgQuality",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalRecordings: 1,
+        domainWise: 1,
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        stats[0] || { totalRecordings: 0, domainWise: [] },
+        "User contribution stats fetched"
+      )
+    );
+});
 
 
-export { registerUser, loginUser, logoutUser, getUserRecordings };
+
+export { 
+    registerUser,
+    loginUser,
+    logoutUser, 
+    getUserRecordings, 
+    refreshAccessToken, 
+    changeCurrentPassword, 
+    getCurrentUser, 
+    updateAccountDetails,
+    getUserContributionStats,
+    getUserIncentives 
+};

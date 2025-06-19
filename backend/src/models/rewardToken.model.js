@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { Recording } from "./recordings.model";
 
 const rewardTokenSchema = new mongoose.Schema({
    userId: {
