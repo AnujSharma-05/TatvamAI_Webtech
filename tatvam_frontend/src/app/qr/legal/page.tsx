@@ -8,37 +8,31 @@ const legalPoints = [
     title: 'Data Usage',
     description:
       'Your voice recordings will be used to train AI models that help make technology more accessible in Indian languages.',
-    icon: '🔍',
   },
   {
     title: 'Privacy Protection',
     description:
       'All data is anonymized before use. We never share your personal information with third parties.',
-    icon: '🔒',
   },
   {
     title: 'Data Storage',
     description:
       'Your recordings are stored securely on encrypted servers and can be deleted upon request.',
-    icon: '💾',
   },
   {
     title: 'Consent & Control',
     description:
       'You have full control over your data and can withdraw consent at any time.',
-    icon: '✋',
   },
   {
     title: 'Academic Use',
     description:
       'Your contributions may be used in academic research to advance Indian language technology.',
-    icon: '📚',
   },
   {
     title: 'Commercial Applications',
     description:
       'Voice data may be used to develop commercial products that make technology accessible in Indian languages.',
-    icon: '💼',
   },
 ]
 
@@ -68,7 +62,6 @@ export default function LegalPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="bg-gray-800 rounded-xl p-6"
               >
-                <div className="text-3xl mb-4">{point.icon}</div>
                 <h2 className="text-xl font-semibold mb-3">{point.title}</h2>
                 <p className="text-gray-300">{point.description}</p>
               </motion.div>

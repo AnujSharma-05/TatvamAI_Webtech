@@ -13,17 +13,14 @@ const offerings = [
   {
     title: 'Domain-specific Speech Datasets',
     description: 'ASR/TTS datasets tailored for your industry needs',
-    icon: '🎯',
   },
   {
     title: 'Multilingual Models',
     description: 'Pre-trained models that understand Indias languages',
-    icon: '-',
   },
   {
     title: 'Plug-and-Play APIs',
     description: 'Easy integration for your applications',
-    icon: '🔌',
   },
 ]
 
@@ -79,7 +76,6 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 className="bg-gray-800 rounded-lg p-6 text-center"
               >
-                <div className="text-4xl mb-4">{offering.icon}</div>
                 <h3 className="text-xl font-semibold mb-3">{offering.title}</h3>
                 <p className="text-gray-300">{offering.description}</p>
               </motion.div>

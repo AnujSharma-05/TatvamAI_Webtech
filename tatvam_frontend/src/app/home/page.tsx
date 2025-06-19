@@ -99,9 +99,9 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { title: "Scan or Sign Up", icon: "📱" },
-              { title: "Speak in your language", icon: "🗣️" },
-              { title: "Help train inclusive AI + Earn rewards", icon: "🎁" },
+              { title: "Scan or Sign Up" },
+              { title: "Speak in your language" },
+              { title: "Help train inclusive AI + Earn rewards" },
             ].map((step, index) => (
               <motion.div
                 key={index}
@@ -111,7 +111,6 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 className="text-center p-6 bg-gray-800 rounded-lg"
               >
-                <div className="text-4xl mb-4">{step.icon}</div>
                 <h3 className="text-xl font-semibold">{step.title}</h3>
               </motion.div>
             ))}
