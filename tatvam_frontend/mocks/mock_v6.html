@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SinkedIn - Where Failures Find Friends</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #0d1117;
+        color: #e6edf3;
+        line-height: 1.6;
+      }
+
+      .header {
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2rem;
+      }
+
+      .logo {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #f85149;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+
+      .nav-links a {
+        color: #8b949e;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .nav-links a:hover {
+        color: #e6edf3;
+      }
+
+      .profile-btn {
+        background: #21262d;
+        border: 1px solid #30363d;
+        color: #e6edf3;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      .profile-btn:hover {
+        background: #30363d;
+      }
+
+      .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        gap: 2rem;
+      }
+
+      .sidebar {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 1.5rem;
+        height: fit-content;
+      }
+
+      .sidebar h3 {
+        color: #f85149;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+
+      .sidebar-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #21262d;
+        color: #8b949e;
+        font-size: 0.9rem;
+      }
+
+      .sidebar-item:last-child {
+        border-bottom: none;
+      }
+
+      .main-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .post-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: border-color 0.2s;
+      }
+
+      .post-card:hover {
+        border-color: #f85149;
+      }
+
+      .post-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .avatar {
+        width: 50px;
+        height: 50px;
+        background: #30363d;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      }
+
+      .post-author {
+        flex: 1;
+      }
+
+      .author-name {
+        font-weight: 600;
+        color: #e6edf3;
+        margin-bottom: 0.2rem;
+      }
+
+      .author-title {
+        color: #8b949e;
+        font-size: 0.9rem;
+      }
+
+      .post-time {
+        color: #6e7681;
+        font-size: 0.8rem;
+      }
+
+      .post-content {
+        margin-bottom: 1rem;
+        line-height: 1.5;
+      }
+
+      .failure-tag {
+        background: #f85149;
+        color: #fff;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+      }
+
+      .post-actions {
+        display: flex;
+        gap: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #21262d;
+      }
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #8b949e;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+      }
+
+      .action-btn:hover {
+        color: #f85149;
+      }
+
+      .compose-box {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .compose-textarea {
+        width: 100%;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 1rem;
+        color: #e6edf3;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .compose-textarea::placeholder {
+        color: #6e7681;
+      }
+
+      .compose-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+      }
+
+      .post-btn {
+        background: #f85149;
+        color: #fff;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .post-btn:hover {
+        background: #d93229;
+      }
+
+      .trending {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 1.5rem;
+        height: fit-content;
+      }
+
+      .trending h3 {
+        color: #f85149;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+
+      .trending-item {
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #21262d;
+        color: #e6edf3;
+        font-size: 0.9rem;
+      }
+
+      .trending-item:last-child {
+        border-bottom: none;
+      }
+
+      .trending-count {
+        color: #8b949e;
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 1024px) {
+        .main-container {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+
+        .nav-container {
+          padding: 0 1rem;
+        }
+
+        .nav-links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="nav-container">
+        <a href="#" class="logo">SinkedIn</a>
+        <nav>
+          <ul class="nav-links">
+            <li><a href="#">Feed</a></li>
+            <li><a href="#">Failures</a></li>
+            <li><a href="#">Rejections</a></li>
+            <li><a href="#">Disasters</a></li>
+          </ul>
+        </nav>
+        <a href="#" class="profile-btn">My Failures</a>
+      </div>
+    </header>
+
+    <div class="main-container">
+      <aside class="sidebar">
+        <h3>Failure Categories</h3>
+        <div class="sidebar-item">💼 Job Rejections (2.3k)</div>
+        <div class="sidebar-item">💰 Startup Failures (1.8k)</div>
+        <div class="sidebar-item">💔 Dating Disasters (3.1k)</div>
+        <div class="sidebar-item">🎓 Academic Fails (956)</div>
+        <div class="sidebar-item">💸 Investment Losses (1.2k)</div>
+        <div class="sidebar-item">🏠 Life Mistakes (4.5k)</div>
+        <div class="sidebar-item">🤦‍♂️ Embarrassing Moments (6.7k)</div>
+      </aside>
+
+      <main class="main-feed">
+        <div class="compose-box">
+          <textarea
+            class="compose-textarea"
+            placeholder="What went wrong today? Share your latest failure, rejection, or disaster..."
+          ></textarea>
+          <div class="compose-actions">
+            <select
+              style="
+                background: #21262d;
+                border: 1px solid #30363d;
+                color: #e6edf3;
+                padding: 0.5rem;
+                border-radius: 4px;
+              "
+            >
+              <option>💼 Job Rejection</option>
+              <option>💰 Startup Fail</option>
+              <option>💔 Dating Disaster</option>
+              <option>🎓 Academic Fail</option>
+              <option>💸 Money Lost</option>
+              <option>🏠 Life Mistake</option>
+              <option>🤦‍♂️ Embarrassing</option>
+            </select>
+            <button class="post-btn">Share Failure</button>
+          </div>
+        </div>
+
+        <article class="post-card">
+          <div class="post-header">
+            <div class="avatar">😭</div>
+            <div class="post-author">
+              <div class="author-name">Sarah M.</div>
+              <div class="author-title">
+                Failed Entrepreneur • 127 rejections
+              </div>
+            </div>
+            <div class="post-time">2h ago</div>
+          </div>
+          <div class="failure-tag">💼 Job Rejection</div>
+          <div class="post-content">
+            Got rejected from my dream job today after 6 rounds of interviews.
+            They said I was "overqualified but underexperienced" - like what
+            does that even mean? 😂 At least I'm consistent with my rejection
+            streak of 47 this month!
+          </div>
+          <div class="post-actions">
+            <button class="action-btn">😢 Relate (234)</button>
+            <button class="action-btn">🤝 Been There (89)</button>
+            <button class="action-btn">💬 Commiserate (12)</button>
+            <button class="action-btn">📤 Share Misery</button>
+          </div>
+        </article>
+
+        <article class="post-card">
+          <div class="post-header">
+            <div class="avatar">🤡</div>
+            <div class="post-author">
+              <div class="author-name">Mike R.</div>
+              <div class="author-title">
+                Startup Graveyard Owner • 3 failed ventures
+              </div>
+            </div>
+            <div class="post-time">4h ago</div>
+          </div>
+          <div class="failure-tag">💰 Startup Fail</div>
+          <div class="post-content">
+            My third startup just died. Burned through $50k of savings building
+            an app that literally nobody wanted. The best part? My mom was the
+            only user and she uninstalled it after a week. Time to update my
+            LinkedIn... I mean SinkedIn bio! 🎉
+          </div>
+          <div class="post-actions">
+            <button class="action-btn">😢 Relate (567)</button>
+            <button class="action-btn">🤝 Been There (201)</button>
+            <button class="action-btn">💬 Commiserate (45)</button>
+            <button class="action-btn">📤 Share Misery</button>
+          </div>
+        </article>
+
+        <article class="post-card">
+          <div class="post-header">
+            <div class="avatar">💀</div>
+            <div class="post-author">
+              <div class="author-name">Alex T.</div>
+              <div class="author-title">
+                Professional Disaster • Master of Bad Decisions
+              </div>
+            </div>
+            <div class="post-time">6h ago</div>
+          </div>
+          <div class="failure-tag">💔 Dating Disaster</div>
+          <div class="post-content">
+            Showed up to a first date at the wrong restaurant. Waited 2 hours.
+            Texted them asking where they were. Turns out there are TWO "Tony's
+            Pizza" in this city. They went home. I ate pizza alone and cried a
+            little. The waiter gave me free breadsticks out of pity.
+          </div>
+          <div class="post-actions">
+            <button class="action-btn">😢 Relate (892)</button>
+            <button class="action-btn">🤝 Been There (334)</button>
+            <button class="action-btn">💬 Commiserate (78)</button>
+            <button class="action-btn">📤 Share Misery</button>
+          </div>
+        </article>
+      </main>
+
+      <aside class="trending">
+        <h3>Trending Failures</h3>
+        <div class="trending-item">
+          #RejectionStory
+          <div class="trending-count">2.3k failures shared</div>
+        </div>
+        <div class="trending-item">
+          #StartupGraveyard
+          <div class="trending-count">1.8k disasters</div>
+        </div>
+        <div class="trending-item">
+          #InterviewFails
+          <div class="trending-count">3.2k embarrassments</div>
+        </div>
+        <div class="trending-item">
+          #DatingDisaster
+          <div class="trending-count">4.1k heartbreaks</div>
+        </div>
+        <div class="trending-item">
+          #BadDecisions
+          <div class="trending-count">5.7k regrets</div>
+        </div>
+        <div class="trending-item">
+          #EpicFails
+          <div class="trending-count">8.9k disasters</div>
+        </div>
+      </aside>
+    </div>
+  </body>
+</html>

@@ -9,19 +9,16 @@ const actions = [
     title: 'Contribute From Home',
     description: 'Record your voice in your preferred language',
     href: '/dashboard/contribute',
-    icon: '🎙️',
   },
   {
     title: 'Check History',
     description: 'View your past contributions and earnings',
     href: '/dashboard/history',
-    icon: '📊',
   },
   {
     title: 'About TatvamAI',
     description: 'Learn more about our mission',
     href: '/dashboard/about',
-    icon: 'ℹ️',
   },
 ]
 
@@ -88,7 +85,6 @@ export default function DashboardPage() {
                   whileTap={{ scale: 0.95 }}
                   className="bg-gray-800 rounded-xl p-8 h-full hover:bg-gray-700 transition-colors cursor-pointer"
                 >
-                  <div className="text-4xl mb-4">{action.icon}</div>
                   <h3 className="text-xl font-semibold mb-2">{action.title}</h3>
                   <p className="text-gray-300">{action.description}</p>
                 </motion.div>
