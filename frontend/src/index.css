@@ -1,0 +1,123 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer base {
+  :root {
+    --background: 255 255 230; /* #FFFFE6 */
+    --foreground: 15 53 65; /* #0F3541 */
+
+    --card: 255 255 255;
+    --card-foreground: 15 53 65;
+
+    --popover: 255 255 255;
+    --popover-foreground: 15 53 65;
+
+    --primary: 15 53 65; /* #0F3541 */
+    --primary-foreground: 255 255 230; /* #FFFFE6 */
+
+    --secondary: 255 255 230; /* #FFFFE6 */
+    --secondary-foreground: 15 53 65;
+
+    --muted: 240 246 248;
+    --muted-foreground: 115 125 140;
+
+    --accent: 45 212 191; /* #2DD4BF */
+    --accent-foreground: 15 53 65;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 230;
+
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 15 53 65;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 255 255 230;
+    --sidebar-foreground: 15 53 65;
+    --sidebar-primary: 15 53 65;
+    --sidebar-primary-foreground: 255 255 230;
+    --sidebar-accent: 240 246 248;
+    --sidebar-accent-foreground: 15 53 65;
+    --sidebar-border: 226 232 240;
+    --sidebar-ring: 45 212 191;
+  }
+
+  .dark {
+    --background: 15 53 65;
+    --foreground: 255 255 230;
+
+    --card: 15 53 65;
+    --card-foreground: 255 255 230;
+
+    --popover: 15 53 65;
+    --popover-foreground: 255 255 230;
+
+    --primary: 255 255 230;
+    --primary-foreground: 15 53 65;
+
+    --secondary: 20 60 75;
+    --secondary-foreground: 255 255 230;
+
+    --muted: 20 60 75;
+    --muted-foreground: 156 163 175;
+
+    --accent: 45 212 191;
+    --accent-foreground: 15 53 65;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 230;
+
+    --border: 20 60 75;
+    --input: 20 60 75;
+    --ring: 45 212 191;
+
+    --sidebar-background: 15 53 65;
+    --sidebar-foreground: 255 255 230;
+    --sidebar-primary: 45 212 191;
+    --sidebar-primary-foreground: 15 53 65;
+    --sidebar-accent: 20 60 75;
+    --sidebar-accent-foreground: 255 255 230;
+    --sidebar-border: 20 60 75;
+    --sidebar-ring: 45 212 191;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg;
+  }
+  
+  .glass-dark {
+    @apply backdrop-blur-sm bg-primary/10 border border-primary/20 shadow-lg;
+  }
+
+  .shimmer {
+    @apply bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+}
