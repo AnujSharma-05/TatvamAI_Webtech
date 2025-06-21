@@ -11,7 +11,7 @@ const getAllUserRewards = asyncHandler(async (req, res) => {
   if (method) query.method = method;
   if (status) query.status = status;
 
-  const rewards = await Token.find(query).sort({ createdAt: -1 });
+  const rewards = await RewardToken.find(query).sort({ createdAt: -1 });
 
   return res
     .status(200)
@@ -19,7 +19,7 @@ const getAllUserRewards = asyncHandler(async (req, res) => {
 });
 
 const getAllTokensAdmin = asyncHandler(async (req, res) => {
-  const tokens = await Token.find()
+  const tokens = await RewardToken.find()
     .populate("userId", "displayName email")
     .populate("recordingId", "domain language quality")
     .sort({ createdAt: -1 });
@@ -30,7 +30,7 @@ const getAllTokensAdmin = asyncHandler(async (req, res) => {
 });
 
 const getTokenStats = asyncHandler(async (req, res) => {
-  const stats = await Token.aggregate([
+  const stats = await RewardToken.aggregate([
     {
       $lookup: {
         from: "recordings",
