@@ -52,30 +52,6 @@ const Index = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-accent/10 to-primary/10 rounded-full blur-3xl animate-pulse-slow"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="relative z-10 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-gradient">TatvamAI</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/about" className="text-primary/80 hover:text-primary transition-colors">About</Link>
-            <Link to="/contribute" className="text-primary/80 hover:text-primary transition-colors">Contribute</Link>
-            <Link to="/contact" className="text-primary/80 hover:text-primary transition-colors">Contact</Link>
-            <Button 
-              variant="outline" 
-              className="border-primary text-primary hover:bg-primary hover:text-white"
-              onClick={() => setShowAuthModal(true)}
-            >
-              Sign In
-            </Button>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="relative z-10 px-6 py-20">
         <div className="max-w-7xl mx-auto">
@@ -187,44 +163,6 @@ const Index = () => {
           </Card>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="relative z-10 px-6 py-12 border-t border-primary/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gradient">TatvamAI</span>
-              </div>
-              <p className="text-primary/70 max-w-md">
-                Building inclusive AI through community voice contributions. Join us in creating technology that understands everyone.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-primary mb-4">Quick Links</h4>
-              <div className="space-y-2">
-                <Link to="/about" className="block text-primary/70 hover:text-primary transition-colors">About</Link>
-                <Link to="/contribute" className="block text-primary/70 hover:text-primary transition-colors">Contribute</Link>
-                <Link to="/contact" className="block text-primary/70 hover:text-primary transition-colors">Contact</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-primary mb-4">Support</h4>
-              <div className="space-y-2">
-                <Link to="/help" className="block text-primary/70 hover:text-primary transition-colors">Help Center</Link>
-                <Link to="/privacy" className="block text-primary/70 hover:text-primary transition-colors">Privacy Policy</Link>
-                <Link to="/terms" className="block text-primary/70 hover:text-primary transition-colors">Terms of Service</Link>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-primary/10 mt-12 pt-8 text-center">
-            <p className="text-primary/60">© 2024 TatvamAI. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
 
       {/* Modals */}
       <QRContribution 

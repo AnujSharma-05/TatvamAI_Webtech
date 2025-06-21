@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// import { Navbar } from './components/Navbar';
+import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import Home from './pages/Index';
 import About from './pages/About';
@@ -17,7 +17,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-background">
-        {/* <Navbar /> */}
+        <Navbar />
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
