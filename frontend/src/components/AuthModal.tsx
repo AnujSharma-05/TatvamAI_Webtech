@@ -1,12 +1,11 @@
-
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Card } from "./ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Smartphone, Mail, Globe, User, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -199,26 +198,25 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               </p>
             </div>
 
-            <div className="flex space-x-3">
-              <Button
-                onClick={handleVerifyOTP}
-                disabled={isLoading || formData.otp.length !== 4}
-                className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white py-3 rounded-full"
-              >
-                {isLoading ? 'Verifying...' : 'Verify OTP'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setStep(1)}
-                className="px-6 py-3 rounded-full"
-              >
-                Back
-              </Button>
-            </div>
+            <Button
+              onClick={handleVerifyOTP}
+              disabled={isLoading || formData.otp.length !== 4}
+              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white py-3 rounded-full"
+            >
+              {isLoading ? 'Verifying...' : 'Verify OTP'}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setStep(1)}
+              className="w-full"
+            >
+              Back
+            </Button>
           </div>
         )}
 
-        {/* Step 3: Profile Completion */}
+        {/* Step 3: Complete Profile */}
         {step === 3 && (
           <div className="space-y-6 animate-fade-in">
             <div className="text-center">
@@ -226,54 +224,52 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                 <User className="w-8 h-8 text-white" />
               </div>
               <p className="text-primary/70">
-                Complete your profile to get started
+                Let's complete your profile to get started
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your full name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
+            <div>
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="mt-1"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="language">Preferred Language</Label>
-                <Select value={formData.language} onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {languages.map((lang) => (
-                      <SelectItem key={lang.value} value={lang.value}>
-                        {lang.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="language">Preferred Language</Label>
+              <Select value={formData.language} onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your preferred language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div>
-                <Label htmlFor="country">Country</Label>
-                <Select value={formData.country} onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.value} value={country.value}>
-                        {country.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="country">Country</Label>
+              <Select value={formData.country} onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <Button
@@ -281,7 +277,15 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               disabled={isLoading || !formData.name || !formData.language || !formData.country}
               className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white py-3 rounded-full"
             >
-              {isLoading ? 'Saving...' : 'Complete Profile'}
+              {isLoading ? 'Completing...' : 'Complete Profile'}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setStep(2)}
+              className="w-full"
+            >
+              Back
             </Button>
           </div>
         )}
@@ -289,29 +293,24 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         {/* Step 4: Success */}
         {step === 4 && (
           <div className="space-y-6 animate-fade-in text-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-success to-success-600 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle className="w-10 h-10 text-white" />
+            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-
+            
             <div>
-              <h3 className="text-2xl font-bold text-primary mb-2">Welcome aboard!</h3>
+              <h3 className="text-xl font-semibold text-primary mb-2">
+                Welcome to TatvamAI!
+              </h3>
               <p className="text-primary/70">
-                Your account has been created successfully. You can now start contributing your voice to help build better AI.
+                Your account has been created successfully. You can now start contributing to our voice dataset.
               </p>
             </div>
-
-            <Card className="p-4 glass border-0">
-              <div className="flex items-center justify-between">
-                <span className="text-primary/70">Welcome Bonus</span>
-                <span className="font-bold text-accent">+25 Points</span>
-              </div>
-            </Card>
 
             <Button
               onClick={handleFinish}
               className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white py-3 rounded-full"
             >
-              Start Contributing
+              Get Started
             </Button>
           </div>
         )}

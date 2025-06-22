@@ -1,15 +1,12 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
 	],
-	prefix: "",
 	theme: {
 		container: {
 			center: true,
@@ -23,22 +20,19 @@ export default {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
+				background: '#f5f5dc', // Linen / Light Brown Tint
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#0F3541',
-					50: '#E8F4F6',
-					100: '#D1E9ED',
-					200: '#A3D3DB',
-					300: '#75BDC9',
-					400: '#47A7B7',
-					500: '#1991A5',
-					600: '#147B93',
-					700: '#106581',
-					800: '#0C4F6F',
-					900: '#0F3541',
-					950: '#071A20',
-					foreground: '#FFFFE6'
+					50: '#f8fafc',
+					100: '#f1f5f9',
+					200: '#e2e8f0',
+					300: '#cbd5e1',
+					400: '#94a3b8',
+					500: '#64748b',
+					600: '#475569',
+					700: '#334155',
+					800: '#1e293b',
+					900: '#0f172a',
 				},
 				secondary: {
 					DEFAULT: '#FFFFE6',
@@ -55,18 +49,16 @@ export default {
 					foreground: '#0F3541'
 				},
 				accent: {
-					DEFAULT: '#2DD4BF',
-					50: '#F0FDFA',
-					100: '#CCFBF1',
-					200: '#99F6E4',
-					300: '#5EEAD4',
-					400: '#2DD4BF',
-					500: '#14B8A6',
-					600: '#0D9488',
-					700: '#0F766E',
-					800: '#115E59',
-					900: '#134E4A',
-					foreground: '#0F3541'
+					50: '#f0f9ff',
+					100: '#e0f2fe',
+					200: '#bae6fd',
+					300: '#7dd3fc',
+					400: '#38bdf8',
+					500: '#0ea5e9',
+					600: '#0284c7',
+					700: '#0369a1',
+					800: '#075985',
+					900: '#0c4a6e',
 				},
 				warning: {
 					DEFAULT: '#F59E0B',
@@ -119,7 +111,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				dark: '#111827', // Rich Black / Charcoal
+				stone: {
+					50: '#fafaf9',
+					100: '#f5f5f4',
+					200: '#e7e5e4',
+					300: '#d6d3d1',
+					400: '#a8a29e',
+					500: '#78716c',
+					600: '#57534e',
+					700: '#44403c',
+					800: '#292524',
+					900: '#1c1917',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -188,7 +193,7 @@ export default {
 						transform: 'translateY(0px)'
 					},
 					'50%': {
-						transform: 'translateY(-10px)'
+						transform: 'translateY(-20px)'
 					}
 				},
 				'pulse-slow': {
@@ -206,7 +211,49 @@ export default {
 					'100%': {
 						backgroundPosition: '200% 0'
 					}
-				}
+				},
+				fadeIn: {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' },
+				},
+				slideUp: {
+					'0%': { opacity: '0', transform: 'translateY(40px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' },
+				},
+				scaleUp: {
+					'0%': { opacity: '0', transform: 'scale(0.95)' },
+					'100%': { opacity: '1', transform: 'scale(1)' },
+				},
+				'gradient-y': {
+					'0%, 100%': {
+						'background-size': '400% 400%',
+						'background-position': 'center top',
+					},
+					'50%': {
+						'background-size': '200% 200%',
+						'background-position': 'center center',
+					},
+				},
+				'gradient-x': {
+					'0%, 100%': {
+						'background-size': '200% 200%',
+						'background-position': 'left center',
+					},
+					'50%': {
+						'background-size': '200% 200%',
+						'background-position': 'right center',
+					},
+				},
+				'gradient-xy': {
+					'0%, 100%': {
+						'background-size': '400% 400%',
+						'background-position': 'left center',
+					},
+					'50%': {
+						'background-size': '200% 200%',
+						'background-position': 'right center',
+					},
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -215,9 +262,15 @@ export default {
 				'slide-in-right': 'slide-in-right 0.6s ease-out',
 				'slide-in-left': 'slide-in-left 0.6s ease-out',
 				'scale-in': 'scale-in 0.4s ease-out',
-				'float': 'float 3s ease-in-out infinite',
+				'float': 'float 6s ease-in-out infinite',
 				'pulse-slow': 'pulse-slow 2s ease-in-out infinite',
-				'shimmer': 'shimmer 2s linear infinite'
+				'shimmer': 'shimmer 2s linear infinite',
+				'fade': 'fadeIn 1s ease-out both',
+				'slideUp': 'slideUp 1s ease-out both',
+				'scaleUp': 'scaleUp 0.6s ease-out both',
+				'gradient-x': 'gradient-x 15s ease infinite',
+				'gradient-y': 'gradient-y 15s ease infinite',
+				'gradient-xy': 'gradient-xy 15s ease infinite',
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -226,8 +279,43 @@ export default {
 			},
 			backdropBlur: {
 				xs: '2px'
-			}
+			},
+			fontFamily: {
+				inter: ['Inter', 'sans-serif'],
+				sans: ['Inter var', 'sans-serif'],
+			},
+			fontSize: {
+				'xs': ['0.75rem', { lineHeight: '1rem' }],
+				'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+				'base': ['1rem', { lineHeight: '1.5rem' }],
+				'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+				'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+				'2xl': ['1.5rem', { lineHeight: '2rem' }],
+				'3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+				'4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+				'5xl': ['3rem', { lineHeight: '1' }],
+				'6xl': ['3.75rem', { lineHeight: '1' }],
+				'7xl': ['4.5rem', { lineHeight: '1' }],
+				'8xl': ['6rem', { lineHeight: '1' }],
+				'9xl': ['8rem', { lineHeight: '1' }],
+			},
+			spacing: {
+				'18': '4.5rem',
+				'88': '22rem',
+				'128': '32rem',
+			},
+			boxShadow: {
+				'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+				'medium': '0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+				'strong': '0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 2px 10px -2px rgba(0, 0, 0, 0.04)',
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require('@tailwindcss/forms'),
+		require('@tailwindcss/typography'),
+		require('@tailwindcss/aspect-ratio'),
+	],
+	darkMode: 'class',
 } satisfies Config;

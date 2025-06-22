@@ -11,7 +11,8 @@ import QR from './pages/QR';
 import Demo from './pages/Demo';
 import Auth from './pages/Auth';
 import Contributor from './pages/Contributor';
-import './App.css';
+import SignInPage from './pages/auth/signin/SignIn';
+import SignUpPage from './pages/auth/signup/SignUp';
 
 function App() {
   return (
@@ -29,6 +30,8 @@ function App() {
             <Route path="/qr" element={<QR />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/signin" element={<SignInPage />} />
+            <Route path="/auth/signup" element={<SignUpPage />} />
             <Route path="/contributor" element={<Contributor />} />
           </Routes>
         </main>
