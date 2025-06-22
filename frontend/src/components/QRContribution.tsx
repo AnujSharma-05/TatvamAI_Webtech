@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +20,10 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -29,8 +32,7 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
     } else if (recordingTime >= 120) {
-      setIsRecording(false);
-      setIsComplete(true);
+      stopRecording();
     }
     return () => clearInterval(interval);
   }, [isRecording, recordingTime]);
@@ -41,10 +43,50 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
 
   const canProceed = Object.values(consent).every(Boolean);
 
-  const startRecording = () => {
+  const startRecording = async () => {
     setIsRecording(true);
     setRecordingTime(0);
     setStep(3);
+    setAudioBlob(null);
+    setAudioUrl(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      
+      const chunks: Blob[] = [];
+      setAudioChunks(chunks);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+    } catch (err) {
+      alert("Microphone access denied or not available.");
+      setIsRecording(false);
+      setStep(1);
+    }
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    // Don't set isComplete here - let the audio processing happen first
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -59,12 +101,58 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
     setIsRecording(false);
     setRecordingTime(0);
     setIsComplete(false);
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setMediaRecorder(null);
+    setAudioChunks([]);
   };
 
   const handleClose = () => {
+    // Clean up audio URL to prevent memory leaks
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
     resetFlow();
     onClose();
   };
+
+  const handleUpload = async () => {
+    if (!audioBlob) return;
+    
+    // Placeholder: Replace with your API call to upload audioBlob
+    // Example:
+    // const formData = new FormData();
+    // formData.append('audio', audioBlob, `recording-${Date.now()}.wav`);
+    // await fetch('/api/your-upload-endpoint', { method: 'POST', body: formData });
+    
+    alert("Upload API call goes here!");
+    setIsComplete(true);
+  };
+
+  const handleRecordAgain = () => {
+    // Clean up current audio
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setRecordingTime(0);
+    setIsRecording(false);
+    setMediaRecorder(null);
+    setAudioChunks([]);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [mediaRecorder, audioUrl]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -197,24 +285,20 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
                 }`}>
                   <Mic className="w-12 h-12 text-white" />
                 </div>
-                
                 {isRecording && (
                   <div className="absolute inset-0 rounded-full border-4 border-red-500/30 animate-ping"></div>
                 )}
               </div>
 
               <h3 className="text-2xl font-bold text-primary mb-2">
-                {isRecording ? 'Recording...' : 'Ready to Record'}
+                {isRecording ? 'Recording...' : audioBlob ? 'Recording Complete' : 'Ready to Record'}
               </h3>
-              
               <p className="text-lg text-primary/70 mb-6">
-                Speak clearly into your microphone
+                {isRecording ? 'Speak clearly into your microphone' : audioBlob ? 'Review your recording below' : 'Click start to begin recording'}
               </p>
-
               <div className="text-4xl font-mono font-bold text-primary mb-6">
                 {formatTime(recordingTime)} / 2:00
               </div>
-
               <div className="w-full bg-primary/20 rounded-full h-2 mb-6">
                 <div 
                   className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-300"
@@ -222,9 +306,10 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
                 ></div>
               </div>
 
-              {!isRecording && (
+              {/* Recording Controls */}
+              {!isRecording && !audioBlob && (
                 <Button
-                  onClick={() => setIsRecording(true)}
+                  onClick={startRecording}
                   className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-8 py-3 rounded-full"
                 >
                   Start Recording
@@ -233,15 +318,38 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
 
               {isRecording && (
                 <Button
-                  onClick={() => {
-                    setIsRecording(false);
-                    setIsComplete(true);
-                  }}
+                  onClick={stopRecording}
                   variant="outline"
                   className="border-red-500 text-red-500 hover:bg-red-50 px-8 py-3 rounded-full"
                 >
                   Stop Recording
                 </Button>
+              )}
+
+              {/* After Recording: Audio Player, Upload, Record Again */}
+              {!isRecording && audioBlob && audioUrl && (
+                <div className="space-y-4 mt-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <audio controls src={audioUrl} className="w-full">
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button
+                      onClick={handleUpload}
+                      className="bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white px-8 py-3 rounded-full"
+                    >
+                      Upload Recording
+                    </Button>
+                    <Button
+                      onClick={handleRecordAgain}
+                      variant="outline"
+                      className="px-8 py-3 rounded-full"
+                    >
+                      Record Again
+                    </Button>
+                  </div>
+                </div>
               )}
             </Card>
           </div>
@@ -251,7 +359,7 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
         {isComplete && (
           <div className="space-y-6 animate-fade-in">
             <Card className="p-8 glass border-0 text-center">
-              <div className="w-24 h-24 bg-gradient-to-r from-success to-success-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-12 h-12 text-white" />
               </div>
 
@@ -263,8 +371,8 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
                 Your voice contribution has been successfully recorded and will help improve AI for everyone.
               </p>
 
-              <div className="bg-accent/10 rounded-lg p-4 mb-6">
-                <p className="text-accent-700 font-medium">
+              <div className="bg-green-50 rounded-lg p-4 mb-6">
+                <p className="text-green-700 font-medium">
                   🎉 You've earned 10 contribution points!
                 </p>
               </div>
