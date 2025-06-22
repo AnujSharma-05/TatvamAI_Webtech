@@ -10,7 +10,7 @@ const Footer: FC = () => {
         
         {/* Logo and Description */}
         <div>
-          <h2 className="text-xl font-bold text-primary bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
             TatvamAI
           </h2>
           <p className="text-sm text-muted-foreground mt-2">
