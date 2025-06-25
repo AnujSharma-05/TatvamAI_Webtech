@@ -16,11 +16,14 @@ const QRRecording = () => {
     recording: false,
     terms: false
   });
+
+  const domains = ['healthcare', 'education', 'fmcg', 'telecom', 'retail', 'technology'];
+  const languages = ['English', 'Hindi', 'Tamil', 'Telugu', 'Gujarati', 'Punjabi', 'Odia', 'Kannada', 'Bengali', 'Malayalam'];
+
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [recorder, setRecorder] = useState<any>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -28,6 +31,10 @@ const QRRecording = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [domain, setDomain] = useState("");
+  const [language, setLanguage] = useState("");
+  const [promptText, setPromptText] = useState("Please read the following text clearly and at a natural pace: 'The quick brown fox jumps over the lazy dog.'");
+  const canProceedPrompt = domain && language && promptText.trim();
 
   useEffect(() => {
     if (stream && isRecording && !isPaused) {
@@ -92,13 +99,15 @@ const QRRecording = () => {
   };
 
   const startRecording = async () => {
+    console.log("Starting recording...");
     try {
       setError(null);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 44100
+          sampleRate: 16000,
+          channelCount: 1,
         }
       });
 
@@ -110,10 +119,6 @@ const QRRecording = () => {
         recorderType: StereoAudioRecorder,
         desiredSampRate: 16000,
         numberOfAudioChannels: 1,
-        timeSlice: 100,
-        ondataavailable: (blob: Blob) => {
-          setAudioChunks((prev) => [...prev, blob]);
-        }
       });
 
       newRecorder.startRecording();
@@ -121,7 +126,12 @@ const QRRecording = () => {
       setIsRecording(true);
       setIsPaused(false);
       setRecordingTime(0);
-      setStep(3);
+      setAudioBlob(null);
+      if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+      }
+      setAudioUrl(null);
+      setStep(5);
     } catch (err) {
       setError("Microphone access denied or not available. Please check your browser permissions.");
       console.error("Recording error:", err);
@@ -152,10 +162,11 @@ const QRRecording = () => {
 
         const audio = new Audio(url);
         audio.onloadedmetadata = () => {
-          setRecordingTime(audio.duration);
+            // Use Math.round to avoid long decimals
+            setRecordingTime(Math.round(audio.duration)); 
         };
-
-        setStep(4);
+        // The step is now 6 for Review & Submit
+        setStep(6);
       });
     }
     if (stream) {
@@ -165,7 +176,7 @@ const QRRecording = () => {
     setIsPaused(false);
     setAudioLevel(0);
   };
-
+  
   const resetFlow = useCallback(() => {
     setStep(1);
     setConsent({ dataUsage: false, recording: false, terms: false });
@@ -177,6 +188,10 @@ const QRRecording = () => {
     setError(null);
     setIsUploading(false);
     setUploadProgress(0);
+    setDomain("");
+    setLanguage("");
+    setPromptText("Please read the following text clearly and at a natural pace: 'The quick brown fox jumps over the lazy dog.'");
+
 
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
@@ -189,7 +204,6 @@ const QRRecording = () => {
     }
 
     setRecorder(null);
-    setAudioChunks([]);
   }, [audioUrl, stream]);
 
   const handleUpload = async () => {
@@ -201,24 +215,24 @@ const QRRecording = () => {
     const formData = new FormData();
     formData.append("audio", audioBlob, `recording-${Date.now()}.wav`);
     formData.append("duration", recordingTime.toFixed(2));
-    formData.append("language", "English");
-    formData.append("dialect", "General");
-    formData.append("domain", "education");
+    formData.append("language", language);
+    formData.append("domain", domain);
     formData.append("recordedVia", "web");
 
     try {
+      // The endpoint might need adjustment based on your actual API
       const response = await axios.post("/recordings/", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         },
         onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+          const total = progressEvent.total ?? 1; // Use a default value if total is null
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
           setUploadProgress(percentCompleted);
         }
       });
-
-      setUploadProgress(100);
-      setStep(5);
+      // The step is now 7 for Contribution Complete
+      setStep(7);
     } catch (err) {
       setError("Upload failed. Please try again.");
       console.error(err);
@@ -240,9 +254,9 @@ const QRRecording = () => {
     setIsRecording(false);
     setIsPaused(false);
     setRecorder(null);
-    setAudioChunks([]);
     setError(null);
-    setStep(2);
+    // Go back to the prompt step to start a new recording
+    setStep(4); 
   };
 
   const downloadAudio = () => {
@@ -260,23 +274,24 @@ const QRRecording = () => {
     switch (step) {
       case 1: return "Voice Contribution";
       case 2: return "Terms & Consent";
-      case 3: return "Recording Session";
-      case 4: return "Review & Submit";
-      case 5: return "Contribution Complete";
+      case 3: return "Pick Domain & Language";
+      case 4: return "Speaking Prompt";
+      case 5: return "Recording Session";
+      case 6: return "Review & Submit";
+      case 7: return "Contribution Complete";
       default: return "Voice Contribution";
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
-
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">{getStepTitle()}</h1>
             <div className="flex justify-center items-center space-x-2 mb-6">
-              {[1, 2, 3, 4, 5].map((num) => (
+              {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                 <div key={num} className="flex items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
                     step === num 
@@ -287,7 +302,7 @@ const QRRecording = () => {
                   }`}>
                     {step > num ? <CheckCircle className="w-4 h-4" /> : num}
                   </div>
-                  {num < 5 && (
+                   {num < 7 && (
                     <div className={`w-8 h-0.5 transition-all duration-300 ${
                       step > num ? 'bg-green-500' : 'bg-slate-700'
                     }`} />
@@ -353,26 +368,12 @@ const QRRecording = () => {
               
               <div className="space-y-6 mb-8">
                 {[
-                  { 
-                    key: "dataUsage", 
-                    text: "I consent to the use of my voice data for AI training purposes",
-                    icon: <Mic className="w-5 h-5 text-blue-400" />
-                  },
-                  { 
-                    key: "recording", 
-                    text: "I understand that my voice will be securely recorded and processed",
-                    icon: <Shield className="w-5 h-5 text-green-400" />
-                  },
-                  { 
-                    key: "terms", 
-                    text: "I agree to the Terms of Service and Privacy Policy",
-                    icon: <FileText className="w-5 h-5 text-purple-400" />
-                  }
+                  { key: "dataUsage", text: "I consent to the use of my voice data for AI training purposes", icon: <Mic className="w-5 h-5 text-blue-400" /> },
+                  { key: "recording", text: "I understand that my voice will be securely recorded and processed", icon: <Shield className="w-5 h-5 text-green-400" /> },
+                  { key: "terms", text: "I agree to the Terms of Service and Privacy Policy", icon: <FileText className="w-5 h-5 text-purple-400" /> }
                 ].map(({ key, text, icon }) => (
                   <div key={key} className="flex items-start space-x-4 p-4 bg-slate-700 rounded-lg">
-                    <div className="flex-shrink-0 mt-1">
-                      {icon}
-                    </div>
+                    <div className="flex-shrink-0 mt-1">{icon}</div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
                         <Checkbox
@@ -381,9 +382,7 @@ const QRRecording = () => {
                           onCheckedChange={(val) => handleConsentChange(key as keyof typeof consent, val as boolean)}
                           className="border-slate-500"
                         />
-                        <label htmlFor={key} className="text-slate-300 cursor-pointer">
-                          {text}
-                        </label>
+                        <label htmlFor={key} className="text-slate-300 cursor-pointer">{text}</label>
                       </div>
                     </div>
                   </div>
@@ -391,30 +390,66 @@ const QRRecording = () => {
               </div>
               
               <div className="flex justify-between">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setStep(1)}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
+                <Button variant="outline" onClick={() => setStep(1)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
                 <Button 
                   disabled={!canProceed} 
-                  onClick={startRecording}
-                  className="bg-gradient-to-r from-green-600 to-emerald-500 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setStep(3)} // Corrected: Go to step 3
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Start Recording
-                  <Mic className="w-4 h-4 ml-2" />
+                  Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Step 3: Recording */}
+          {/* Step 3: Pick Domain & Language */}
           {step === 3 && (
+            <Card className="p-8 space-y-6 bg-slate-800 border-slate-700">
+              <select className="w-full p-2 bg-slate-700 text-white rounded" value={domain} onChange={e => setDomain(e.target.value)}>
+                <option value="">Select Domain</option>
+                {domains.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <select className="w-full p-2 bg-slate-700 text-white rounded" value={language} onChange={e => setLanguage(e.target.value)}>
+                <option value="">Select Language</option>
+                {languages.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setStep(2)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
+                <Button disabled={!domain || !language} onClick={() => setStep(4)} className="bg-gradient-to-r from-blue-600 to-purple-600 disabled:opacity-50">
+                  Next <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Step 4: Speaking Prompt */}
+          {step === 4 && (
+            <Card className="p-8 space-y-6 bg-slate-800 border-slate-700">
+              <textarea
+                className="w-full p-4 bg-slate-700 text-white rounded min-h-[150px]"
+                placeholder="Paste or write your speaking prompt here..."
+                value={promptText}
+                onChange={e => setPromptText(e.target.value)}
+              />
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setStep(3)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
+                <Button onClick={startRecording} disabled={!canProceedPrompt} className="bg-gradient-to-r from-green-600 to-emerald-500 disabled:opacity-50">
+                  Start Recording <Mic className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Step 5: Recording */}
+          {step === 5 && (
             <div className="bg-slate-800 p-8 rounded-xl text-center">
-              <div className="relative mb-8">
+               <div className="relative mb-8">
                 <div className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ${
                   isPaused 
                     ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
@@ -423,21 +458,18 @@ const QRRecording = () => {
                   <Mic className="w-12 h-12 text-white" />
                 </div>
                 
-                {/* Audio level indicator */}
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-4">
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-4 rounded-full transition-all duration-100 ${
-                          audioLevel > i * 50 ? 'bg-green-400' : 'bg-slate-600'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                      className="w-full h-full rounded-full border-4 border-slate-700"
+                      style={{
+                        transform: `scale(${1 + audioLevel / 500})`,
+                        opacity: 0.8 - audioLevel / 300,
+                        transition: 'transform 0.1s ease-out, opacity 0.1s ease-out'
+                      }}
+                    />
                 </div>
               </div>
-              
+
               <h2 className="text-2xl font-bold mb-4">
                 {isPaused ? "Recording Paused" : "Recording in Progress"}
               </h2>
@@ -452,44 +484,30 @@ const QRRecording = () => {
               
               <div className="flex justify-center space-x-4">
                 {!isPaused ? (
-                  <Button 
-                    onClick={pauseRecording}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3"
-                  >
-                    <Pause className="w-4 h-4 mr-2" />
-                    Pause
+                  <Button onClick={pauseRecording} className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3">
+                    <Pause className="w-4 h-4 mr-2" /> Pause
                   </Button>
                 ) : (
-                  <Button 
-                    onClick={resumeRecording}
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Resume
+                  <Button onClick={resumeRecording} className="bg-green-500 hover:bg-green-600 text-white px-6 py-3">
+                    <Play className="w-4 h-4 mr-2" /> Resume
                   </Button>
                 )}
-                <Button 
-                  onClick={stopRecording}
-                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-3"
-                >
-                  <Square className="w-4 h-4 mr-2" />
-                  Stop
+                <Button onClick={stopRecording} className="bg-red-500 hover:bg-red-600 text-white px-6 py-3">
+                  <Square className="w-4 h-4 mr-2" /> Stop
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Step 4: Review */}
-          {step === 4 && audioUrl && (
+          {/* Step 6: Review */}
+          {step === 6 && audioUrl && (
             <div className="bg-slate-800 p-8 rounded-xl">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Review Your Recording</h2>
-                <p className="text-slate-300">
-                  Listen to your recording and choose to submit or record again
-                </p>
+                <p className="text-slate-300">Listen to your recording and choose to submit or record again</p>
               </div>
               
               <div className="bg-slate-700 p-6 rounded-lg mb-8">
@@ -497,39 +515,17 @@ const QRRecording = () => {
                   <Volume2 className="w-5 h-5 text-blue-400" />
                   <span className="text-slate-300">Duration: {formatTime(recordingTime)}</span>
                 </div>
-                <audio 
-                  controls 
-                  src={audioUrl} 
-                  className="w-full"
-                  style={{ 
-                    filter: 'invert(1) hue-rotate(180deg)',
-                    backgroundColor: 'transparent'
-                  }}
-                />
+                <audio controls src={audioUrl} className="w-full" />
               </div>
               
               <div className="flex justify-center space-x-4 flex-wrap gap-2">
-                <Button 
-                  onClick={handleRecordAgain}
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Record Again
+                <Button onClick={handleRecordAgain} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <RotateCcw className="w-4 h-4 mr-2" /> Record Again
                 </Button>
-                <Button 
-                  onClick={downloadAudio}
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
+                <Button onClick={downloadAudio} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <Download className="w-4 h-4 mr-2" /> Download
                 </Button>
-                <Button 
-                  onClick={handleUpload}
-                  disabled={isUploading}
-                  className="bg-gradient-to-r from-green-600 to-emerald-500 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
-                >
+                <Button onClick={handleUpload} disabled={isUploading} className="bg-gradient-to-r from-green-600 to-emerald-500 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50">
                   {isUploading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -557,8 +553,8 @@ const QRRecording = () => {
             </div>
           )}
 
-          {/* Step 5: Success */}
-          {step === 5 && (
+          {/* Step 7: Success */}
+          {step === 7 && (
             <div className="bg-slate-800 p-8 rounded-xl text-center">
               <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-10 h-10 text-white" />
@@ -569,14 +565,15 @@ const QRRecording = () => {
                 You're helping build more inclusive AI systems for everyone.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <div className="p-4 bg-slate-700 rounded-lg">
-                  <h3 className="font-semibold mb-2">Recording Duration</h3>
-                  <p className="text-slate-300">{formatTime(recordingTime)}</p>
-                </div>
-                <div className="p-4 bg-slate-700 rounded-lg">
-                  <h3 className="font-semibold mb-2">Contribution ID</h3>
-                  <p className="text-slate-300 font-mono text-sm">#{Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
-                </div>
+                  <div className="p-4 bg-slate-700 rounded-lg">
+                      <h3 className="font-semibold mb-2">Recording Info</h3>
+                      <p className="text-slate-300">{language} / {domain}</p>
+                      <p className="text-slate-300 mt-1">Duration: {formatTime(recordingTime)}</p>
+                  </div>
+                  <div className="p-4 bg-slate-700 rounded-lg">
+                      <h3 className="font-semibold mb-2">Contribution ID</h3>
+                      <p className="text-slate-300 font-mono text-sm">#{Math.random().toString(36).substring(2, 9).toUpperCase()}</p>
+                  </div>
               </div>
               <Button 
                 onClick={resetFlow}
