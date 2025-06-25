@@ -2,87 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
-
+/* Definition of the design system with the new color palette */
 @layer base {
   :root {
-    --background: 255 255 230; /* #FFFFE6 */
-    --foreground: 15 53 65; /* #0F3541 */
+    /* Main colors */
+    --dark-spring-green: 48 107 52; /* #306b34 */
+    --dark-slate-gray: 28 82 83; /* #1c5253 */
+    --cream: 243 255 198; /* #f3ffc6 */
+    --mindaro: 195 235 120; /* #c3eb78 */
+    --amaranth-purple: 182 23 75; /* #b6174b */
+    --navy-blue: 16 23 41; /* #101729 */
 
-    --card: 255 255 255;
-    --card-foreground: 15 53 65;
+    /* System colors mapped to our palette */
+    --background: 16 23 41; /* #101729 - deep navy blue */
+    --foreground: 255 255 255; /* white - for better visibility */
 
-    --popover: 255 255 255;
-    --popover-foreground: 15 53 65;
+    --card: 22 31 55; /* slightly lighter than background */
+    --card-foreground: 00 00 00;
 
-    --primary: 15 53 65; /* #0F3541 */
-    --primary-foreground: 255 255 230; /* #FFFFE6 */
+    --popover: 22 31 55;
+    --popover-foreground: 255 255 255;
 
-    --secondary: 255 255 230; /* #FFFFE6 */
-    --secondary-foreground: 15 53 65;
+    --primary: 195 235 120; /* mindaro - stands out on dark background */
+    --primary-foreground: 16 23 41;
 
-    --muted: 240 246 248;
-    --muted-foreground: 115 125 140;
+    --secondary: 243 255 198; /* cream - for secondary elements */
+    --secondary-foreground: 16 23 41;
 
-    --accent: 45 212 191; /* #2DD4BF */
-    --accent-foreground: 15 53 65;
+    --muted: 28 39 67; /* slightly lighter than background */
+    --muted-foreground: 156 163 175; /* light gray */
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 230;
+    --accent: 182 23 75; /* amaranth-purple - for highlights */
+    --accent-foreground: 255 255 255;
 
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 15 53 65;
+    --destructive: 182 23 75; /* amaranth-purple */
+    --destructive-foreground: 255 255 255;
+
+    --border: 28 39 67;
+    --input: 28 39 67;
+    --ring: 195 235 120;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 255 255 230;
-    --sidebar-foreground: 15 53 65;
-    --sidebar-primary: 15 53 65;
-    --sidebar-primary-foreground: 255 255 230;
-    --sidebar-accent: 240 246 248;
-    --sidebar-accent-foreground: 15 53 65;
-    --sidebar-border: 226 232 240;
-    --sidebar-ring: 45 212 191;
+    /* Sidebar specific colors */
+    --sidebar-background: 22 31 55;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 195 235 120;
+    --sidebar-primary-foreground: 16 23 41;
+    --sidebar-accent: 182 23 75;
+    --sidebar-accent-foreground: 255 255 255;
+    --sidebar-border: 28 39 67;
+    --sidebar-ring: 195 235 120;
   }
 
   .dark {
-    --background: 15 53 65;
-    --foreground: 255 255 230;
+    --background: 16 23 41; /* #101729 - keeping same as light mode */
+    --foreground: 255 255 255;
 
-    --card: 15 53 65;
-    --card-foreground: 255 255 230;
+    --card: 22 31 55;
+    --card-foreground: 255 255 255;
 
-    --popover: 15 53 65;
-    --popover-foreground: 255 255 230;
+    --popover: 22 31 55;
+    --popover-foreground: 255 255 255;
 
-    --primary: 255 255 230;
-    --primary-foreground: 15 53 65;
+    --primary: 195 235 120;
+    --primary-foreground: 16 23 41;
 
-    --secondary: 20 60 75;
-    --secondary-foreground: 255 255 230;
+    --secondary: 243 255 198;
+    --secondary-foreground: 16 23 41;
 
-    --muted: 20 60 75;
+    --muted: 28 39 67;
     --muted-foreground: 156 163 175;
 
-    --accent: 45 212 191;
-    --accent-foreground: 15 53 65;
+    --accent: 182 23 75;
+    --accent-foreground: 255 255 255;
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 230;
+    --destructive: 182 23 75;
+    --destructive-foreground: 255 255 255;
 
-    --border: 20 60 75;
-    --input: 20 60 75;
-    --ring: 45 212 191;
+    --border: 28 39 67;
+    --input: 28 39 67;
+    --ring: 195 235 120;
 
-    --sidebar-background: 15 53 65;
-    --sidebar-foreground: 255 255 230;
-    --sidebar-primary: 45 212 191;
-    --sidebar-primary-foreground: 15 53 65;
-    --sidebar-accent: 20 60 75;
-    --sidebar-accent-foreground: 255 255 230;
-    --sidebar-border: 20 60 75;
-    --sidebar-ring: 45 212 191;
+    /* Sidebar specific colors for dark mode - keeping consistent */
+    --sidebar-background: 22 31 55;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 195 235 120;
+    --sidebar-primary-foreground: 16 23 41;
+    --sidebar-accent: 182 23 75;
+    --sidebar-accent-foreground: 255 255 255;
+    --sidebar-border: 28 39 67;
+    --sidebar-ring: 195 235 120;
   }
 }
 
@@ -103,20 +113,41 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-sm bg-white/10 border border-white/20 shadow-lg;
+    @apply backdrop-blur-sm bg-white/5 border border-white/10 shadow-lg;
   }
   
   .glass-dark {
-    @apply backdrop-blur-sm bg-primary/10 border border-primary/20 shadow-lg;
+    @apply backdrop-blur-sm bg-white/5 border border-white/10 shadow-lg;
   }
 
   .shimmer {
-    @apply bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    @apply bg-gradient-to-r from-transparent via-white/10 to-transparent;
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-900 to-accent-500 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[#c3eb78] via-[#f3ffc6] to-[#b6174b] bg-clip-text text-transparent;
+  }
+
+  /* Gradient utilities with adjusted opacity for better visibility on dark background */
+  .gradient-top {
+    @apply bg-gradient-to-t from-[#306b34ff] via-[#1c5253ff] via-[#f3ffc6dd] via-[#c3eb78dd] to-[#b6174bff];
+  }
+
+  .gradient-right {
+    @apply bg-gradient-to-r from-[#306b34ff] via-[#1c5253ff] via-[#f3ffc6dd] via-[#c3eb78dd] to-[#b6174bff];
+  }
+
+  .gradient-bottom {
+    @apply bg-gradient-to-b from-[#306b34ff] via-[#1c5253ff] via-[#f3ffc6dd] via-[#c3eb78dd] to-[#b6174bff];
+  }
+
+  .gradient-left {
+    @apply bg-gradient-to-l from-[#306b34ff] via-[#1c5253ff] via-[#f3ffc6dd] via-[#c3eb78dd] to-[#b6174bff];
+  }
+
+  .gradient-diagonal {
+    @apply bg-gradient-to-br from-[#306b34ff] via-[#1c5253ff] via-[#f3ffc6dd] via-[#c3eb78dd] to-[#b6174bff];
   }
 }
