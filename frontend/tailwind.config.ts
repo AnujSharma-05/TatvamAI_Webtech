@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
-export default {
+const config = {
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -17,48 +19,45 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: '#f5f5dc', // Linen / Light Brown Tint
-				foreground: 'hsl(var(--foreground))',
+				"dark-spring-green": "#306b34",
+				"dark-slate-gray": "#1c5253",
+				"cream": "#f3ffc6",
+				"mindaro": "#c3eb78",
+				"amaranth-purple": "#b6174b",
+				"navy": "#101729",
+				
+				border: "rgb(var(--border) / <alpha-value>)",
+				input: "rgb(var(--input) / <alpha-value>)",
+				ring: "rgb(var(--ring) / <alpha-value>)",
+				background: "rgb(var(--background) / <alpha-value>)",
+				foreground: "rgb(var(--foreground) / <alpha-value>)",
 				primary: {
-					50: '#f8fafc',
-					100: '#f1f5f9',
-					200: '#e2e8f0',
-					300: '#cbd5e1',
-					400: '#94a3b8',
-					500: '#64748b',
-					600: '#475569',
-					700: '#334155',
-					800: '#1e293b',
-					900: '#0f172a',
+					DEFAULT: "rgb(var(--primary) / <alpha-value>)",
+					foreground: "rgb(var(--primary-foreground) / <alpha-value>)",
 				},
 				secondary: {
-					DEFAULT: '#FFFFE6',
-					50: '#FFFFFE',
-					100: '#FFFFE6',
-					200: '#FFFFCC',
-					300: '#FFFFB3',
-					400: '#FFFF99',
-					500: '#FFFF80',
-					600: '#FFFF66',
-					700: '#FFFF4D',
-					800: '#FFFF33',
-					900: '#FFFF1A',
-					foreground: '#0F3541'
+					DEFAULT: "rgb(var(--secondary) / <alpha-value>)",
+					foreground: "rgb(var(--secondary-foreground) / <alpha-value>)",
+				},
+				destructive: {
+					DEFAULT: "rgb(var(--destructive) / <alpha-value>)",
+					foreground: "rgb(var(--destructive-foreground) / <alpha-value>)",
+				},
+				muted: {
+					DEFAULT: "rgb(var(--muted) / <alpha-value>)",
+					foreground: "rgb(var(--muted-foreground) / <alpha-value>)",
 				},
 				accent: {
-					50: '#f0f9ff',
-					100: '#e0f2fe',
-					200: '#bae6fd',
-					300: '#7dd3fc',
-					400: '#38bdf8',
-					500: '#0ea5e9',
-					600: '#0284c7',
-					700: '#0369a1',
-					800: '#075985',
-					900: '#0c4a6e',
+					DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+					foreground: "rgb(var(--accent-foreground) / <alpha-value>)",
+				},
+				popover: {
+					DEFAULT: "rgb(var(--popover) / <alpha-value>)",
+					foreground: "rgb(var(--popover-foreground) / <alpha-value>)",
+				},
+				card: {
+					DEFAULT: "rgb(var(--card) / <alpha-value>)",
+					foreground: "rgb(var(--card-foreground) / <alpha-value>)",
 				},
 				warning: {
 					DEFAULT: '#F59E0B',
@@ -85,22 +84,6 @@ export default {
 					700: '#047857',
 					800: '#065F46',
 					900: '#064E3B'
-				},
-				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
-				},
-				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
-				},
-				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
-				},
-				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
@@ -275,7 +258,15 @@ export default {
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-				'shimmer': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+				'shimmer': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+				'gradient-top': 'linear-gradient(0deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-right': 'linear-gradient(90deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-bottom': 'linear-gradient(180deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-left': 'linear-gradient(270deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-top-right': 'linear-gradient(45deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-bottom-right': 'linear-gradient(135deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-top-left': 'linear-gradient(225deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
+				'gradient-bottom-left': 'linear-gradient(315deg, #306b34ff, #1c5253ff, #f3ffc6ff, #c3eb78ff, #b6174bff)',
 			},
 			backdropBlur: {
 				xs: '2px'
@@ -311,11 +302,8 @@ export default {
 			},
 		}
 	},
-	plugins: [
-		require("tailwindcss-animate"),
-		require('@tailwindcss/forms'),
-		require('@tailwindcss/typography'),
-		require('@tailwindcss/aspect-ratio'),
-	],
+	plugins: [animate, typography],
 	darkMode: 'class',
 } satisfies Config;
+
+export default config;
