@@ -7,6 +7,9 @@ import { RewardToken } from "../models/rewardToken.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
 import { RewardToken } from "../models/rewardToken.model.js";
+import crypto from "crypto";
+import { sendEmail } from "../utils/sendEmail.js";
+import { sendSms } from "../utils/sendSms.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -65,12 +68,16 @@ const registerUser = asyncHandler(async (req, res) => {
   // Check if user already exists
   const existedUser = await User.findOne({
     // Check if user exists by email or username (returns false if not found)
-    $or: [{ email }, { name }], // or operator to check both fields
+    $or: [{ email }, { name }, {phoneNo}], // or operator to check both fields
   });
 
   if (existedUser) {
-    throw new ApiError(400, "User already exists with this email or username");
+    throw new ApiError(400, "User already exists with this email or username or phone number");
   }
+
+  const emailVerificationToken = crypto.randomBytes(32).toString("hex"); // generate a random token for email verification
+
+  const phoneOtp = Math.floor(100000 + Math.random() * 900000).toString(); // generate a random 6 digit OTP for phone verification
 
   // Create a new user
   const user = await User.create({
@@ -80,12 +87,22 @@ const registerUser = asyncHandler(async (req, res) => {
     gender,
     dob,
     phoneNo,
+    phoneOtp,
+    phoneOtpExpires: new Date(Date.now() + 10 * 60 * 1000), // OTP expires in 10 minutes
+    emailVerificationToken,
     city,
     motherTongue,
     knownLanguages: knownLanguages
       ? knownLanguages.split(",").map((lang) => lang.trim())
       : [], // split the languages by comma and trim spaces
   });
+
+  await sendEmail(email, "Tatvam_AI Email Verification", `
+    Please verify your email by clicking on the link below:
+    <a href="${process.env.CLIENT_URL}/verify-email/${emailVerificationToken}">Verify Email</a>
+  `);
+
+  await sendSms(phoneNo, `Your OTP for Tatvam_AI registration is ${phoneOtp}. It is valid for 10 minutes.`);
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -100,17 +117,51 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
+const verifyEmail = asyncHandler(async (req, res) => {
+
+  const user = await User.findOne({ emailVerificationToken: req.params.token });
+
+  if (!user) {
+    throw new ApiError(404, "Invalid or expired email verification token");
+  }
+
+  user.emailVerified = true; // set emailVerified to true
+  user.emailVerificationToken = undefined; // remove the emailVerificationToken
+
+  await user.save({ validateBeforeSave: false }); // save the user without validation
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {}, "Email verified successfully"));
+
+})
+
+const verifyPhoneOtp = asyncHandler(async (req, res) => {
+    const { phoneNo, otp } = req.body;
+
+    const user = await User.findOne({ phoneNo });
+
+    if (!user || user.phoneOtp !== otp || user.phoneOtpExpires < Date.now()) {
+        throw new ApiError(404, "Invalid or expired OTP");
+    }
+
+    user.phoneNoVerified = true; // set phoneNoVerified to true
+    user.phoneOtp = undefined; // remove the phoneOtp
+    user.phoneOtpExpires = undefined; // remove the phoneOtpExpires
+    await user.save({ validateBeforeSave: false }); // save the user without validation
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Phone number verified successfully"));
+});
+
 const loginUser = asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
-
-    // if(!username && !email){
-    //     throw new ApiError(400, "Username or email is required")
-    // }
 
     if (!(username || email)) {
         throw new ApiError(400, "Username or email is required");
     }
-
+    
     const user = await User.findOne({
         $or: [{ username }, { email }],
     });
@@ -124,6 +175,10 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (!isPasswordValid) {
         throw new ApiError(401, "Invalid or wrong password");
+    }
+
+    if (!user.emailVerified || !user.phoneNoVerified) {
+        throw new ApiError(403, "Please verify your email and phone number before logging in");
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
@@ -156,6 +211,71 @@ const loginUser = asyncHandler(async (req, res) => {
     )
     );
 });
+
+// when user login with phone number and OTP
+const sendPhoneOtp = asyncHandler(async (req, res) => {
+    const { phoneNo } = req.body;
+
+    const user = await User.findOne({ phoneNo });
+    if (!user) {
+        throw new ApiError(404, "User not found with this phone number");
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+    user.phoneOtp = otp;
+    user.phoneOtpExpires = Date.now() + 10 * 60 * 1000; // 10 min
+    await user.save();
+
+    await sendSms(phoneNo, `Your OTP for Tatvam_AI login is ${otp}. It is valid for 10 minutes.`);
+
+    res.status(200).json(new ApiResponse(200, null, "OTP sent successfully"));
+});
+
+
+const loginWithPhoneOtp = asyncHandler(async (req, res) => {
+    const { phoneNo, otp } = req.body;
+
+    const user = await User.findOne({ phoneNo });
+
+    if (!user) {
+        throw new ApiError(404, "User does not exist with this phone number");
+    }
+
+    if (!otp || user.phoneOtp !== otp || user.phoneOtpExpires < Date.now()) {
+        throw new ApiError(400, "Invalid or expired OTP");
+    }
+
+    // Clear OTP fields after successful login
+    user.phoneOtp = undefined;
+    user.phoneOtpExpires = undefined;
+    await user.save();
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    accessToken,
+                    refreshToken,
+                },
+                "User logged in with phoneNo successfully"
+            )
+        );
+});
+
 
 const logoutUser = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
@@ -447,5 +567,9 @@ export {
     getCurrentUser, 
     updateAccountDetails,
     getUserContributionStats,
-    getUserIncentives 
+    getUserIncentives,
+    verifyEmail,
+    verifyPhoneOtp,
+    sendPhoneOtp,
+    loginWithPhoneOtp 
 };

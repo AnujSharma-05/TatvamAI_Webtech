@@ -12,16 +12,23 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
-    role: {
+    phoneNo: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user", // default role is user
+      required: true,
+      unique: true,
     },
     password: {
       type: String,
       required: true,
       select: false, // this will not return the password field when fetching user data
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user", // default role is user
     },
     gender: {
       type: String,
@@ -31,11 +38,6 @@ const userSchema = new mongoose.Schema(
     dob: {
       type: Date,
       required: true,
-    },
-    phoneNo: {
-      type: String,
-      required: true,
-      unique: true,
     },
     city: {
       type: String,
@@ -66,6 +68,24 @@ const userSchema = new mongoose.Schema(
         ref: "RewardToken", // reference to the RewardToken model
       },
     ],
+    emailVerified: {
+      type: Boolean,
+      default: false, // email verification status
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false, // this will not return the emailVerificationToken field when fetching user data
+    },
+    phoneNoVerified: {
+      type: Boolean,
+      default: false, // phone number verification status
+    },
+    phoneOtp: {
+      type: String,
+    },
+    phoneOtpExpires: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
