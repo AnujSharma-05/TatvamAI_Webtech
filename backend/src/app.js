@@ -7,7 +7,7 @@ const app = express();
 
 // Middlewares setup
 app.use(cors({
-    origin: ["http://localhost:8080"],
+    origin: ["http://localhost:8080", process.env.VITE_URL],
     credentials: true,
 }))
 
