@@ -9,7 +9,11 @@ import {
     getCurrentUser, 
     updateAccountDetails,
     getUserContributionStats,
-    getUserIncentives
+    getUserIncentives,
+    verifyEmail,
+    sendPhoneOtp,
+    verifyPhoneOtp,
+    loginWithPhoneOtp
 } from '../controllers/user.controller.js';
 
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -17,24 +21,24 @@ import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
+// Auth
 router.route('/register').post(registerUser)
-
 router.route('/login').post(loginUser)
-
 router.route('/logout').post(verifyJWT, logoutUser)
-
 router.route('/refresh-token').post(refreshAccessToken)
 
+// User
 router.route('/current').get(verifyJWT, getCurrentUser)
-
 router.route('/recordings').get(verifyJWT, getUserRecordings)
-
 router.route('/change-password').post(verifyJWT, changeCurrentPassword)
-
 router.route('/update-account').put(verifyJWT, updateAccountDetails)
-
 router.route('/contribution-stats').get(verifyJWT, getUserContributionStats)
-
 router.route('/incentives').get(verifyJWT, getUserIncentives)
+
+// Email/Phone OTP verification routes
+router.route('/verify-email/:token').get(verifyEmail); // e.g., /verify-email/abc123
+router.route('/send-phone-otp').post(sendPhoneOtp);
+router.route('/verify-phone-otp').post(verifyPhoneOtp);
+router.route('/login-phone-otp').post(loginWithPhoneOtp);
 
 export default router;
