@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Mic, Globe, Users, Award, ChevronRight, Play, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
-import QRContribution from "../components/QRContribution";
-import AuthModal from "../components/AuthModal";
+// import QRContribution from "../components/QRContribution";
+// import AuthModal from "../components/AuthModal";
 
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  // const [showQRModal, setShowQRModal] = useState(false);
+  // const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
@@ -41,7 +44,6 @@ const Index = () => {
       color: "from-[#1e3a8a] to-[#6366f1]"
     }
   ];
-  
 
   return (
     <div className="min-h-screen bg-[#101729] overflow-hidden">
@@ -65,22 +67,21 @@ const Index = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              onClick={() => setShowAuthModal(true)}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Start Contributing
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
-
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                onClick={() => navigate("/auth/signin")}
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Start Contributing
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
 
               <Button 
                 variant="outline" 
                 size="lg"
                 className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105"
-                onClick={() => setShowQRModal(true)}
+                onClick={() => navigate("/qr")}
               >
                 <QrCode className="w-5 h-5 mr-2" />
                 Scan QR Code
@@ -148,7 +149,7 @@ const Index = () => {
               <Button 
                 size="lg"
                 className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => navigate("/auth/signin")}
               >
                 Get Started Now
                 <ChevronRight className="w-5 h-5 ml-2" />
@@ -166,6 +167,7 @@ const Index = () => {
       </section>
 
       {/* Modals */}
+      {/* 
       <QRContribution 
         isOpen={showQRModal} 
         onClose={() => setShowQRModal(false)} 
@@ -174,7 +176,8 @@ const Index = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={() => console.log('Auth successful')}
-      />
+      /> 
+      */}
     </div>
   );
 };
