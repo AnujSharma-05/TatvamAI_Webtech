@@ -9,11 +9,13 @@ import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
 import QR from './pages/QR';
 import Demo from './pages/Demo';
-import Auth from './pages/Auth';
 import Contributor from './pages/Contributor';
 import SignInPage from './pages/auth/signin/SignIn';
 import SignUpPage from './pages/auth/signup/SignUp';
 import Recording from './pages/CrowdSourceRecording';
+import ProtectedRoute from './components/ProtectedRoute';
+import Auth from './pages/Auth';
+import NotFound from './pages/NotFound'; // Optional 404
 
 function App() {
   return (
@@ -27,14 +29,43 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/products" element={<Products />} />
             <Route path="/blogs" element={<Blogs />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/qr" element={<QR />} />
             <Route path="/demo" element={<Demo />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/signin" element={<SignInPage />} />
-            <Route path="/auth/signup" element={<SignUpPage />} />
-            <Route path="/contributor" element={<Contributor />} />
-            <Route path="/qr-recording" element={<Recording />} />
+
+            {/* 🔐 Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contributor"
+              element={
+                <ProtectedRoute>
+                  <Contributor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qr-recording"
+              element={
+                <ProtectedRoute>
+                  <Recording />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 🛂 Auth Routes with Layout */}
+            <Route path="/auth" element={<Auth />}>
+              <Route path="signin" element={<SignInPage />} />
+              <Route path="signup" element={<SignUpPage />} />
+            </Route>
+
+            {/* 🔚 Catch-all 404 */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />
