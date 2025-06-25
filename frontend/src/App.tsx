@@ -13,7 +13,7 @@ import Auth from './pages/Auth';
 import Contributor from './pages/Contributor';
 import SignInPage from './pages/auth/signin/SignIn';
 import SignUpPage from './pages/auth/signup/SignUp';
-import QRRecording from './pages/QRRecording';
+import Recording from './pages/CrowdSourceRecording';
 
 function App() {
   return (
@@ -34,7 +34,7 @@ function App() {
             <Route path="/auth/signin" element={<SignInPage />} />
             <Route path="/auth/signup" element={<SignUpPage />} />
             <Route path="/contributor" element={<Contributor />} />
-            <Route path="/qr-recording" element={<QRRecording />} />
+            <Route path="/qr-recording" element={<Recording />} />
           </Routes>
         </main>
         <Footer />
