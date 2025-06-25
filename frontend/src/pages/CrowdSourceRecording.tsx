@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Configuration, OpenAIApi } from "openai";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
@@ -12,10 +11,6 @@ import {
 const domains = ['healthcare','education','fmcg','telecom','retail','technology'];
 const languages = ['English','Hindi','Tamil','Telugu','Gujarati','Punjabi','Odia','Kannada','Bengali','Malayalam'];
 
-const openai = new OpenAIApi(new Configuration({
-  apiKey: process.env.REACT_APP_OPENAI_KEY,
-}));
-
 const Recording = () => {
   const [step, setStep] = useState(1);
   const [consent, setConsent] = useState({dataUsage:false, recording:false, terms:false});
@@ -24,7 +19,6 @@ const Recording = () => {
   const [promptText, setPromptText] = useState("");
   const [generating, setGenerating] = useState(false);
 
-  // Recording state
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -79,31 +73,13 @@ const Recording = () => {
     setConsent(prev=>({ ...prev, [k]: v }));
   };
 
-  const generateParagraph = async () => {
-    setGenerating(true);
-    try {
-      const res = await openai.createCompletion({
-        model: "text-davinci-003",
-        prompt: `Generate a title and a ~500 word informative passage in ${language}, about ${domain}.`,
-        max_tokens: 900,
-        temperature: 0.7
-      });
-      setPromptText(res.data.choices[0].text?.trim() || "");
-      setStep(4);
-    } catch (err) {
-      console.error(err);
-      setPromptText("Error generating content. Please try again.");
-    }
-    setGenerating(false);
-  };
-
   const startRecording = async () => {
     setError(null);
     try {
-      const ms = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, sampleRate:44100 } });
+      const ms = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, sampleRate:16000 } });
       setStream(ms);
       const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-      const mr = new MediaRecorder(ms, { mimeType });
+      const mr = new MediaRecorder(ms, { mimeType: mime, audioBitsPerSecond: 256000 });
       const chunks:Blob[] = [];
       mr.ondataavailable = e => e.data.size && chunks.push(e.data);
       mr.onstop = () => {
@@ -185,7 +161,7 @@ const Recording = () => {
     1: "Welcome to TatvamAI",
     2: "Consent & Privacy",
     3: "Pick Domain & Language",
-    4: "Generated Speaking Prompt",
+    4: "Provide Speaking Prompt",
     5: "Recording Session",
     6: "Review & Submit",
     7: "Thank You!"
@@ -195,6 +171,7 @@ const Recording = () => {
     <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
       <div className="max-w-xl w-full space-y-8">
         <h1 className="text-3xl font-bold text-center">{getTitle()}</h1>
+
         {step === 1 && (
           <Card className="p-8 space-y-6 text-center">
             <Clock className="mx-auto w-12 h-12 text-blue-400" />
@@ -233,16 +210,20 @@ const Recording = () => {
               <option>Select Language</option>
               {languages.map(l=><option key={l}>{l}</option>)}
             </select>
-            <Button disabled={!domain||!language} onClick={generateParagraph}>
-              {generating ? <Loader2 className="animate-spin mr-2"/> : "Generate Prompt"}
-            </Button>
+            <textarea
+              className="w-full p-2 h-32 bg-slate-800 text-white rounded"
+              placeholder="Paste or write your speaking prompt here..."
+              value={promptText}
+              onChange={e => setPromptText(e.target.value)}
+            />
+            <Button disabled={!domain || !language || !promptText.trim()} onClick={() => setStep(4)}>Continue →</Button>
           </Card>
         )}
 
         {step === 4 && (
           <Card className="p-6 space-y-4 max-h-[60vh] overflow-auto">
             <pre className="whitespace-pre-wrap">{promptText}</pre>
-            <Button onClick={() => setStep(5)}>Proceed to Recording</Button>
+            <Button onClick={() => startRecording()}>Proceed to Recording</Button>
           </Card>
         )}
 
