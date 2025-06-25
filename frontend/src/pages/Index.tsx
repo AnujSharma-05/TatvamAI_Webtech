@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
 import { Mic, Globe, Users, Award, ChevronRight, Play, QrCode, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import QRContribution from "@/components/QRContribution";
-import AuthModal from "@/components/AuthModal";
+import QRContribution from "../components/QRContribution";
+import AuthModal from "../components/AuthModal";
 
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
