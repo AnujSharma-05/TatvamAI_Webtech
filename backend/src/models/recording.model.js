@@ -27,7 +27,7 @@ const recordingSchema = new mongoose.Schema({
     },
     recordedVia: {
         type: String,
-        enum: ['device', 'mobile'],
+        enum: ['device', 'web'],
         required: true,
     },
     quality: { // will be set after the model processes the recording

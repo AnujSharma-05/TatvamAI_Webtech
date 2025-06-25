@@ -8,7 +8,7 @@ import {
     getPendingRecordingsForEvaluation
 } from '../controllers/recording.controller.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
-import { upload } from '../middlewares/upload.middleware.js';
+import { upload } from '../middlewares/multer.middleware.js';
 
 const router = Router();
 

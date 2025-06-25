@@ -4,12 +4,13 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Recording } from "../models/recording.model.js";
 import { RewardToken } from "../models/rewardToken.model.js";
+import { Verification } from "../models/verification.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
-import { RewardToken } from "../models/rewardToken.model.js";
 import crypto from "crypto";
-import { sendEmail } from "../utils/sendEmail.js";
-import { sendSms } from "../utils/sendSms.js";
+import sendEmail, { generateEmailVerificationCode } from "../utils/sendEmail.js";
+import sendSms from "../utils/sendOtpSms.js";
+import { log } from "console";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -36,6 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const {
     name,
     email,
+    password,
     gender,
     dob,
     phoneNo,
@@ -67,17 +69,30 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // Check if user already exists
   const existedUser = await User.findOne({
-    // Check if user exists by email or username (returns false if not found)
-    $or: [{ email }, { name }, {phoneNo}], // or operator to check both fields
+    $or: [{ email }, { name }, { phoneNo }],
   });
 
   if (existedUser) {
     throw new ApiError(400, "User already exists with this email or username or phone number");
   }
 
-  const emailVerificationToken = crypto.randomBytes(32).toString("hex"); // generate a random token for email verification
+  // --- Check email verification ---
+  const emailVerification = await Verification.findOne({
+    type: "email",
+    value: email,
+  });
+  if (!emailVerification || emailVerification.expires < Date.now()) {
+    throw new ApiError(400, "Please verify your email before registering");
+  }
 
-  const phoneOtp = Math.floor(100000 + Math.random() * 900000).toString(); // generate a random 6 digit OTP for phone verification
+  // --- Check phone verification ---
+  const phoneVerification = await Verification.findOne({
+    type: "phone",
+    value: phoneNo,
+  });
+  if (!phoneVerification || phoneVerification.expires < Date.now()) {
+    throw new ApiError(400, "Please verify your phone number before registering");
+  }
 
   // Create a new user
   const user = await User.create({
@@ -87,22 +102,18 @@ const registerUser = asyncHandler(async (req, res) => {
     gender,
     dob,
     phoneNo,
-    phoneOtp,
-    phoneOtpExpires: new Date(Date.now() + 10 * 60 * 1000), // OTP expires in 10 minutes
-    emailVerificationToken,
     city,
     motherTongue,
     knownLanguages: knownLanguages
       ? knownLanguages.split(",").map((lang) => lang.trim())
-      : [], // split the languages by comma and trim spaces
+      : [],
+    emailVerified: true,
+    phoneNoVerified: true,
   });
 
-  await sendEmail(email, "Tatvam_AI Email Verification", `
-    Please verify your email by clicking on the link below:
-    <a href="${process.env.CLIENT_URL}/verify-email/${emailVerificationToken}">Verify Email</a>
-  `);
-
-  await sendSms(phoneNo, `Your OTP for Tatvam_AI registration is ${phoneOtp}. It is valid for 10 minutes.`);
+  // Clean up verification records
+  await Verification.deleteOne({ _id: emailVerification._id });
+  await Verification.deleteOne({ _id: phoneVerification._id });
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -117,6 +128,27 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
+const sendPhoneOtpRegister = asyncHandler(async (req, res) => {
+  const { phoneNo } = req.body;
+
+  // Check if phone is already registered
+  const existingUser = await User.findOne({ phoneNo });
+  if (existingUser) throw new ApiError(400, "Phone number already registered");
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+  // Upsert verification code
+  await Verification.findOneAndUpdate(
+    { type: "phone", value: phoneNo },
+    { code: otp, expires },
+    { upsert: true, new: true }
+  );
+
+  // await sendSms(phoneNo, `Your OTP is ${otp}`);
+  res.status(200).json(new ApiResponse(200, { otp }, "OTP sent successfully"));
+});
+
 const verifyEmail = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ emailVerificationToken: req.params.token });
@@ -126,7 +158,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
   }
 
   user.emailVerified = true; // set emailVerified to true
-  user.emailVerificationToken = undefined; // remove the emailVerificationToken
+  // user.emailVerificationToken = undefined; // remove the emailVerificationToken
 
   await user.save({ validateBeforeSave: false }); // save the user without validation
 
@@ -136,34 +168,56 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
 })
 
+const sendEmailVerificationCode = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  // Check if email is already registered
+  const existingUser = await User.findOne({ email });
+  if (existingUser) throw new ApiError(400, "Email already registered");
+
+  const code = generateEmailVerificationCode();
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+  await Verification.findOneAndUpdate(
+    { type: "email", value: email },
+    { code, expires },
+    { upsert: true, new: true }
+  );
+
+  await sendEmail(
+    email,
+    "Tatvam_AI Email Verification Code",
+    `Your Tatvam_AI email verification code is: ${code}`
+  );
+
+  res.status(200).json(new ApiResponse(200, { code }, "Verification code sent to email"));
+});
+
 const verifyPhoneOtp = asyncHandler(async (req, res) => {
-    const { phoneNo, otp } = req.body;
+  const { phoneNo, otp } = req.body;
+  const record = await Verification.findOne({ type: "phone", value: phoneNo });
 
-    const user = await User.findOne({ phoneNo });
+  if (!record || record.code !== otp || record.expires < Date.now()) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
 
-    if (!user || user.phoneOtp !== otp || user.phoneOtpExpires < Date.now()) {
-        throw new ApiError(404, "Invalid or expired OTP");
-    }
+  // Optionally: delete the record after verification
+  // await Verification.deleteOne({ _id: record._id });
 
-    user.phoneNoVerified = true; // set phoneNoVerified to true
-    user.phoneOtp = undefined; // remove the phoneOtp
-    user.phoneOtpExpires = undefined; // remove the phoneOtpExpires
-    await user.save({ validateBeforeSave: false }); // save the user without validation
-
-    return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Phone number verified successfully"));
+  res.status(200).json(new ApiResponse(200, {}, "Phone number verified successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!(username || email)) {
+    if (!email) {
         throw new ApiError(400, "Username or email is required");
     }
     
     const user = await User.findOne({
-        $or: [{ username }, { email }],
+        $or: [
+          {email: email}, // check by email
+        ],
     });
 
     if (!user) {
@@ -213,42 +267,46 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // when user login with phone number and OTP
-const sendPhoneOtp = asyncHandler(async (req, res) => {
-    const { phoneNo } = req.body;
+const sendPhoneOtpLogin = asyncHandler(async (req, res) => {
+  const { phoneNo } = req.body;
+  // console.log("Phone number for OTP login:", phoneNo);
+  
+  // Check if phone is already registered
+  const existingUser = await User.findOne({ phoneNo });
+  if (!existingUser) throw new ApiError(400, "User does not exist with this phone number");
 
-    const user = await User.findOne({ phoneNo });
-    if (!user) {
-        throw new ApiError(404, "User not found with this phone number");
-    }
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-    user.phoneOtp = otp;
-    user.phoneOtpExpires = Date.now() + 10 * 60 * 1000; // 10 min
-    await user.save();
+  // Upsert verification code
+  await Verification.findOneAndUpdate(
+    { type: "phone", value: phoneNo },
+    { code: otp, expires },
+    { upsert: true, new: true }
+  );
 
-    await sendSms(phoneNo, `Your OTP for Tatvam_AI login is ${otp}. It is valid for 10 minutes.`);
-
-    res.status(200).json(new ApiResponse(200, null, "OTP sent successfully"));
+  // await sendSms(phoneNo, `Your OTP is ${otp}`);
+  res.status(200).json(new ApiResponse(200, { otp }, "OTP sent successfully"));
 });
-
 
 const loginWithPhoneOtp = asyncHandler(async (req, res) => {
     const { phoneNo, otp } = req.body;
 
     const user = await User.findOne({ phoneNo });
-
+    // console.log(user);
+    
     if (!user) {
         throw new ApiError(404, "User does not exist with this phone number");
     }
 
-    if (!otp || user.phoneOtp !== otp || user.phoneOtpExpires < Date.now()) {
+    // Check OTP in Verification collection
+    const record = await Verification.findOne({ type: "phone", value: phoneNo });
+    if (!record || record.code !== otp || record.expires < Date.now()) {
         throw new ApiError(400, "Invalid or expired OTP");
     }
 
-    // Clear OTP fields after successful login
-    user.phoneOtp = undefined;
-    user.phoneOtpExpires = undefined;
-    await user.save();
+    // Delete the verification record after successful login
+    await Verification.deleteOne({ _id: record._id });
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
@@ -555,6 +613,19 @@ const getUserContributionStats = asyncHandler(async (req, res) => {
     );
 });
 
+const verifyEmailCode = asyncHandler(async (req, res) => {
+  const { email, code } = req.body;
+  const record = await Verification.findOne({ type: "email", value: email });
+
+  if (!record || record.code !== code || record.expires < Date.now()) {
+    throw new ApiError(400, "Invalid or expired verification code");
+  }
+
+  // await Verification.deleteOne({ _id: record._id });
+
+  res.status(200).json(new ApiResponse(200, {}, "Email verified successfully"));
+});
+
 
 
 export { 
@@ -570,6 +641,9 @@ export {
     getUserIncentives,
     verifyEmail,
     verifyPhoneOtp,
-    sendPhoneOtp,
-    loginWithPhoneOtp 
+    sendPhoneOtpLogin,
+    sendPhoneOtpRegister,
+    loginWithPhoneOtp,
+    sendEmailVerificationCode,
+    verifyEmailCode
 };

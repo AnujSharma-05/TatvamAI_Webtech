@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
+import axios from '../../../config/axios'
 
 type Step = 1 | 2
 type Gender = 'male' | 'female' | 'other'
@@ -65,11 +66,18 @@ export default function SignUpPage() {
       toast.error('Please enter phone number')
       return
     }
-    // TODO: Implement phone OTP sending via OTP provider
     try {
-      // API call to send phone OTP
+      // Await the API call and get the OTP from response
+      const res = await axios.post('/users/send-phone-otp', { phoneNo: formData.phone })
+      if (!res.data.success) {
+        throw new Error(res.data.message || 'Failed to send OTP')
+      }
       setVerificationStatus(prev => ({ ...prev, phone: 'sent' }))
       toast.success('OTP sent to your phone!')
+      // Show OTP in alert if present in response
+      if (res.data && res.data.otp) {
+        window.alert(`Your phone OTP is: ${res.data.otp}`)
+      }
     } catch (error) {
       toast.error('Failed to send OTP')
     }
@@ -80,9 +88,9 @@ export default function SignUpPage() {
       toast.error('Please enter email address')
       return
     }
-    // TODO: Implement email OTP sending via nodemailer
     try {
       // API call to send email verification
+      axios.post('/users/send-verification-code', { email: formData.email })
       setVerificationStatus(prev => ({ ...prev, email: 'sent' }))
       toast.success('Verification email sent!')
     } catch (error) {
@@ -98,6 +106,13 @@ export default function SignUpPage() {
     // TODO: Implement phone OTP verification
     try {
       // API call to verify phone OTP
+      const response = await axios.post('/users/verify-phone-otp', {
+        phoneNo: formData.phone,
+        otp: phoneOtp,
+      })
+      if (!response.data.success) {
+        throw new Error('Invalid OTP')
+      }
       setVerificationStatus(prev => ({ ...prev, phone: 'verified' }))
       toast.success('Phone number verified!')
     } catch (error) {
@@ -110,13 +125,21 @@ export default function SignUpPage() {
       toast.error('Please enter verification code')
       return
     }
-    // TODO: Implement email OTP verification
     try {
-      // API call to verify email
+      const response = await axios.post('/users/verify-email-code', {
+        email: formData.email,
+        code: emailOtp,
+      })
+      // Check for HTTP 200 or message
+      if (response.status !== 200) {
+        throw new Error('Invalid verification code')
+      }
       setVerificationStatus(prev => ({ ...prev, email: 'verified' }))
       toast.success('Email verified!')
-    } catch (error) {
-      toast.error('Invalid verification code')
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || 'Invalid verification code'
+      )
     }
   }
 
@@ -202,10 +225,17 @@ export default function SignUpPage() {
     // TODO: Implement form submission
     try {
       // API call to create account
+      await axios.post('/users/register', {
+        ...formData,
+        phoneNo: formData.phone, // map phone to phoneNo
+        knownLanguages: formData.knownLanguages.join(','), // convert array to string
+      })
       toast.success('Account created successfully!')
       navigate('/dashboard')
     } catch (error) {
-      toast.error('Failed to create account')
+      toast.error(
+        error?.response?.data?.message || 'Failed to create account'
+      )
     }
   }
 
