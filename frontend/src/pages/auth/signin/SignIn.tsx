@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast' 
 import { useNavigate, Link } from 'react-router-dom'
+import axios from "../../../config/axios"
 
 type AuthMethod = 'phone' | 'email'
 
@@ -11,19 +12,80 @@ export default function SignInPage() {
   const [contact, setContact] = useState('')
   const [otp, setOtp] = useState('')
   const [isOtpSent, setIsOtpSent] = useState(false)
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
     // TODO: Implement OTP sending
+    try {
+      const res = await axios.post('/users/send-phone-otp-login', { phoneNo: contact })
+      if (res.data.success) {
+        toast.success('OTP sent successfully!')
+      } else {
+        throw new Error('Failed to send OTP')
+      }
+    } catch (err: any) {
+      if (err.response?.data?.message) {
+        toast.error(err.response.data.message)
+      } else {
+        toast.error('Failed to send OTP')
+      }
+    } finally {
+      setLoading(false)
+    }
     setIsOtpSent(true)
     toast.success('OTP sent successfully!')
   }
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
     // TODO: Implement OTP verification
+    try {
+      const res = await axios.post('/users/login-phone-otp', {
+        phoneNo: contact,
+        otp,
+      }, {withCredentials: true})
+      if (res.data.success) {
+        toast.success('OTP verified successfully!')
+      } else {
+        throw new Error('OTP verification failed')
+      }
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        toast.error('Please verify your email and phone number before logging in')
+      }
+    } finally {
+      setLoading(false)
+    }
     toast.success('Signed in successfully!')
     navigate('/dashboard')
+  }
+
+  // Email login handler
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await axios.post('/users/login', {
+        email: contact,
+        password,
+      }, { withCredentials: true })
+      toast.success('Signed in successfully!')
+      navigate('/dashboard')
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        toast.error('Please verify your email and phone number before logging in')
+      } else if (err.response?.data?.message) {
+        toast.error(err.response.data.message)
+      } else {
+        toast.error('Login failed')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -70,74 +132,108 @@ export default function SignInPage() {
               </button>
             </div>
 
-            {!isOtpSent ? (
-              <form onSubmit={handleSendOtp} className="space-y-6">
+            {/* Email login with password */}
+            {authMethod === 'email' ? (
+              <form onSubmit={handleEmailLogin} className="space-y-6">
                 <div>
-                  <label
-                    htmlFor="contact"
-                    className="block text-sm font-medium mb-2"
-                  >
-                    {authMethod === 'phone' ? 'Phone Number' : 'Email Address'}
+                  <label htmlFor="contact" className="block text-sm font-medium mb-2">
+                    Email Address
                   </label>
                   <input
-                    type={authMethod === 'phone' ? 'tel' : 'email'}
+                    type="email"
                     id="contact"
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    placeholder={
-                      authMethod === 'phone'
-                        ? 'Enter your phone number'
-                        : 'Enter your email'
-                    }
+                    placeholder="Enter your email"
                     required
                     className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
                   />
                 </div>
-
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
                 <motion.button
                   type="submit"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  disabled={loading}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
                 >
-                  Send OTP
+                  {loading ? 'Signing in...' : 'Sign In'}
                 </motion.button>
               </form>
             ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-6">
-                <div>
-                  <label htmlFor="otp" className="block text-sm font-medium mb-2">
-                    Enter OTP
-                  </label>
-                  <input
-                    type="text"
-                    id="otp"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter the OTP sent to you"
-                    required
-                    maxLength={6}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-center text-2xl tracking-wider"
-                  />
-                </div>
-
-                <motion.button
-                  type="submit"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-                >
-                  Verify OTP
-                </motion.button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsOtpSent(false)}
-                  className="w-full text-gray-400 hover:text-white text-sm"
-                >
-                  Change {authMethod === 'phone' ? 'phone number' : 'email'}
-                </button>
-              </form>
+              // Phone OTP login (existing)
+              !isOtpSent ? (
+                <form onSubmit={handleSendOtp} className="space-y-6">
+                  <div>
+                    <label htmlFor="contact" className="block text-sm font-medium mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="contact"
+                      value={contact}
+                      onChange={(e) => setContact(e.target.value)}
+                      placeholder="Enter your phone number"
+                      required
+                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                  >
+                    Send OTP
+                  </motion.button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOtp} className="space-y-6">
+                  <div>
+                    <label htmlFor="otp" className="block text-sm font-medium mb-2">
+                      Enter OTP
+                    </label>
+                    <input
+                      type="text"
+                      id="otp"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="Enter the OTP sent to you"
+                      required
+                      maxLength={6}
+                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-center text-2xl tracking-wider"
+                    />
+                  </div>
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                  >
+                    Verify OTP
+                  </motion.button>
+                  <button
+                    type="button"
+                    onClick={() => setIsOtpSent(false)}
+                    className="w-full text-gray-400 hover:text-white text-sm"
+                  >
+                    Change phone number
+                  </button>
+                </form>
+              )
             )}
           </motion.div>
 
@@ -156,4 +252,4 @@ export default function SignInPage() {
       </div>
     </main>
   )
-} 
+}

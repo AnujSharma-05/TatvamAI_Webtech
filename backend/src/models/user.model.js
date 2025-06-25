@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
@@ -23,7 +23,6 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      select: false, // this will not return the password field when fetching user data
     },
     role: {
       type: String,
@@ -32,7 +31,6 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: Male | Female | Other,
       required: true,
     },
     dob: {
@@ -72,9 +70,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // email verification status
     },
-    emailVerificationToken: {
+    emailVerificationCode: {
       type: String,
-      select: false, // this will not return the emailVerificationToken field when fetching user data
+    },
+    emailVerificationCodeExpires: {
+      type: Date,
     },
     phoneNoVerified: {
       type: Boolean,

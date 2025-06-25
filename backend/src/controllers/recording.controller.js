@@ -3,12 +3,11 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Recording } from "../models/recording.model.js";
-import { RewardToken } from "../models/rewardToken.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
-import { RewardToken } from "../models/rewardToken.model.js";
+// import { RewardToken } from "../models/rewardToken.model.js";
 
 import axios from "axios";
-import { uploadFileToS3 } from "../utils/aws_s3.js";
+import uploadFileToS3 from "../utils/aws_s3.js";
 
 const uploadRecording = asyncHandler(async (req, res) => {
   const { language, dialect, domain, recordedVia, duration } = req.body;

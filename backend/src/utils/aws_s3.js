@@ -9,10 +9,9 @@ const s3 = new AWS.S3({
 const uploadFileToS3 = async (file, key) => {
   const params = {
     Bucket: process.env.AWS_S3_BUCKET,
-    Key: key, // e.g., 'audio/filename.wav'
+    Key: `raw-audio/${key}`, // Save in 'raw-audio/' folder
     Body: file.buffer,
     ContentType: file.mimetype,
-    ACL: 'public-read', // or 'private'
   };
 
   return s3.upload(params).promise();
