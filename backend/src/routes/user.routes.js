@@ -10,10 +10,12 @@ import {
     updateAccountDetails,
     getUserContributionStats,
     getUserIncentives,
-    verifyEmail,
-    sendPhoneOtp,
+    sendPhoneOtpLogin,
+    sendPhoneOtpRegister,
     verifyPhoneOtp,
-    loginWithPhoneOtp
+    loginWithPhoneOtp,
+    sendEmailVerificationCode,
+    verifyEmailCode
 } from '../controllers/user.controller.js';
 
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -36,9 +38,17 @@ router.route('/contribution-stats').get(verifyJWT, getUserContributionStats)
 router.route('/incentives').get(verifyJWT, getUserIncentives)
 
 // Email/Phone OTP verification routes
-router.route('/verify-email/:token').get(verifyEmail); // e.g., /verify-email/abc123
-router.route('/send-phone-otp').post(sendPhoneOtp);
+// router.route('/verify-email/:token').get(verifyEmail); // e.g., /verify-email/abc123
+
+router.route('/send-phone-otp-register').post(sendPhoneOtpRegister);
 router.route('/verify-phone-otp').post(verifyPhoneOtp);
+
+
+router.route('/send-phone-otp-login').post(sendPhoneOtpLogin);
 router.route('/login-phone-otp').post(loginWithPhoneOtp);
+
+
+router.route('/send-verification-code').post(sendEmailVerificationCode); 
+router.route('/verify-email-code').post(verifyEmailCode);
 
 export default router;
