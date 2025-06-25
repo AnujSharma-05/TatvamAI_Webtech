@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { toast } from 'react-hot-toast' 
 import { useNavigate, Link } from 'react-router-dom'
 import axios from "../../../config/axios"
+import { useAuth } from "../../AuthContext"; // adjust path if needed
+
 
 type AuthMethod = 'phone' | 'email'
 
@@ -14,6 +16,7 @@ export default function SignInPage() {
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const { setUser } = useAuth();
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,53 +43,59 @@ export default function SignInPage() {
   }
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    // TODO: Implement OTP verification
+    e.preventDefault();
+    setLoading(true);
     try {
       const res = await axios.post('/users/login-phone-otp', {
         phoneNo: contact,
         otp,
-      }, {withCredentials: true})
-      if (res.data.success) {
-        toast.success('OTP verified successfully!')
-      } else {
-        throw new Error('OTP verification failed')
-      }
+      }, { withCredentials: true });
+  
+      // ✅ Set user in context
+      setUser(res.data.data.user); // 🔁 match your API
+  
+      toast.success('Signed in successfully!');
+      navigate('/dashboard');
     } catch (err: any) {
       if (err.response?.status === 403) {
-        toast.error('Please verify your email and phone number before logging in')
+        toast.error('Please verify your email and phone number before logging in');
+      } else {
+        toast.error('OTP verification failed');
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-    toast.success('Signed in successfully!')
-    navigate('/dashboard')
-  }
+  };
+  
 
   // Email login handler
   const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       const res = await axios.post('/users/login', {
         email: contact,
         password,
-      }, { withCredentials: true })
-      toast.success('Signed in successfully!')
-      navigate('/dashboard')
+      }, { withCredentials: true });
+  
+      // ✅ Set user in context
+      setUser(res.data.data.user); // 🔁 adjust according to your backend's response
+  
+      toast.success('Signed in successfully!');
+      navigate('/dashboard');
     } catch (err: any) {
       if (err.response?.status === 403) {
-        toast.error('Please verify your email and phone number before logging in')
+        toast.error('Please verify your email and phone number before logging in');
       } else if (err.response?.data?.message) {
-        toast.error(err.response.data.message)
+        toast.error(err.response.data.message);
       } else {
-        toast.error('Login failed')
+        toast.error('Login failed');
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+  
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white py-20">

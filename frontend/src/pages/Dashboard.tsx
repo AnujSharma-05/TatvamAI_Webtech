@@ -1,6 +1,10 @@
 import { MotionCard } from '../components/MotionProvider';
+import { useNavigate } from 'react-router-dom';
+
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const recentRecordings = [
     {
       id: 1,
@@ -117,9 +121,13 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
             <p className="text-slate-300">Welcome back! Here's your contribution summary.</p>
           </div>
-          <button className="mt-4 lg:mt-0 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105">
+          <button
+            onClick={() => navigate('/qr-recording')}
+            className="mt-4 lg:mt-0 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
+          >
             New Recording
           </button>
+
         </div>
 
         {/* Stats Grid */}
