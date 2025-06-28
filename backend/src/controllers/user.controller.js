@@ -366,6 +366,28 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { loggedInUser }, "User logged out"));
 });
 
+const deleteUserAccount = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+
+    if (!userId || !isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid user ID");
+    }
+
+    // Delete user and associated recordings
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+        throw new ApiError(404, "User not found");
+    }
+    // await Recording.deleteMany({ userId: new mongoose.Types.ObjectId(userId) });
+    // await RewardToken.deleteMany({ userId: new mongoose.Types.ObjectId(userId) });
+    // await Verification.deleteMany({ userId: new mongoose.Types.ObjectId(userId) });
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "User account deleted successfully"));
+});
+
+
 const getUserRecordings = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
 
@@ -645,5 +667,6 @@ export {
     sendPhoneOtpRegister,
     loginWithPhoneOtp,
     sendEmailVerificationCode,
-    verifyEmailCode
+    verifyEmailCode,
+    deleteUserAccount
 };

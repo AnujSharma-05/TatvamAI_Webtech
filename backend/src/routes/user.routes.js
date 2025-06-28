@@ -15,7 +15,8 @@ import {
     verifyPhoneOtp,
     loginWithPhoneOtp,
     sendEmailVerificationCode,
-    verifyEmailCode
+    verifyEmailCode,
+    deleteUserAccount
 } from '../controllers/user.controller.js';
 
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -36,6 +37,7 @@ router.route('/change-password').post(verifyJWT, changeCurrentPassword)
 router.route('/update-account').put(verifyJWT, updateAccountDetails)
 router.route('/contribution-stats').get(verifyJWT, getUserContributionStats)
 router.route('/incentives').get(verifyJWT, getUserIncentives)
+router.route('/delete-account').delete(verifyJWT, deleteUserAccount); 
 
 // Email/Phone OTP verification routes
 // router.route('/verify-email/:token').get(verifyEmail); // e.g., /verify-email/abc123

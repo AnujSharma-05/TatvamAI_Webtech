@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaCoins } from "react-icons/fa"; // Add this import
+
+import { useAuth } from "@/pages/AuthContext"; // adjust path as needed
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user } = useAuth(); // user: { name, tokens }
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,29 +87,62 @@ export const Navbar = () => {
             </Link>
           </div>
 
-          {/* CTA Buttons */}
+          {/* Desktop User Info / CTA Buttons */}
           <div className="hidden lg:flex items-center space-x-6 ml-8">
-            <Link
-              to="/auth/signin"
-              className="text-white hover:text-blue-400 font-medium transition-colors duration-300"
-            >
-              Sign In
-            </Link>
-            <Link
-              to="/auth/signup"
-              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              Get Started
-            </Link>
+            {!user ? (
+              <>
+                <Link
+                  to="/auth/signin"
+                  className="text-white hover:text-blue-400 font-medium transition-colors duration-300"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/auth/signup"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  Get Started
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="text-white font-semibold hover:text-blue-400 transition-colors duration-300"
+                >
+                  {user.name}
+                </button>
+                <div className="flex items-center text-yellow-400 font-bold">
+                  <FaCoins className="mr-1" />
+                  <span>{0}</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-3 text-white hover:text-blue-400 rounded-xl hover:bg-slate-800 transition-all duration-200 ml-auto"
-          >
-            {!isMobileMenuOpen ? 'Menu' : 'Close'}
-          </button>
+          {/* Mobile User Info / Menu Button */}
+          <div className="lg:hidden flex items-center space-x-3 ml-auto">
+            {user && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="text-white font-medium hover:text-blue-400 transition-colors duration-300 text-sm truncate max-w-[120px]"
+                >
+                  {user.name}
+                </button>
+                <div className="flex items-center text-yellow-400 font-bold text-sm">
+                  <FaCoins className="mr-1" />
+                  <span>{0}</span>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-3 text-white hover:text-blue-400 rounded-xl hover:bg-slate-800 transition-all duration-200"
+            >
+              {!isMobileMenuOpen ? 'Menu' : 'Close'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -121,15 +159,51 @@ export const Navbar = () => {
             </Link>
             <div>
               <p className="font-semibold text-sm text-white mb-1">Products</p>
-              <Link to="/products" className="block text-sm text-white hover:text-blue-400 py-1">Voice Datasets</Link>
-              <Link to="/demo" className="block text-sm text-white hover:text-blue-400 py-1">Live Demo</Link>
-              <Link to="/qr" className="block text-sm text-white hover:text-blue-400 py-1">QR Scanner</Link>
+              <Link 
+                to="/products" 
+                className="block text-sm text-white hover:text-blue-400 py-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Voice Datasets
+              </Link>
+              <Link 
+                to="/demo" 
+                className="block text-sm text-white hover:text-blue-400 py-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Live Demo
+              </Link>
+              <Link 
+                to="/qr" 
+                className="block text-sm text-white hover:text-blue-400 py-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                QR Scanner
+              </Link>
             </div>
             <div>
               <p className="font-semibold text-sm text-white mb-1">Resources</p>
-              <Link to="/blogs" className="block text-sm text-white hover:text-blue-400 py-1">Blog</Link>
-              <Link to="/contributor" className="block text-sm text-white hover:text-blue-400 py-1">Become a Contributor</Link>
-              <Link to="/dashboard" className="block text-sm text-white hover:text-blue-400 py-1">Dashboard</Link>
+              <Link 
+                to="/blogs" 
+                className="block text-sm text-white hover:text-blue-400 py-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Blog
+              </Link>
+              <Link 
+                to="/contributor" 
+                className="block text-sm text-white hover:text-blue-400 py-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Become a Contributor
+              </Link>
+              <Link 
+                to="/dashboard" 
+                className="block text-sm text-white hover:text-blue-400 py-1"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
             </div>
             <Link
               to="/contact"
@@ -138,21 +212,40 @@ export const Navbar = () => {
             >
               Contact
             </Link>
+            
+            {/* Mobile Auth Section */}
             <div className="pt-6 border-t border-slate-700 space-y-6">
-              <Link
-                to="/auth/signin"
-                className="block text-white hover:text-blue-400 font-medium py-3 text-lg transition-colors duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/auth/signup"
-                className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Get Started
-              </Link>
+              {!user ? (
+                <>
+                  <Link
+                    to="/auth/signin"
+                    className="block text-white hover:text-blue-400 font-medium py-3 text-lg transition-colors duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/auth/signup"
+                    className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-slate-300 text-sm">Logged in as:</div>
+                  <button
+                    onClick={() => {
+                      navigate('/profile');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors duration-300"
+                  >
+                    {user.name}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
