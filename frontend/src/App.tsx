@@ -16,6 +16,7 @@ import Recording from './pages/CrowdSourceRecording';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
 import NotFound from './pages/NotFound'; // Optional 404
+import Profile from './pages/Profile'; // Create this page if not present
 
 function App() {
   return (
@@ -54,6 +55,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Recording />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />
