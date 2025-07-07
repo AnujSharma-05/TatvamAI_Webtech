@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
@@ -12,30 +12,30 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    phoneNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
     },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user", // default role is user
     },
-    password: {
-      type: String,
-      required: true,
-      select: false, // this will not return the password field when fetching user data
-    },
     gender: {
       type: String,
-      enum: Male | Female | Other,
       required: true,
     },
     dob: {
       type: Date,
       required: true,
-    },
-    phoneNo: {
-      type: String,
-      required: true,
-      unique: true,
     },
     city: {
       type: String,
@@ -66,6 +66,26 @@ const userSchema = new mongoose.Schema(
         ref: "RewardToken", // reference to the RewardToken model
       },
     ],
+    emailVerified: {
+      type: Boolean,
+      default: false, // email verification status
+    },
+    emailVerificationCode: {
+      type: String,
+    },
+    emailVerificationCodeExpires: {
+      type: Date,
+    },
+    phoneNoVerified: {
+      type: Boolean,
+      default: false, // phone number verification status
+    },
+    phoneOtp: {
+      type: String,
+    },
+    phoneOtpExpires: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

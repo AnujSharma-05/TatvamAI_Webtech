@@ -1,12 +1,13 @@
-import axios from "axios";
+import axios from 'axios';
 
+const base = import.meta.env.VITE_URL;
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3000",
-  withCredentials: true, // for cookies
-  timeout: 12000, // 12 seconds timeout
+baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
+  withCredentials: true,
+  timeout: 120000
 });
 
-// Add a request interceptor to log requests
+
 instance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');

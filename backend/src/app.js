@@ -7,12 +7,14 @@ const app = express();
 
 // Middlewares setup
 app.use(cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:8080", process.env.VITE_URL],
     credentials: true,
 }))
 
+// app.use(cors()); // Enable CORS for all origins
+
 app.use(express.json({limit: '16kb'})); // Limit request body size to 16kb (allowing json requests)
-app.use(express.urlencoded({ extended: true, limit: '16kb' })); // Parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(express.static('public')); // Serve static files from the 'public' directory
 app.use(cookieParser()); // Parse cookies from request headers
 

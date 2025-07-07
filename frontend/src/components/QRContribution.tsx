@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Checkbox } from "./ui/checkbox";
-import { Mic, Clock, Shield, FileText, CheckCircle, X } from "lucide-react";
+import { Mic, Clock, Shield, FileText, CheckCircle, X, Play, Pause, Square, RotateCcw } from "lucide-react";
 
 interface QRContributionProps {
   isOpen: boolean;
@@ -18,16 +18,18 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
     terms: false
   });
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRecording && recordingTime < 120) {
+    if (isRecording && !isPaused && recordingTime < 120) {
       interval = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -35,7 +37,7 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
       stopRecording();
     }
     return () => clearInterval(interval);
-  }, [isRecording, recordingTime]);
+  }, [isRecording, isPaused, recordingTime]);
 
   const handleConsentChange = (key: keyof typeof consent, value: boolean) => {
     setConsent(prev => ({ ...prev, [key]: value }));
@@ -44,15 +46,32 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
   const canProceed = Object.values(consent).every(Boolean);
 
   const startRecording = async () => {
-    setIsRecording(true);
-    setRecordingTime(0);
-    setStep(3);
-    setAudioBlob(null);
-    setAudioUrl(null);
-
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      // Request microphone permission with better error handling
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100,
+        }
+      });
+      
+      setStream(mediaStream);
+      
+      // Check for supported MIME types
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = ''; // Let browser choose
+          }
+        }
+      }
+      
+      const options = mimeType ? { mimeType } : {};
+      const recorder = new MediaRecorder(mediaStream, options);
       setMediaRecorder(recorder);
       
       const chunks: Blob[] = [];
@@ -61,32 +80,87 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunks.push(event.data);
+          setAudioChunks([...chunks, event.data]);
         }
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
         setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setStep(4); // Move to review step
         
-        // Stop all tracks to release microphone
-        stream.getTracks().forEach(track => track.stop());
+        // Log for debugging
+        console.log('Recording stopped:', {
+          size: blob.size,
+          type: blob.type,
+          duration: recordingTime
+        });
       };
 
-      recorder.start();
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        alert('Recording error occurred. Please try again.');
+      };
+
+      // Start recording with timeslice for better data handling
+      recorder.start(100); // Collect data every 100ms
+      setIsRecording(true);
+      setIsPaused(false);
+      setRecordingTime(0);
+      setStep(3);
+      setAudioBlob(null);
+      setAudioUrl(null);
+      
+      console.log('Recording started with MIME type:', mimeType || 'default');
+      
     } catch (err) {
-      alert("Microphone access denied or not available.");
-      setIsRecording(false);
-      setStep(1);
+      console.error('Microphone access error:', err);
+      
+      let errorMessage = "Unable to access microphone. ";
+      
+      if (err instanceof Error) {
+        if (err.name === 'NotAllowedError') {
+          errorMessage += "Please allow microphone access and try again.";
+        } else if (err.name === 'NotFoundError') {
+          errorMessage += "No microphone found. Please connect a microphone.";
+        } else if (err.name === 'NotSupportedError') {
+          errorMessage += "Recording not supported in this browser.";
+        } else {
+          errorMessage += err.message;
+        }
+      }
+      
+      alert(errorMessage);
+      setStep(2);
+    }
+  };
+
+  const pauseRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.pause();
+      setIsPaused(true);
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === "paused") {
+      mediaRecorder.resume();
+      setIsPaused(false);
     }
   };
 
   const stopRecording = () => {
-    setIsRecording(false);
-    // Don't set isComplete here - let the audio processing happen first
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
     }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsRecording(false);
+    setIsPaused(false);
   };
 
   const formatTime = (seconds: number) => {
@@ -99,18 +173,30 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
     setStep(1);
     setConsent({ dataUsage: false, recording: false, terms: false });
     setIsRecording(false);
+    setIsPaused(false);
     setRecordingTime(0);
     setIsComplete(false);
     setAudioBlob(null);
     setAudioUrl(null);
     setMediaRecorder(null);
     setAudioChunks([]);
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
   };
 
   const handleClose = () => {
     // Clean up audio URL to prevent memory leaks
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
+    }
+    // Stop any active recording
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
     resetFlow();
     onClose();
@@ -122,24 +208,30 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
     // Placeholder: Replace with your API call to upload audioBlob
     // Example:
     // const formData = new FormData();
-    // formData.append('audio', audioBlob, `recording-${Date.now()}.wav`);
+    // formData.append('audio', audioBlob, `recording-${Date.now()}.webm`);
     // await fetch('/api/your-upload-endpoint', { method: 'POST', body: formData });
     
     alert("Upload API call goes here!");
-    setIsComplete(true);
+    setStep(5);
   };
 
   const handleRecordAgain = () => {
-    // Clean up current audio
+    // Clean up current audio and stream
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
     }
     setAudioBlob(null);
     setAudioUrl(null);
     setRecordingTime(0);
     setIsRecording(false);
+    setIsPaused(false);
     setMediaRecorder(null);
     setAudioChunks([]);
+    setStep(2); // Go back to consent step
   };
 
   // Cleanup on unmount
@@ -148,11 +240,14 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
       if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.stop();
       }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [mediaRecorder, audioUrl]);
+  }, [mediaRecorder, stream, audioUrl]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -273,34 +368,61 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
         {/* Step 3: Recording */}
         {step === 3 && (
           <div className="space-y-6 animate-fade-in text-center">
-            <div className="w-24 h-24 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${
+              isPaused 
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
+                : 'bg-gradient-to-r from-red-500 to-red-600 animate-pulse'
+            }`}>
               <Mic className="w-12 h-12 text-white" />
             </div>
 
             <div>
               <h3 className="text-2xl font-bold text-primary mb-2">
-                Recording in Progress
+                {isPaused ? 'Recording Paused' : 'Recording in Progress'}
               </h3>
               <p className="text-4xl font-mono text-accent mb-4">
                 {formatTime(recordingTime)}
               </p>
               <p className="text-primary/70">
-                Please speak clearly and naturally. You can stop anytime.
+                {isPaused 
+                  ? 'Recording is paused. You can resume or stop the recording.'
+                  : 'Please speak clearly and naturally. You can pause or stop anytime.'
+                }
               </p>
             </div>
 
             <div className="flex justify-center space-x-4">
+              {!isPaused ? (
+                <Button
+                  onClick={pauseRecording}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-full flex items-center space-x-2"
+                >
+                  <Pause className="w-4 h-4" />
+                  <span>Pause</span>
+                </Button>
+              ) : (
+                <Button
+                  onClick={resumeRecording}
+                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full flex items-center space-x-2"
+                >
+                  <Play className="w-4 h-4" />
+                  <span>Resume</span>
+                </Button>
+              )}
+              
               <Button
                 onClick={stopRecording}
-                className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-full"
+                className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-full flex items-center space-x-2"
               >
-                Stop Recording
+                <Square className="w-4 h-4" />
+                <span>Stop</span>
               </Button>
             </div>
 
             <div className="text-sm text-primary/60">
               <p>Maximum recording time: 2 minutes</p>
               <p>Recording will automatically stop when time is up</p>
+              {isPaused && <p className="text-yellow-600 font-medium">Timer is paused</p>}
             </div>
           </div>
         )}
@@ -316,41 +438,47 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
                 Recording Complete!
               </h3>
               <p className="text-primary/70">
-                Review your recording and upload when ready
+                Review your recording and choose what to do next
               </p>
             </div>
 
             {audioUrl && (
-              <Card className="p-4">
+              <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <FileText className="w-4 h-4 text-primary" />
+                    <FileText className="w-5 h-5 text-primary" />
                     <span className="font-medium text-primary">Your Recording</span>
                   </div>
-                  <span className="text-sm text-primary/60">
+                  <span className="text-sm text-primary/60 bg-white px-2 py-1 rounded-full">
                     {formatTime(recordingTime)}
                   </span>
                 </div>
                 
-                <audio controls className="w-full" src={audioUrl}>
+                <audio controls className="w-full mb-4" src={audioUrl}>
                   Your browser does not support the audio element.
                 </audio>
+                
+                <p className="text-sm text-primary/70 text-center">
+                  🎧 Listen to your recording above to review the quality
+                </p>
               </Card>
             )}
 
-            <div className="flex justify-center space-x-4">
+            <div className="flex justify-center space-x-4 flex-wrap gap-2">
               <Button
                 variant="outline"
                 onClick={handleRecordAgain}
-                className="px-6 py-3 rounded-full"
+                className="px-6 py-3 rounded-full flex items-center space-x-2"
               >
-                Record Again
+                <RotateCcw className="w-4 h-4" />
+                <span>Record Again</span>
               </Button>
               <Button
                 onClick={handleUpload}
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white px-8 py-3 rounded-full"
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary-800 hover:to-accent-600 text-white px-8 py-3 rounded-full flex items-center space-x-2"
               >
-                Upload Recording
+                <CheckCircle className="w-4 h-4" />
+                <span>Submit Recording</span>
               </Button>
             </div>
           </div>
@@ -370,10 +498,10 @@ const QRContribution = ({ isOpen, onClose }: QRContributionProps) => {
               </p>
             </div>
 
-            <Card className="p-4 glass border-0">
+            <Card className="p-4 glass border-0 bg-gradient-to-r from-green-50 to-blue-50">
               <div className="flex items-center justify-between">
                 <span className="text-primary/70">Contribution Points</span>
-                <span className="font-bold text-accent">+10 Points</span>
+                <span className="font-bold text-accent text-xl">+10 Points</span>
               </div>
             </Card>
 

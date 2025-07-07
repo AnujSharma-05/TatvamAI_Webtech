@@ -8,32 +8,11 @@ const QR = () => {
   const [qrData, setQrData] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
-  const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const navigate = useNavigate();
-
-  // Check camera permission status
-  useEffect(() => {
-    const checkPermission = async () => {
-      try {
-        if ('permissions' in navigator) {
-          const permission = await navigator.permissions.query({ name: 'camera' as PermissionName });
-          setCameraPermission(permission.state);
-          
-          permission.onchange = () => {
-            setCameraPermission(permission.state);
-          };
-        }
-      } catch (err) {
-        console.log('Permission API not supported, will check on getUserMedia');
-      }
-    };
-    
-    checkPermission();
-  }, []);
 
   // Enhanced cleanup function
   const forceStopScanning = useCallback(() => {
@@ -155,134 +134,37 @@ const QR = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isScanning, forceStopScanning]);
 
-  // Enhanced camera initialization with multiple fallback strategies
   const startScanning = async () => {
     try {
       setError('');
-      setIsScanning(true);
       
-      // Strategy 1: Try rear camera with high quality
       const constraints = {
         video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          aspectRatio: { ideal: 16/9 }
+          facingMode: { ideal: 'environment' },  // Tries rear camera first
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       };
-
-      let stream: MediaStream;
-      
-      try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (err) {
-        console.log('Rear camera failed, trying front camera...');
-        
-        // Strategy 2: Try front camera
-        const frontCameraConstraints = {
-          video: {
-            facingMode: { ideal: 'user' },
-            width: { ideal: 1280, min: 640 },
-            height: { ideal: 720, min: 480 }
-          }
-        };
-        
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(frontCameraConstraints);
-        } catch (err2) {
-          console.log('Front camera failed, trying basic constraints...');
-          
-          // Strategy 3: Try basic video constraints
-          const basicConstraints = {
-            video: true
-          };
-          
-          try {
-            stream = await navigator.mediaDevices.getUserMedia(basicConstraints);
-          } catch (err3) {
-            // Strategy 4: Try with audio (some devices require this)
-            const audioVideoConstraints = {
-              audio: false,
-              video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 }
-              }
-            };
-            
-            stream = await navigator.mediaDevices.getUserMedia(audioVideoConstraints);
-          }
-        }
-      }
-
+  
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      setCameraPermission('granted');
-
+  
       const video = videoRef.current;
       if (video) {
         video.srcObject = stream;
-        
-        // Wait for video to be ready
-        await new Promise((resolve, reject) => {
-          video.onloadedmetadata = () => {
-            console.log('Video metadata loaded:', {
-              videoWidth: video.videoWidth,
-              videoHeight: video.videoHeight,
-              readyState: video.readyState
-            });
-            resolve(true);
-          };
-          
-          video.onerror = (e) => {
-            console.error('Video error:', e);
-            reject(new Error('Video loading failed'));
-          };
-          
-          // Timeout after 10 seconds
-          setTimeout(() => {
-            reject(new Error('Video loading timeout'));
-          }, 10000);
-        });
-
-        // Start playing the video
-        try {
-          await video.play();
-          console.log('Video playback started successfully');
-        } catch (playError) {
-          console.error('Error playing video:', playError);
-          setError('Failed to start video playback. Please try again.');
-          forceStopScanning();
-          return;
-        }
+        video.onloadedmetadata = () => {
+          video.play().catch(err => {
+            console.error('Error playing video:', err);
+            setError('Failed to start video playback');
+          });
+        };
       }
-
+  
+      setIsScanning(true);
     } catch (err) {
       console.error('Error accessing camera:', err);
-      setIsScanning(false);
-      
-      let errorMessage = 'Could not access camera. ';
-      
-      if (err instanceof Error) {
-        if (err.name === 'NotAllowedError') {
-          errorMessage += 'Camera access was denied. Please allow camera access in your browser settings and try again.';
-          setCameraPermission('denied');
-        } else if (err.name === 'NotFoundError') {
-          errorMessage += 'No camera found. Please connect a camera and try again.';
-        } else if (err.name === 'NotSupportedError') {
-          errorMessage += 'Camera not supported in this browser. Please try a different browser.';
-        } else if (err.name === 'NotReadableError') {
-          errorMessage += 'Camera is already in use by another application. Please close other camera apps and try again.';
-        } else if (err.name === 'OverconstrainedError') {
-          errorMessage += 'Camera does not meet the required specifications. Please try a different camera.';
-        } else if (err.name === 'TypeError') {
-          errorMessage += 'Invalid camera constraints. Please refresh the page and try again.';
-        } else {
-          errorMessage += err.message;
-        }
-      } else {
-        errorMessage += 'Unknown error occurred. Please try again.';
-      }
-      
-      setError(errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Could not access camera: ${errorMessage}`);
     }
   };
 
@@ -296,12 +178,6 @@ const QR = () => {
       forceStopScanning();
     }
     navigate('/qr-recording');
-  };
-
-  // Handle camera permission reset
-  const handleResetPermission = () => {
-    setError('');
-    setCameraPermission('unknown');
   };
 
   return (
@@ -322,7 +198,6 @@ const QR = () => {
                     className="w-full h-full object-cover"
                     playsInline
                     muted
-                    autoPlay
                     onError={(e) => {
                       console.error('Video error:', e);
                       setError('Video playback error');
@@ -339,38 +214,23 @@ const QR = () => {
                 </>
               ) : (
                 <div className="flex items-center justify-center h-full text-slate-400">
-                  {cameraPermission === 'denied' ? (
-                    <div className="text-center">
-                      <p className="mb-2">Camera access denied</p>
-                      <p className="text-sm">Please allow camera access in your browser settings</p>
-                    </div>
-                  ) : (
-                    'Click "Start Scanning" to begin'
-                  )}
+                  Click "Start Scanning" to begin
                 </div>
               )}
             </div>
 
             {error && (
               <div className="bg-red-500/10 text-red-400 p-3 rounded-lg mb-4 text-sm">
-                <p className="mb-2">{error}</p>
-                {cameraPermission === 'denied' && (
-                  <button
-                    onClick={handleResetPermission}
-                    className="text-red-300 hover:text-red-100 underline text-xs"
-                  >
-                    Reset Permission
-                  </button>
-                )}
+                {error}
               </div>
             )}
 
             <button
               onClick={isScanning ? stopScanning : startScanning}
-              disabled={!!error && cameraPermission === 'denied'}
+              disabled={!!error}
               className={`w-full px-6 py-3 font-semibold rounded-xl transition-all duration-300 mb-4 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isScanning
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 hover:shadow-lg hover:scale-105'
+                  ? 'bg-red-500 hover:bg-red-600'
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:scale-105'
               }`}
             >
@@ -430,7 +290,6 @@ const QR = () => {
               <p>Scanning: {isScanning ? 'Yes' : 'No'}</p>
               <p>Stream Active: {streamRef.current ? 'Yes' : 'No'}</p>
               <p>Animation Frame: {animationFrameRef.current ? 'Active' : 'Inactive'}</p>
-              <p>Camera Permission: {cameraPermission}</p>
             </div>
           )}
         </MotionDiv>
