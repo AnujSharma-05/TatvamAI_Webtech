@@ -30,7 +30,6 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/products" element={<Products />} />
             <Route path="/blogs" element={<Blogs />} />
-            <Route path="/qr" element={<QR />} />
             <Route path="/demo" element={<Demo />} />
 
             {/* 🔐 Protected Routes */}
@@ -47,6 +46,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Contributor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qr"
+              element={
+                <ProtectedRoute>
+                  <QR />
                 </ProtectedRoute>
               }
             />
