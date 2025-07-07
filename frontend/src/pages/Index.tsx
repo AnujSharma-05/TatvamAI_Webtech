@@ -70,7 +70,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={() => navigate("/auth/signin")}
+                onClick={() => navigate("/qr-recording")}
               >
                 <Play className="w-5 h-5 mr-2" />
                 Start Contributing
