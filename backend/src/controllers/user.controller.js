@@ -336,35 +336,84 @@ const loginWithPhoneOtp = asyncHandler(async (req, res) => {
 });
 
 
+// const logoutUser = asyncHandler(async (req, res) => {
+//   const user = await User.findByIdAndUpdate(
+//     req.user._id, // this is what we have created object (.user) in the verifyJWT in auth middleware
+
+//     // what to update
+//     {
+//       $set: {
+//         refreshToken: undefined, // reset/delete the refreshToken after logging the out
+//       },
+//     },
+//     {
+//       new: true,
+//       // By default, findOneAndUpdate() returns the document as it was before update was applied. If you set new: true, findOneAndUpdate() will instead give you the object after update was applied.
+//     }
+//   );
+
+//   const options = {
+//     // by this cookie could be accessed by the backend server only, not the frontend
+//     httpOnly: true,
+//     secure: true,
+//     sameSite: 'none',
+//   };
+
+//   const loggedInUser = await User.findById(user._id).select("username -_id");
+
+//   return res
+//     .status(200)
+//     .clearCookie("accessToken", options)
+//     .clearCookie("refreshToken", options)
+//     .json(new ApiResponse(200, { loggedInUser }, "User logged out"));
+// });
+
 const logoutUser = asyncHandler(async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.user._id, // this is what we have created object (.user) in the verifyJWT in auth middleware
-
-    // what to update
-    {
-      $set: {
-        refreshToken: undefined, // reset/delete the refreshToken after logging the out
-      },
-    },
-    {
-      new: true,
-      // By default, findOneAndUpdate() returns the document as it was before update was applied. If you set new: true, findOneAndUpdate() will instead give you the object after update was applied.
+  try {
+    // Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json(new ApiResponse(401, null, "User not authenticated"));
     }
-  );
 
-  const options = {
-    // by this cookie could be accessed by the backend server only, not the frontend
-    httpOnly: true,
-    secure: true,
-  };
+    // Update user in database - remove refresh token
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $unset: {
+          refreshToken: 1 // This removes the field from the document
+        }
+      },
+      {
+        new: true
+      }
+    );
 
-  const loggedInUser = await User.findById(user._id).select("username -_id");
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, null, "User not found"));
+    }
 
-  return res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, { loggedInUser }, "User logged out"));
+    // Cookie options - make sure these match your login cookies
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Only secure in production
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Adjust based on environment
+      path: '/' // Make sure path matches the cookies you set during login
+    };
+
+    // Log successful logout
+    // console.log(`User ${user.username || user.email} logged out successfully`);
+
+    // Clear cookies and send response
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "User logged out"));
+
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res.status(500).json(new ApiResponse(500, null, "Internal server error during logout"));
+  }
 });
 
 const deleteUserAccount = asyncHandler(async (req, res) => {

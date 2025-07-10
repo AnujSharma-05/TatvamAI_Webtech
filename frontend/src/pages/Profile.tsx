@@ -28,6 +28,7 @@ const Profile = () => {
   // Success/Error messages
   const [updateMessage, setUpdateMessage] = useState({ type: '', text: '' });
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
+  const [logoutMessage, setLogoutMessage] = useState({ type: '', text: '' });
   
   // Confirmation dialogs
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -39,9 +40,7 @@ const Profile = () => {
       setLoading(true);
       setError(null);
       
-      // Assuming you have a route to get current user details
-      // If not, you might need to add this route to your backend
-      const response = await axios.get('/users/current', {withCredentials: true}); // Adjust endpoint as needed
+      const response = await axios.get('/users/current', {withCredentials: true});
       const userData = response.data.data;
       
       setUser(userData);
@@ -58,26 +57,55 @@ const Profile = () => {
     }
   };
 
-  // Handle logout
+  // Handle logout - FIXED VERSION
   const handleLogout = async () => {
     try {
       setLogoutLoading(true);
+      setLogoutMessage({ type: '', text: '' });
       
-      await axios.post('/users/logout');
+      // Make logout request to backend
+      const response = await axios.post('/users/logout', {}, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
-      // Clear any stored tokens or user data
-    //   localStorage.removeItem('token'); // Adjust based on your auth implementation
-    //   sessionStorage.clear();
+      console.log('Logout successful:', response.data);
       
-      // Redirect to login or home page
-      window.location.href = '/'; // Adjust based on your routing
+      // Clear any local storage data
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      
+      // Clear session storage as well
+      sessionStorage.clear();
+      
+      // Show success message briefly before redirect
+      setLogoutMessage({ type: 'success', text: 'Logged out successfully!' });
+      
+      // Small delay to show success message, then redirect
+      setTimeout(() => {
+        window.location.href = '/auth/signin';
+      }, 1000);
       
     } catch (err) {
       console.error('Logout error:', err);
-      // Even if logout fails on server, clear local storage and redirect
-    //   localStorage.removeItem('token');
-    //   sessionStorage.clear();
-      window.location.href = '/';
+      
+      // Show error message
+      setLogoutMessage({ 
+        type: 'error', 
+        text: err.response?.data?.message || 'Logout failed. Please try again.' 
+      });
+      
+      // Even if logout fails on server, we should still clear local data and redirect
+      // This ensures user is logged out on frontend even if backend fails
+      setTimeout(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/auth/signin';
+      }, 2000);
+      
     } finally {
       setLogoutLoading(false);
     }
@@ -93,15 +121,15 @@ const Profile = () => {
     try {
       setDeleteLoading(true);
       
-      await axios.delete('/delete-account');
+      await axios.delete('/delete-account', {withCredentials: true});
       
       // Clear any stored data
-    //   localStorage.clear();
-    //   sessionStorage.clear();
+      localStorage.clear();
+      sessionStorage.clear();
       
       // Show success message and redirect
       alert('Your account has been successfully deleted.');
-      window.location.href = '/'; // Redirect to home page
+      window.location.href = '/';
       
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete account. Please try again.');
@@ -120,7 +148,7 @@ const Profile = () => {
     setUpdateMessage({ type: '', text: '' });
 
     try {
-      const response = await axios.put('/update-account', updateForm);
+      const response = await axios.put('/update-account', updateForm, {withCredentials: true});
       
       setUpdateMessage({ 
         type: 'success', 
@@ -156,7 +184,7 @@ const Profile = () => {
       return;
     }
 
-    // Validate password strength (optional)
+    // Validate password strength
     if (passwordForm.newPassword.length < 6) {
       setPasswordMessage({ 
         type: 'error', 
@@ -170,7 +198,7 @@ const Profile = () => {
       const response = await axios.post('/change-password', {
         oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword
-      });
+      }, {withCredentials: true});
       
       setPasswordMessage({ 
         type: 'success', 
@@ -474,6 +502,17 @@ const Profile = () => {
                 {logoutLoading ? 'Logging out...' : 'Logout'}
               </button>
             </div>
+            
+            {/* Logout Message */}
+            {logoutMessage.text && (
+              <div className={`mt-4 p-3 rounded-lg ${
+                logoutMessage.type === 'success' 
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
+              }`}>
+                {logoutMessage.text}
+              </div>
+            )}
           </MotionCard>
 
           {/* Delete Account Section */}

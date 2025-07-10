@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import axios from "../config/axios";
+import axios from "../config/axios.ts";
 
 // Define the shape of the user object (customize this to match your backend response)
 interface User {
