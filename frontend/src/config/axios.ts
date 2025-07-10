@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 const base = "https://tatvamai-webtech.onrender.com";
-const instance = axios.create({
+const instance: AxiosInstance = axios.create({
 baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
   withCredentials: true,
   timeout: 120000
@@ -12,8 +12,9 @@ instance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
         if (token) {
-            config.headers = config.headers || {};
-            config.headers.Authorization = `Bearer ${token}`;
+            if (config.headers) {
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
         }
         console.log('Request:', {
             url: config.url,

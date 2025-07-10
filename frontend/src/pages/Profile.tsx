@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MotionCard } from '../components/MotionProvider';
-import axios from '../config/axios'; // Adjust the path based on your file structure
+import axios from '../config/axios.ts'; // Adjust the path based on your file structure
 
 const Profile = () => {
   const [user, setUser] = useState(null);

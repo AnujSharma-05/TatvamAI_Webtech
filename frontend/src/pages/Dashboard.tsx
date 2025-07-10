@@ -1,7 +1,7 @@
 import { MotionCard } from '../components/MotionProvider';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import api from '../config/axios';
+import axios from '../config/axios'; // Adjust the import path as necessary
 
 
 const Dashboard = () => {
@@ -19,7 +19,7 @@ const Dashboard = () => {
   // Fetch user recordings
   const fetchRecordings = async () => {
     try {
-      const response = await api.get('/users/recordings');
+      const response = await axios.get('/users/recordings');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching recordings:', error);
@@ -30,7 +30,7 @@ const Dashboard = () => {
   // Fetch contribution stats
   const fetchContributionStats = async () => {
     try {
-      const response = await api.get('/users/contribution-stats');
+      const response = await axios.get('/users/contribution-stats');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching contribution stats:', error);

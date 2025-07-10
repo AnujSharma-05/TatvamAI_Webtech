@@ -22,9 +22,12 @@ app.use(cookieParser()); // Parse cookies from request headers
 import userRouter from './routes/user.routes.js';
 import recordingRouter from './routes/recording.routes.js';
 import rewardTokenRouter from './routes/rewardToken.routes.js';
+import healthcheckRouter from './routes/healthcheck.routes.js';
 import e from 'express';
 
 // Use routes
+app.use("/api/v1/healthcheck", healthcheckRouter)
+
 app.use('/api/v1/users', userRouter);
 
 app.use('/api/v1/recordings', recordingRouter);
