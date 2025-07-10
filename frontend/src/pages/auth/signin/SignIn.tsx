@@ -76,7 +76,11 @@ export default function SignInPage() {
       const res = await axios.post('/users/login', {
         email: contact,
         password,
-      }, { withCredentials: true });
+      }, { 
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' } 
+          }
+      );
   
       // ✅ Set user in context
       setUser(res.data.data.user); // 🔁 adjust according to your backend's response

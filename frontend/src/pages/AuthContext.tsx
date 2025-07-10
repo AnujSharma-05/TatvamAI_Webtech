@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
-        const response = await axios.get("/users/current");
+        const response = await axios.get("/users/current", {withCredentials: true});
         setUser(response.data.data); // Adjust if your API structure is different
       } catch (error) {
         setUser(null);
