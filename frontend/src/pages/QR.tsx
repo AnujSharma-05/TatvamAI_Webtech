@@ -188,7 +188,7 @@ const QR = () => {
   const videoConstraints = {
     width: { ideal: 640 },
     height: { ideal: 480 },
-    facingMode: facingMode
+    facingMode: { exact: facingMode }
   };
 
   return (
