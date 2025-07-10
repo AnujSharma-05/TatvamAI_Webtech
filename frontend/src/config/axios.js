@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const base = import.meta.env.VITE_URL;
+const base = "https://tatvam-ai.vercel.app";
 const instance = axios.create({
 baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
   withCredentials: true,
