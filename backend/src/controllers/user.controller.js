@@ -247,6 +247,7 @@ const loginUser = asyncHandler(async (req, res) => {
         // secured cookie: by this cookie could be accessed by the backend server only, not the frontend
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
     };
 
     return res

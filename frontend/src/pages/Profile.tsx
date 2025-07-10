@@ -41,7 +41,7 @@ const Profile = () => {
       
       // Assuming you have a route to get current user details
       // If not, you might need to add this route to your backend
-      const response = await axios.get('/users/current'); // Adjust endpoint as needed
+      const response = await axios.get('/users/current', {withCredentials: true}); // Adjust endpoint as needed
       const userData = response.data.data;
       
       setUser(userData);
