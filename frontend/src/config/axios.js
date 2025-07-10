@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const base = "https://tatvam-ai.vercel.app";
+const base = "https://tatvamai-webtech.onrender.com";
 const instance = axios.create({
 baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
   withCredentials: true,
