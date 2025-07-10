@@ -86,7 +86,7 @@ const Profile = () => {
       
       // Small delay to show success message, then redirect
       setTimeout(() => {
-        window.location.href = '/auth/signin';
+        window.location.href = '/';
       }, 1000);
       
     } catch (err) {
@@ -103,7 +103,7 @@ const Profile = () => {
       setTimeout(() => {
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = '/auth/signin';
+        window.location.href = '/';
       }, 2000);
       
     } finally {
