@@ -16,11 +16,15 @@ instance.interceptors.request.use(
                 config.headers['Authorization'] = `Bearer ${token}`;
             }
         }
+        
+        // Debug cookies
+        console.log('Request Cookies:', document.cookie);
         console.log('Request:', {
             url: config.url,
             method: config.method,
             data: config.data,
-            headers: config.headers
+            headers: config.headers,
+            withCredentials: config.withCredentials
         });
         return config;
     },
@@ -32,9 +36,12 @@ instance.interceptors.request.use(
 
 instance.interceptors.response.use(
     (response) => {
+        // Debug response cookies
+        console.log('Response Cookies:', response.headers['set-cookie']);
         console.log('Response:', {
             status: response.status,
-            data: response.data
+            data: response.data,
+            headers: response.headers
         });
         return response;
     },
@@ -43,7 +50,8 @@ instance.interceptors.response.use(
             console.error('Response Error:', {
                 status: error.response.status,
                 data: error.response.data,
-                message: error.message
+                message: error.message,
+                headers: error.response.headers
             });
         } else {
             console.error('Network/Error:', {
