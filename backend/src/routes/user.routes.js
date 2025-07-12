@@ -16,7 +16,8 @@ import {
     loginWithPhoneOtp,
     sendEmailVerificationCode,
     verifyEmailCode,
-    deleteUserAccount
+    deleteUserAccount,
+    testCookies
 } from '../controllers/user.controller.js';
 
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -52,5 +53,8 @@ router.route('/login-phone-otp').post(loginWithPhoneOtp);
 
 router.route('/send-verification-code').post(sendEmailVerificationCode); 
 router.route('/verify-email-code').post(verifyEmailCode);
+
+// Test route for debugging cookies
+router.route('/test-cookies').get(testCookies);
 
 export default router;

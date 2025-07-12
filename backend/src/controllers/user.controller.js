@@ -250,17 +250,24 @@ const loginUser = asyncHandler(async (req, res) => {
         sameSite: 'none',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        // Remove domain restriction for cross-origin
     };
 
     // For cross-origin requests, also return tokens in response body
     console.log('Setting cookies with options:', options);
     console.log('Access token length:', accessToken.length);
     console.log('Refresh token length:', refreshToken.length);
+    console.log('Request origin:', req.headers.origin);
+    console.log('Request host:', req.headers.host);
+    
+    // Set cookies
+    res.cookie("accessToken", accessToken, options);
+    res.cookie("refreshToken", refreshToken, options);
+    
+    console.log('Cookies set in response');
     
     return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
     .json(
     new ApiResponse(
         201,
@@ -714,6 +721,27 @@ const verifyEmailCode = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, {}, "Email verified successfully"));
 });
 
+const testCookies = asyncHandler(async (req, res) => {
+  console.log('Testing cookie setting...');
+  console.log('Request origin:', req.headers.origin);
+  console.log('Request host:', req.headers.host);
+  
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+  
+  res.cookie("testCookie", "testValue", options);
+  
+  console.log('Test cookie set');
+  
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { message: "Test cookie set" }, "Test cookie set successfully"));
+});
 
 
 export { 
@@ -734,5 +762,6 @@ export {
     loginWithPhoneOtp,
     sendEmailVerificationCode,
     verifyEmailCode,
-    deleteUserAccount
+    deleteUserAccount,
+    testCookies
 };
