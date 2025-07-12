@@ -1,14 +1,53 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaCoins } from "react-icons/fa"; // Add this import
-
-import { useAuth } from "@/pages/AuthContext"; // adjust path as needed
+import { FaCoins } from "react-icons/fa";
+import { isAuthenticated, getAuthTokens, logout } from "../utils/auth";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user } = useAuth(); // user: { name, tokens }
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+
+  // Check authentication status and fetch user details
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (isAuthenticated()) {
+        try {
+          // Fetch user details from API
+          const response = await fetch('https://tatvamai-webtech.onrender.com/api/v1/users/current', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser({
+              name: userData.data.name,
+              tokens: userData.data.rewardTokens || 0
+            });
+          } else {
+            // If API call fails, use basic user info
+            setUser({ name: 'User', tokens: 0 });
+          }
+        } catch (error) {
+          // If API call fails, use basic user info
+          setUser({ name: 'User', tokens: 0 });
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    checkAuth();
+    
+    // Listen for storage changes (when user logs in/out in another tab)
+    window.addEventListener('storage', checkAuth);
+    
+    return () => window.removeEventListener('storage', checkAuth);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,8 +153,17 @@ export const Navbar = () => {
                 </button>
                 <div className="flex items-center text-yellow-400 font-bold">
                   <FaCoins className="mr-1" />
-                  <span>{0}</span>
+                  <span>{user.tokens || 0}</span>
                 </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    setUser(null);
+                  }}
+                  className="text-white hover:text-red-400 transition-colors duration-300 text-sm"
+                >
+                  Logout
+                </button>
               </div>
             )}
           </div>
@@ -132,7 +180,7 @@ export const Navbar = () => {
                 </button>
                 <div className="flex items-center text-yellow-400 font-bold text-sm">
                   <FaCoins className="mr-1" />
-                  <span>{0}</span>
+                  <span>{user?.tokens || 0}</span>
                 </div>
               </div>
             )}
@@ -243,6 +291,16 @@ export const Navbar = () => {
                     className="block w-full text-left px-4 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors duration-300"
                   >
                     {user.name}
+                  </button>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setUser(null);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-300"
+                  >
+                    Logout
                   </button>
                 </div>
               )}
