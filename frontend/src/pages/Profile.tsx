@@ -40,7 +40,17 @@ const Profile = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get('/users/current', {withCredentials: true});
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        setError('No access token found. Please log in again.');
+        return;
+      }
+      
+      const response = await axios.get('/users/current', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       const userData = response.data.data;
       
       setUser(userData);
@@ -63,11 +73,13 @@ const Profile = () => {
       setLogoutLoading(true);
       setLogoutMessage({ type: '', text: '' });
       
+      const accessToken = localStorage.getItem('accessToken');
+      
       // Make logout request to backend
       const response = await axios.post('/users/logout', {}, {
-        withCredentials: true,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         }
       });
       
@@ -121,7 +133,12 @@ const Profile = () => {
     try {
       setDeleteLoading(true);
       
-      await axios.delete('/delete-account', {withCredentials: true});
+      const accessToken = localStorage.getItem('accessToken');
+      await axios.delete('/delete-account', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       
       // Clear any stored data
       localStorage.clear();
@@ -148,7 +165,12 @@ const Profile = () => {
     setUpdateMessage({ type: '', text: '' });
 
     try {
-      const response = await axios.put('/update-account', updateForm, {withCredentials: true});
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await axios.put('/update-account', updateForm, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       
       setUpdateMessage({ 
         type: 'success', 
@@ -195,10 +217,15 @@ const Profile = () => {
     }
 
     try {
+      const accessToken = localStorage.getItem('accessToken');
       const response = await axios.post('/change-password', {
         oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword
-      }, {withCredentials: true});
+      }, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
       
       setPasswordMessage({ 
         type: 'success', 
