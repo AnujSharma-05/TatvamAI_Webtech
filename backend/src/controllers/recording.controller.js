@@ -134,6 +134,45 @@ const getPendingRecordingsForEvaluation = asyncHandler(async (req, res) => {
     );
 });
 
+const generateParagraph = asyncHandler(async (req, res) => {
+  const { language, domain } = req.body;
+
+  if (!language || !domain) {
+    throw new ApiError(400, "Language and domain are required");
+  }
+
+  const prompt = `Write a 100-word paragraph in fluent ${language} on the topic of ${domain}. Use conversational tone and include 1-2 local or code-mixed (${language}-English) words.`
+
+  const response = await axios.post(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    {
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        key: process.env.GEMINI_API_KEY,
+      },
+    }
+  );
+  
+  const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!generatedText) {
+    throw new ApiError(500, "Failed to generate paragraph");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, generatedText, "Paragraph generated successfully"));
+});
+
 export {
   uploadRecording,
   evaluateRecording,
@@ -141,4 +180,5 @@ export {
   getRecordingById,
   deleteRecordingById,
   getPendingRecordingsForEvaluation,
+  generateParagraph
 };

@@ -5,7 +5,8 @@ import {
     getAllRecordings,
     getRecordingById,
     deleteRecordingById,
-    getPendingRecordingsForEvaluation
+    getPendingRecordingsForEvaluation,
+    generateParagraph
 } from '../controllers/recording.controller.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 import { upload } from '../middlewares/multer.middleware.js';
@@ -27,5 +28,8 @@ router.route('/admin/:id')
 
 router.route('/admin/:id/evaluate')
     .post(verifyJWT, authorizeRoles("admin"), evaluateRecording); // Evaluate recording by ID (admin only)
+
+router.route('/generate-paragraph')
+    .post(verifyJWT, generateParagraph); // Generate paragraph based on language and domain
 
 export default router;

@@ -4,7 +4,7 @@ import { Card } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
 import {
   Mic, Clock, Shield, FileText, CheckCircle, Pause, Play, Square, RotateCcw,
-  Volume2, Download, Upload, ArrowLeft, ArrowRight, Loader2
+  Volume2, Download, Upload, ArrowLeft, ArrowRight, Loader2, RefreshCw
 } from "lucide-react";
 import RecordRTC, { StereoAudioRecorder } from 'recordrtc';
 import axios from '../config/axios';
@@ -33,8 +33,76 @@ const QRRecording = () => {
   const [error, setError] = useState<string | null>(null);
   const [domain, setDomain] = useState("");
   const [language, setLanguage] = useState("");
-  const [promptText, setPromptText] = useState("Please read the following text clearly and at a natural pace: 'The quick brown fox jumps over the lazy dog.'");
-  const canProceedPrompt = domain && language && promptText.trim();
+  const [promptText, setPromptText] = useState("");
+  const [isGeneratingParagraph, setIsGeneratingParagraph] = useState(false);
+  const [generatedParagraph, setGeneratedParagraph] = useState("");
+  
+  const canProceedPrompt = domain && language;
+
+  // Generate paragraph when domain and language are selected
+  const generateParagraph = async () => {
+    if (!domain || !language) return;
+    
+    setIsGeneratingParagraph(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post('/recordings/generate-paragraph', {
+        language,
+        domain
+      });
+      
+      // Handle the response structure properly
+      let paragraph = "Default paragraph text";
+      
+      if (response.data && typeof response.data === 'object') {
+        // The API returns ApiResponse structure: {statusCode, data, message, success}
+        if (response.data.data && typeof response.data.data === 'string') {
+          paragraph = response.data.data;
+        } else if (response.data.message && typeof response.data.message === 'string') {
+          paragraph = response.data.message;
+        } else if (response.data.text && typeof response.data.text === 'string') {
+          paragraph = response.data.text;
+        } else {
+          // Fallback: try to stringify the data if it's an object
+          paragraph = JSON.stringify(response.data);
+        }
+      } else if (typeof response.data === 'string') {
+        paragraph = response.data;
+      }
+      
+      // Ensure we always have a valid string
+      if (typeof paragraph !== 'string') {
+        console.warn('Paragraph is not a string, converting:', paragraph);
+        paragraph = String(paragraph);
+      }
+      
+      // Additional safety check - if paragraph is too short or seems like an error, use fallback
+      if (paragraph.length < 10 || paragraph.includes('error') || paragraph.includes('Error')) {
+        console.warn('Paragraph seems invalid, using fallback');
+        paragraph = `Please read the following ${domain} related text in ${language}: 'The quick brown fox jumps over the lazy dog.'`;
+      }
+      
+      setGeneratedParagraph(paragraph);
+      setPromptText(paragraph);
+    } catch (err) {
+      setError("Failed to generate paragraph. Please try again.");
+      console.error("Paragraph generation error:", err);
+      // Fallback to default text
+      const fallbackText = `Please read the following ${domain} related text in ${language}: 'The quick brown fox jumps over the lazy dog.'`;
+      setGeneratedParagraph(fallbackText);
+      setPromptText(fallbackText);
+    } finally {
+      setIsGeneratingParagraph(false);
+    }
+  };
+
+  // Auto-generate paragraph when domain and language change
+  useEffect(() => {
+    if (domain && language && step === 3) {
+      generateParagraph();
+    }
+  }, [domain, language, step]);
 
   useEffect(() => {
     if (stream && isRecording && !isPaused) {
@@ -162,10 +230,8 @@ const QRRecording = () => {
 
         const audio = new Audio(url);
         audio.onloadedmetadata = () => {
-            // Use Math.round to avoid long decimals
             setRecordingTime(Math.round(audio.duration)); 
         };
-        // The step is now 6 for Review & Submit
         setStep(6);
       });
     }
@@ -190,8 +256,9 @@ const QRRecording = () => {
     setUploadProgress(0);
     setDomain("");
     setLanguage("");
-    setPromptText("Please read the following text clearly and at a natural pace: 'The quick brown fox jumps over the lazy dog.'");
-
+    setPromptText("");
+    setGeneratedParagraph("");
+    setIsGeneratingParagraph(false);
 
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
@@ -218,20 +285,19 @@ const QRRecording = () => {
     formData.append("language", language);
     formData.append("domain", domain);
     formData.append("recordedVia", "web");
+    formData.append("paragraph", generatedParagraph);
 
     try {
-      // The endpoint might need adjustment based on your actual API
       const response = await axios.post("/recordings/", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         },
         onUploadProgress: (progressEvent) => {
-          const total = progressEvent.total ?? 1; // Use a default value if total is null
+          const total = progressEvent.total ?? 1;
           const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
           setUploadProgress(percentCompleted);
         }
       });
-      // The step is now 7 for Contribution Complete
       setStep(7);
     } catch (err) {
       setError("Upload failed. Please try again.");
@@ -255,7 +321,6 @@ const QRRecording = () => {
     setIsPaused(false);
     setRecorder(null);
     setError(null);
-    // Go back to the prompt step to start a new recording
     setStep(4); 
   };
 
@@ -286,7 +351,7 @@ const QRRecording = () => {
   return (
     <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto my-20">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">{getStepTitle()}</h1>
@@ -395,7 +460,7 @@ const QRRecording = () => {
                 </Button>
                 <Button 
                   disabled={!canProceed} 
-                  onClick={() => setStep(3)} // Corrected: Go to step 3
+                  onClick={() => setStep(3)}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next <ArrowRight className="w-4 h-4 ml-2" />
@@ -407,19 +472,94 @@ const QRRecording = () => {
           {/* Step 3: Pick Domain & Language */}
           {step === 3 && (
             <Card className="p-8 space-y-6 bg-slate-800 border-slate-700">
-              <select className="w-full p-2 bg-slate-700 text-white rounded" value={domain} onChange={e => setDomain(e.target.value)}>
-                <option value="">Select Domain</option>
-                {domains.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-              <select className="w-full p-2 bg-slate-700 text-white rounded" value={language} onChange={e => setLanguage(e.target.value)}>
-                <option value="">Select Language</option>
-                {languages.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-slate-300 mb-2 font-medium">Select Domain</label>
+                  <select 
+                    className="w-full p-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-blue-500 focus:outline-none transition-colors" 
+                    value={domain} 
+                    onChange={e => setDomain(e.target.value)}
+                  >
+                    <option value="">Choose a domain...</option>
+                    {domains.map(d => (
+                      <option key={d} value={d} className="capitalize">{d}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-slate-300 mb-2 font-medium">Select Language</label>
+                  <select 
+                    className="w-full p-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-blue-500 focus:outline-none transition-colors" 
+                    value={language} 
+                    onChange={e => setLanguage(e.target.value)}
+                  >
+                    <option value="">Choose a language...</option>
+                    {languages.map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Enhanced Generated Paragraph Preview */}
+              {(domain && language) && (
+                <div className="bg-slate-700 p-6 rounded-lg border-2 border-blue-500/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-slate-300 font-medium text-lg">Generated Reading Text</h3>
+                    <Button
+                      onClick={generateParagraph}
+                      disabled={isGeneratingParagraph}
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                    >
+                      {isGeneratingParagraph ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4" />
+                      )}
+                      {isGeneratingParagraph ? ' Generating...' : ' Regenerate'}
+                    </Button>
+                  </div>
+                  
+                  {isGeneratingParagraph ? (
+                    <div className="flex items-center space-x-3 text-slate-400 p-4 bg-slate-800 rounded-lg">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <div>
+                        <p className="font-medium">Generating paragraph...</p>
+                        <p className="text-sm">Creating {domain} content in {language}</p>
+                      </div>
+                    </div>
+                  ) : generatedParagraph ? (
+                    <div className="bg-slate-800 p-4 rounded border-l-4 border-green-500 shadow-lg">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <span className="text-green-300 font-medium">Text Ready!</span>
+                      </div>
+                      <p className="text-slate-200 leading-relaxed text-lg">{String(generatedParagraph)}</p>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-800 p-4 rounded border-l-4 border-blue-500">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <FileText className="w-5 h-5 text-blue-400" />
+                        <span className="text-blue-300 font-medium">Ready to Generate</span>
+                      </div>
+                      <p className="text-slate-400 italic">Click the regenerate button to create reading text for {domain} in {language}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep(2)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
-                <Button disabled={!domain || !language} onClick={() => setStep(4)} className="bg-gradient-to-r from-blue-600 to-purple-600 disabled:opacity-50">
+                <Button 
+                  disabled={!canProceedPrompt || isGeneratingParagraph || !generatedParagraph} 
+                  onClick={() => setStep(4)} 
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 disabled:opacity-50"
+                >
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -429,17 +569,64 @@ const QRRecording = () => {
           {/* Step 4: Speaking Prompt */}
           {step === 4 && (
             <Card className="p-8 space-y-6 bg-slate-800 border-slate-700">
-              <textarea
-                className="w-full p-4 bg-slate-700 text-white rounded min-h-[150px]"
-                placeholder="Paste or write your speaking prompt here..."
-                value={promptText}
-                onChange={e => setPromptText(e.target.value)}
-              />
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Reading Instructions</h3>
+                <div className="bg-slate-700 p-4 rounded-lg mb-4">
+                  <p className="text-slate-300 mb-2">
+                    <strong>Domain:</strong> {domain} | <strong>Language:</strong> {language}
+                  </p>
+                  <p className="text-slate-400 text-sm">
+                    Please read the following text clearly and at a natural pace. You'll have up to 2 minutes to complete the recording.
+                  </p>
+                </div>
+                
+                {/* Enhanced Text Display */}
+                <div className="bg-slate-700 p-6 rounded-lg border-2 border-blue-500/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-medium text-blue-400">Text to Read:</h4>
+                    <div className="flex items-center space-x-2 text-sm text-slate-400">
+                      <Mic className="w-4 h-4" />
+                      <span>Ready to record</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-800 p-6 rounded border-l-4 border-blue-500 shadow-lg">
+                    <p className="text-slate-100 leading-relaxed text-lg font-medium">
+                      {String(generatedParagraph || promptText || "No text available. Please go back and generate text first.")}
+                    </p>
+                  </div>
+                  {!generatedParagraph && !promptText && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded mt-3">
+                      <p className="text-yellow-300 text-sm">⚠️ No text available. Please go back and generate text first.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <Mic className="w-5 h-5 text-blue-400 mt-0.5" />
+                  <div>
+                    <p className="text-blue-300 font-medium">Recording Tips:</p>
+                    <ul className="text-slate-300 text-sm mt-1 space-y-1">
+                      <li>• Speak clearly and at your natural pace</li>
+                      <li>• Find a quiet environment</li>
+                      <li>• Keep your device close to your mouth</li>
+                      <li>• You can pause and resume if needed</li>
+                      <li>• The text will be visible during recording</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep(3)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
-                <Button onClick={startRecording} disabled={!canProceedPrompt} className="bg-gradient-to-r from-green-600 to-emerald-500 disabled:opacity-50">
+                <Button 
+                  onClick={startRecording} 
+                  disabled={!generatedParagraph && !promptText.trim()} 
+                  className="bg-gradient-to-r from-green-600 to-emerald-500 disabled:opacity-50"
+                >
                   Start Recording <Mic className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -448,53 +635,109 @@ const QRRecording = () => {
 
           {/* Step 5: Recording */}
           {step === 5 && (
-            <div className="bg-slate-800 p-8 rounded-xl text-center">
-               <div className="relative mb-8">
-                <div className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ${
-                  isPaused 
-                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
-                    : 'bg-gradient-to-r from-red-500 to-pink-500'
-                } ${!isPaused ? 'animate-pulse' : ''}`}>
-                  <Mic className="w-12 h-12 text-white" />
-                </div>
-                
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div
-                      className="w-full h-full rounded-full border-4 border-slate-700"
-                      style={{
-                        transform: `scale(${1 + audioLevel / 500})`,
-                        opacity: 0.8 - audioLevel / 300,
-                        transition: 'transform 0.1s ease-out, opacity 0.1s ease-out'
-                      }}
-                    />
+            <div className="bg-slate-800 p-6 rounded-xl">
+              {/* Text Display Section - Full Width */}
+              <div className="mb-6">
+                <div className="bg-slate-700 p-4 rounded-lg border-2 border-blue-500/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-blue-400">Read This Text:</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'}`}></div>
+                      <span className="text-sm text-slate-400">
+                        {isPaused ? 'Paused' : 'Recording'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-800 p-4 rounded border-l-4 border-blue-500 max-h-64 overflow-y-auto shadow-lg">
+                    <p className="text-slate-100 leading-relaxed text-base sm:text-lg font-medium">
+                      {String(generatedParagraph || promptText || "No text available")}
+                    </p>
+                  </div>
+                  
+                  <div className="mt-3 p-3 bg-slate-600 rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-slate-400">Domain:</span>
+                        <span className="text-slate-200 ml-2 font-medium capitalize">{domain}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Language:</span>
+                        <span className="text-slate-200 ml-2 font-medium">{language}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <h2 className="text-2xl font-bold mb-4">
-                {isPaused ? "Recording Paused" : "Recording in Progress"}
-              </h2>
-              
-              <div className="text-5xl font-mono mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                {formatTime(recordingTime)}
-              </div>
-              
-              <div className="text-slate-400 mb-8">
-                {recordingTime < 120 ? `${120 - recordingTime}s remaining` : 'Maximum duration reached'}
-              </div>
-              
-              <div className="flex justify-center space-x-4">
-                {!isPaused ? (
-                  <Button onClick={pauseRecording} className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3">
-                    <Pause className="w-4 h-4 mr-2" /> Pause
+              {/* Recording Controls Section - Centered and Compact */}
+              <div className="text-center">
+                {/* Minimalist Recording Interface */}
+                <div className="flex flex-col items-center space-y-4 mb-6">
+                  {/* Compact Mic Icon */}
+                  <div className="relative">
+                    <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ${
+                      isPaused 
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
+                        : 'bg-gradient-to-r from-red-500 to-pink-500'
+                    } ${!isPaused ? 'animate-pulse' : ''}`}>
+                      <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    </div>
+                    
+                    {/* Subtle Audio Level Indicator */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div
+                        className="w-full h-full rounded-full border-2 border-slate-600"
+                        style={{
+                          transform: `scale(${1 + audioLevel / 1000})`,
+                          opacity: 0.6 - audioLevel / 500,
+                          transition: 'transform 0.1s ease-out, opacity 0.1s ease-out'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Recording Status */}
+                  <div className="text-center">
+                    <h2 className="text-lg sm:text-xl font-bold mb-2">
+                      {isPaused ? "Recording Paused" : "Recording in Progress"}
+                    </h2>
+                    
+                    <div className="text-3xl sm:text-4xl font-mono mb-1 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                      {formatTime(recordingTime)}
+                    </div>
+                    
+                    <div className="text-slate-400 text-sm">
+                      {recordingTime < 120 ? `${120 - recordingTime}s remaining` : 'Maximum duration reached'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recording Controls */}
+                <div className="flex justify-center space-x-3 sm:space-x-4">
+                  {!isPaused ? (
+                    <Button onClick={pauseRecording} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm">
+                      <Pause className="w-4 h-4 mr-2" /> Pause
+                    </Button>
+                  ) : (
+                    <Button onClick={resumeRecording} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm">
+                      <Play className="w-4 h-4 mr-2" /> Resume
+                    </Button>
+                  )}
+                  <Button onClick={stopRecording} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm">
+                    <Square className="w-4 h-4 mr-2" /> Stop
                   </Button>
-                ) : (
-                  <Button onClick={resumeRecording} className="bg-green-500 hover:bg-green-600 text-white px-6 py-3">
-                    <Play className="w-4 h-4 mr-2" /> Resume
-                  </Button>
-                )}
-                <Button onClick={stopRecording} className="bg-red-500 hover:bg-red-600 text-white px-6 py-3">
-                  <Square className="w-4 h-4 mr-2" /> Stop
-                </Button>
+                </div>
+
+                {/* Recording Tips */}
+                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg max-w-md mx-auto">
+                  <div className="flex items-center space-x-2 text-blue-300">
+                    <Mic className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {isPaused ? 'Recording paused - click Resume to continue' : 'Recording active - speak clearly'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
