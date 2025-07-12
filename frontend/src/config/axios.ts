@@ -2,8 +2,9 @@ import axios, { AxiosInstance } from 'axios';
 
 const base = "https://tatvamai-webtech.onrender.com";
 const instance: AxiosInstance = axios.create({
-baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
-  timeout: 120000
+  baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
+  timeout: 120000,
+  withCredentials: false // Explicitly set to false for localStorage auth
 });
 
 instance.interceptors.request.use(

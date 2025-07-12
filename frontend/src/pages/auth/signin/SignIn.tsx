@@ -53,6 +53,8 @@ export default function SignInPage() {
       const tokens = handleLoginResponse(res);
       if (tokens) {
         toast.success('Signed in successfully!');
+        // Trigger a storage event to update navbar
+        window.dispatchEvent(new Event('storage'));
         navigate('/dashboard');
       } else {
         toast.error('Login failed - no tokens received');
@@ -82,6 +84,8 @@ export default function SignInPage() {
       const tokens = handleLoginResponse(res);
       if (tokens) {
         toast.success('Signed in successfully!');
+        // Trigger a storage event to update navbar
+        window.dispatchEvent(new Event('storage'));
         navigate('/dashboard');
       } else {
         toast.error('Login failed - no tokens received');
