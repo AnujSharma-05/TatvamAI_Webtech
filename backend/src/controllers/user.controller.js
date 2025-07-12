@@ -248,8 +248,10 @@ const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
+        path: '/',
     };
 
+    // For cross-origin requests, also return tokens in response body
     return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -316,6 +318,8 @@ const loginWithPhoneOtp = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: true,
+        sameSite: 'none',
+        path: '/',
     };
 
     return res
@@ -357,6 +361,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
+    path: '/',
   };
 
   const loggedInUser = await User.findById(user._id).select("username -_id");
@@ -526,7 +531,9 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
     
         const options = {
             httpOnly: true,
-            secure: true
+            secure: true,
+            sameSite: 'none',
+            path: '/',
         }
     
         // generate new tokens
