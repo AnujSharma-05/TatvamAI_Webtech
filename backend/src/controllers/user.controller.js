@@ -249,9 +249,14 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: true,
         sameSite: 'none',
         path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
 
     // For cross-origin requests, also return tokens in response body
+    console.log('Setting cookies with options:', options);
+    console.log('Access token length:', accessToken.length);
+    console.log('Refresh token length:', refreshToken.length);
+    
     return res
     .status(200)
     .cookie("accessToken", accessToken, options)
@@ -322,6 +327,10 @@ const loginWithPhoneOtp = asyncHandler(async (req, res) => {
         path: '/',
     };
 
+    console.log('Setting cookies with options:', options);
+    console.log('Access token length:', accessToken.length);
+    console.log('Refresh token length:', refreshToken.length);
+    
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
