@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { toast } from 'react-hot-toast' 
 import { useNavigate, Link } from 'react-router-dom'
 import axios from "../../../config/axios"
-import { useAuth } from "../../AuthContext"; // adjust path if needed
+import { handleLoginResponse } from "../../../utils/auth"
 
 
 type AuthMethod = 'phone' | 'email'
@@ -16,7 +16,6 @@ export default function SignInPage() {
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { setUser } = useAuth();
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,13 +48,15 @@ export default function SignInPage() {
       const res = await axios.post('/users/login-phone-otp', {
         phoneNo: contact,
         otp,
-      }, { withCredentials: true });
+      });
   
-      // ✅ Set user in context
-      setUser(res.data.data.user); // 🔁 match your API
-  
-      toast.success('Signed in successfully!');
-      navigate('/dashboard');
+      const tokens = handleLoginResponse(res);
+      if (tokens) {
+        toast.success('Signed in successfully!');
+        navigate('/dashboard');
+      } else {
+        toast.error('Login failed - no tokens received');
+      }
     } catch (err: any) {
       if (err.response?.status === 403) {
         toast.error('Please verify your email and phone number before logging in');
@@ -76,17 +77,15 @@ export default function SignInPage() {
       const res = await axios.post('/users/login', {
         email: contact,
         password,
-      }, { 
-            withCredentials: true,
-            headers: { 'Content-Type': 'application/json' } 
-          }
-      );
+      });
   
-      // ✅ Set user in context
-      setUser(res.data.data.user); // 🔁 adjust according to your backend's response
-  
-      toast.success('Signed in successfully!');
-      navigate('/dashboard');
+      const tokens = handleLoginResponse(res);
+      if (tokens) {
+        toast.success('Signed in successfully!');
+        navigate('/dashboard');
+      } else {
+        toast.error('Login failed - no tokens received');
+      }
     } catch (err: any) {
       if (err.response?.status === 403) {
         toast.error('Please verify your email and phone number before logging in');

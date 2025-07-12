@@ -8,10 +8,9 @@ const app = express();
 // Middlewares setup
 app.use(cors({
     origin: ["https://tatvam-ai.vercel.app", "http://localhost:8080", "https://localhost:8080"],
-    credentials: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
-    exposedHeaders: ['Set-Cookie'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }))
 
 // app.use(cors()); // Enable CORS for all origins

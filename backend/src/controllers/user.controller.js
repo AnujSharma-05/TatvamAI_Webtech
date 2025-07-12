@@ -243,29 +243,8 @@ const loginUser = asyncHandler(async (req, res) => {
         "-password -refreshToken"
     );
 
-    const options = {
-        // secured cookie: by this cookie could be accessed by the backend server only, not the frontend
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        // Remove domain restriction for cross-origin
-    };
+    // No cookie options needed for localStorage auth
 
-    // For cross-origin requests, also return tokens in response body
-    console.log('Setting cookies with options:', options);
-    console.log('Access token length:', accessToken.length);
-    console.log('Refresh token length:', refreshToken.length);
-    console.log('Request origin:', req.headers.origin);
-    console.log('Request host:', req.headers.host);
-    
-    // Set cookies
-    res.cookie("accessToken", accessToken, options);
-    res.cookie("refreshToken", refreshToken, options);
-    
-    console.log('Cookies set in response');
-    
     return res
     .status(200)
     .json(
@@ -327,21 +306,10 @@ const loginWithPhoneOtp = asyncHandler(async (req, res) => {
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
-    const options = {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        path: '/',
-    };
+    // No cookie options needed for localStorage auth
 
-    console.log('Setting cookies with options:', options);
-    console.log('Access token length:', accessToken.length);
-    console.log('Refresh token length:', refreshToken.length);
-    
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
         .json(
             new ApiResponse(
                 200,
@@ -372,20 +340,12 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
   );
 
-  const options = {
-    // by this cookie could be accessed by the backend server only, not the frontend
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    path: '/',
-  };
+  // No cookie options needed for localStorage auth
 
   const loggedInUser = await User.findById(user._id).select("username -_id");
 
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, { loggedInUser }, "User logged out"));
 });
 
@@ -545,20 +505,13 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
             throw new ApiError(401, "Refresh Token is expired or used")
         }
     
-        const options = {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            path: '/',
-        }
+        // No cookie options needed for localStorage auth
     
         // generate new tokens
         const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id)
         
         return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", newRefreshToken, options)
         .json(
             new ApiResponse(
                 200,
@@ -721,27 +674,7 @@ const verifyEmailCode = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, {}, "Email verified successfully"));
 });
 
-const testCookies = asyncHandler(async (req, res) => {
-  console.log('Testing cookie setting...');
-  console.log('Request origin:', req.headers.origin);
-  console.log('Request host:', req.headers.host);
-  
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    path: '/',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-  
-  res.cookie("testCookie", "testValue", options);
-  
-  console.log('Test cookie set');
-  
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { message: "Test cookie set" }, "Test cookie set successfully"));
-});
+
 
 
 export { 
@@ -762,6 +695,5 @@ export {
     loginWithPhoneOtp,
     sendEmailVerificationCode,
     verifyEmailCode,
-    deleteUserAccount,
-    testCookies
+    deleteUserAccount
 };

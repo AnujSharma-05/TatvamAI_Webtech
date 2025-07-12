@@ -18,10 +18,6 @@ import Auth from './pages/Auth';
 import NotFound from './pages/NotFound'; // Optional 404
 import Profile from './pages/Profile'; // Create this page if not present
 
-// Debug components (only in development)
-import AuthDebugger from './components/AuthDebugger';
-import CookieTest from './components/CookieTest';
-
 function App() {
   return (
     <Router>
@@ -89,14 +85,6 @@ function App() {
           </Routes>
         </main>
         <Footer />
-        
-        {/* Debug components - only show in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <AuthDebugger />
-            <CookieTest />
-          </>
-        )}
       </div>
     </Router>
   );
