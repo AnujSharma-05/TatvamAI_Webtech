@@ -50,6 +50,10 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isCheckingExistence, setIsCheckingExistence] = useState(false)
+  const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false)
+  const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false)
+  const [isVerifyingPhoneOtp, setIsVerifyingPhoneOtp] = useState(false)
+  const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     name: '',
     gender: 'male',
@@ -87,19 +91,19 @@ export default function SignUpPage() {
       
       // If we get a 200 response, user exists
       if (response.status === 200) {
-        return response.data.data || false; // Note: your ApiResponse wraps user data in 'data' property
+        return true; // User exists
       }
       
       return false;
     } catch (error: any) {
       // Handle 404 - user not found (this is expected behavior)
       if (error.response?.status === 404) {
-        return false;
+        return false; // User doesn't exist
       }
       
       // Handle other errors (network issues, server errors, etc.)
       console.log('Error checking user existence:', error.message);
-      return false;
+      throw error; // Re-throw to be handled by the calling function
     }
   };
 
@@ -114,6 +118,7 @@ export default function SignUpPage() {
       return
     }
 
+    setIsSendingPhoneOtp(true)
     try {
       // Check if phone number already exists
       const res = await axios.post('/users/send-phone-otp-register', { phoneNo: formData.phone })
@@ -126,9 +131,12 @@ export default function SignUpPage() {
     } catch (error: any) {
       if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already registered')) {
         toast.error('This phone number is already registered. Please use a different number or try logging in.')
+        setVerificationStatus(prev => ({ ...prev, phone: 'pending' }))
       } else {
         toast.error(error?.response?.data?.message || 'Failed to send OTP')
       }
+    } finally {
+      setIsSendingPhoneOtp(false)
     }
   }
 
@@ -145,6 +153,7 @@ export default function SignUpPage() {
       return
     }
 
+    setIsSendingEmailOtp(true)
     try {
       // API call to send email verification
       const res = await axios.post('/users/send-verification-code', { email: formData.email })
@@ -157,9 +166,12 @@ export default function SignUpPage() {
     } catch (error: any) {
       if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already registered')) {
         toast.error('This email is already registered. Please use a different email or try logging in.')
+        setVerificationStatus(prev => ({ ...prev, email: 'pending' }))
       } else {
         toast.error(error?.response?.data?.message || 'Failed to send verification email')
       }
+    } finally {
+      setIsSendingEmailOtp(false)
     }
   }
 
@@ -168,6 +180,7 @@ export default function SignUpPage() {
       toast.error('Please enter OTP')
       return
     }
+    setIsVerifyingPhoneOtp(true)
     try {
       // API call to verify phone OTP
       const response = await axios.post('/users/verify-phone-otp', {
@@ -178,6 +191,8 @@ export default function SignUpPage() {
       toast.success('Phone number verified!')
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Invalid OTP')
+    } finally {
+      setIsVerifyingPhoneOtp(false)
     }
   }
 
@@ -186,6 +201,7 @@ export default function SignUpPage() {
       toast.error('Please enter verification code')
       return
     }
+    setIsVerifyingEmailOtp(true)
     try {
       const response = await axios.post('/users/verify-email-code', {
         email: formData.email,
@@ -197,6 +213,8 @@ export default function SignUpPage() {
       toast.error(
         error?.response?.data?.message || 'Invalid verification code'
       )
+    } finally {
+      setIsVerifyingEmailOtp(false)
     }
   }
 
@@ -263,11 +281,12 @@ export default function SignUpPage() {
         return
       }
       
-      // If no dedicated endpoint, we'll proceed and let the OTP sending functions handle the check
+      // If no user exists, proceed to step 2
       setStep(2)
     } catch (error: any) {
       // If checking fails, we'll still proceed but the OTP functions will handle existence checking
       console.log('User existence check failed, proceeding to step 2')
+      toast('Proceeding to verification step. If you encounter issues, please try again.')
       setStep(2)
     } finally {
       setIsCheckingExistence(false)
@@ -606,9 +625,14 @@ export default function SignUpPage() {
                       <div className="flex gap-4">
                         <button
                           onClick={handleSendPhoneOtp}
-                          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                          disabled={isSendingPhoneOtp}
+                          className={`px-4 py-2 rounded-lg ${
+                            isSendingPhoneOtp 
+                              ? 'bg-gray-600 cursor-not-allowed' 
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
                         >
-                          Send OTP
+                          {isSendingPhoneOtp ? 'Sending...' : 'Send OTP'}
                         </button>
                       </div>
                     )}
@@ -626,15 +650,25 @@ export default function SignUpPage() {
                         <div className="flex gap-4">
                           <button
                             onClick={handleVerifyPhoneOtp}
-                            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
+                            disabled={isVerifyingPhoneOtp}
+                            className={`px-4 py-2 rounded-lg ${
+                              isVerifyingPhoneOtp 
+                                ? 'bg-gray-600 cursor-not-allowed' 
+                                : 'bg-green-600 hover:bg-green-700'
+                            }`}
                           >
-                            Verify OTP
+                            {isVerifyingPhoneOtp ? 'Verifying...' : 'Verify OTP'}
                           </button>
                           <button
                             onClick={handleSendPhoneOtp}
-                            className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg"
+                            disabled={isSendingPhoneOtp}
+                            className={`px-4 py-2 rounded-lg ${
+                              isSendingPhoneOtp 
+                                ? 'bg-gray-600 cursor-not-allowed' 
+                                : 'bg-gray-600 hover:bg-gray-700'
+                            }`}
                           >
-                            Resend OTP
+                            {isSendingPhoneOtp ? 'Sending...' : 'Resend OTP'}
                           </button>
                         </div>
                       </div>
@@ -656,9 +690,14 @@ export default function SignUpPage() {
                       <div className="flex gap-4">
                         <button
                           onClick={handleSendEmailOtp}
-                          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                          disabled={isSendingEmailOtp}
+                          className={`px-4 py-2 rounded-lg ${
+                            isSendingEmailOtp 
+                              ? 'bg-gray-600 cursor-not-allowed' 
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
                         >
-                          Send Verification Email
+                          {isSendingEmailOtp ? 'Sending...' : 'Send Verification Email'}
                         </button>
                       </div>
                     )}
@@ -676,15 +715,25 @@ export default function SignUpPage() {
                         <div className="flex gap-4">
                           <button
                             onClick={handleVerifyEmailOtp}
-                            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
+                            disabled={isVerifyingEmailOtp}
+                            className={`px-4 py-2 rounded-lg ${
+                              isVerifyingEmailOtp 
+                                ? 'bg-gray-600 cursor-not-allowed' 
+                                : 'bg-green-600 hover:bg-green-700'
+                            }`}
                           >
-                            Verify Email
+                            {isVerifyingEmailOtp ? 'Verifying...' : 'Verify Email'}
                           </button>
                           <button
                             onClick={handleSendEmailOtp}
-                            className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg"
+                            disabled={isSendingEmailOtp}
+                            className={`px-4 py-2 rounded-lg ${
+                              isSendingEmailOtp 
+                                ? 'bg-gray-600 cursor-not-allowed' 
+                                : 'bg-gray-600 hover:bg-gray-700'
+                            }`}
                           >
-                            Resend Email
+                            {isSendingEmailOtp ? 'Sending...' : 'Resend Email'}
                           </button>
                         </div>
                       </div>
