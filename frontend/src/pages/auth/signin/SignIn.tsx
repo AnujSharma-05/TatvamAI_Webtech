@@ -43,6 +43,7 @@ export default function SignInPage() {
         window.alert(`Your phone OTP is: ${res.data.data.otp}`)
       }
     } catch (err: any) {
+      console.log('Signin phone OTP error:', err.response?.data)
       if (err.response?.status === 400 && err.response?.data?.message?.includes('does not exist')) {
         toast.error('This phone number is not registered. Please sign up first.')
       } else if (err.response?.data?.message) {
@@ -116,6 +117,7 @@ export default function SignInPage() {
         toast.error('Login failed - no tokens received');
       }
     } catch (err: any) {
+      console.log('Email login error:', err.response?.data)
       if (err.response?.status === 404) {
         toast.error('This email is not registered. Please sign up first.');
       } else if (err.response?.status === 403) {
