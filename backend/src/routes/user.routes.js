@@ -16,7 +16,8 @@ import {
     loginWithPhoneOtp,
     sendEmailVerificationCode,
     verifyEmailCode,
-    deleteUserAccount
+    deleteUserAccount,
+    checkUserExistence
 } from '../controllers/user.controller.js';
 
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -52,5 +53,9 @@ router.route('/login-phone-otp').post(loginWithPhoneOtp);
 
 router.route('/send-verification-code').post(sendEmailVerificationCode); 
 router.route('/verify-email-code').post(verifyEmailCode);
+
+
+router.route('/check-user-existence').post(checkUserExistence); // Check if user exists by email or phone
+
 
 export default router;

@@ -675,7 +675,25 @@ const verifyEmailCode = asyncHandler(async (req, res) => {
 });
 
 
+const checkUserExistence = asyncHandler(async (req, res) => {
+  const { email, phoneNo } = req.body;
 
+  if (!email && !phoneNo) {
+    throw new ApiError(400, "Email or phone number is required");
+  }
+
+  const query = {};
+  if (email) query.email = email;
+  if (phoneNo) query.phoneNo = phoneNo;
+
+  const user = await User.findOne(query).select("-password -refreshToken");
+
+  if (!user) {
+    return res.status(404).json(new ApiResponse(404, {}, "User not found"));
+  }
+
+  return res.status(200).json(new ApiResponse(200, user, "User exists"));
+});
 
 export { 
     registerUser,
@@ -695,5 +713,6 @@ export {
     loginWithPhoneOtp,
     sendEmailVerificationCode,
     verifyEmailCode,
-    deleteUserAccount
+    deleteUserAccount,
+    checkUserExistence
 };
