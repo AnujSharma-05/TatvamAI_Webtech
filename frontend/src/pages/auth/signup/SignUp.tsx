@@ -87,7 +87,10 @@ export default function SignUpPage() {
         return false;
       }
   
+      console.log('Checking user existence with:', requestBody)
       const response = await axios.post('/users/check-user-existence', requestBody);
+      
+      console.log('User existence response:', response.data)
       
       // If we get a 200 response, user exists
       if (response.status === 200) {
@@ -96,6 +99,7 @@ export default function SignUpPage() {
       
       return false;
     } catch (error: any) {
+      console.log('User existence check error:', error.response?.data)
       // Handle 404 - user not found (this is expected behavior)
       if (error.response?.status === 404) {
         return false; // User doesn't exist
@@ -129,6 +133,7 @@ export default function SignUpPage() {
         window.alert(`Your phone OTP is: ${res.data.data.otp}`)
       }
     } catch (error: any) {
+      console.log('Phone OTP error:', error.response?.data)
       if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already registered')) {
         toast.error('This phone number is already registered. Please use a different number or try logging in.')
         setVerificationStatus(prev => ({ ...prev, phone: 'pending' }))
@@ -164,6 +169,7 @@ export default function SignUpPage() {
         window.alert(`Your email verification code is: ${res.data.data.code}`)
       }
     } catch (error: any) {
+      console.log('Email OTP error:', error.response?.data)
       if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already registered')) {
         toast.error('This email is already registered. Please use a different email or try logging in.')
         setVerificationStatus(prev => ({ ...prev, email: 'pending' }))
@@ -594,6 +600,8 @@ export default function SignUpPage() {
                 <div className="text-sm text-gray-400">
                   * Required fields for account creation.
                 </div>
+
+
 
                 <motion.button
                   type="submit"
