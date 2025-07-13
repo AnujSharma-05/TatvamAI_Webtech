@@ -3,14 +3,14 @@ import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from '../../../config/axios'
+import { Eye, EyeOff } from 'lucide-react'
 
 type Step = 1 | 2
 type Gender = 'male' | 'female' | 'other'
 type VerificationStatus = {
-  phone: 'pending' | 'sent' | 'verified' | 'skipped'
-  email: 'pending' | 'sent' | 'verified' | 'skipped'
+  phone: 'pending' | 'sent' | 'verified'
+  email: 'pending' | 'sent' | 'verified'
 }
-type AuthMethod = 'phone' | 'email' | 'both'
 
 type FormData = {
   name: string
@@ -41,13 +41,15 @@ const languages = [
 export default function SignUpPage() {
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>(1)
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('phone')
   const [phoneOtp, setPhoneOtp] = useState('')
   const [emailOtp, setEmailOtp] = useState('')
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
     phone: 'pending',
     email: 'pending'
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isCheckingExistence, setIsCheckingExistence] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     name: '',
     gender: 'male',
@@ -61,25 +63,72 @@ export default function SignUpPage() {
     confirmPassword: '',
   })
 
+  // Phone number validation
+  const validatePhoneNumber = (phone: string) => {
+    const phoneRegex = /^[6-9]\d{9}$/
+    return phoneRegex.test(phone)
+  }
+
+  // Check if user already exists with phone or email
+  const checkUserExistence = async (phone: string, email: string) => {
+    try {
+      // Create request body with only the fields that have values
+      const requestBody: { phoneNo?: string; email?: string } = {};
+      
+      if (phone) requestBody.phoneNo = phone;
+      if (email) requestBody.email = email;
+  
+      // If neither phone nor email is provided, return false
+      if (!phone && !email) {
+        return false;
+      }
+  
+      const response = await axios.post('/users/check-user-existence', requestBody);
+      
+      // If we get a 200 response, user exists
+      if (response.status === 200) {
+        return response.data.data || false; // Note: your ApiResponse wraps user data in 'data' property
+      }
+      
+      return false;
+    } catch (error: any) {
+      // Handle 404 - user not found (this is expected behavior)
+      if (error.response?.status === 404) {
+        return false;
+      }
+      
+      // Handle other errors (network issues, server errors, etc.)
+      console.log('Error checking user existence:', error.message);
+      return false;
+    }
+  };
+
   const handleSendPhoneOtp = async () => {
     if (!formData.phone) {
       toast.error('Please enter phone number')
       return
     }
+
+    if (!validatePhoneNumber(formData.phone)) {
+      toast.error('Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9')
+      return
+    }
+
     try {
-      // Await the API call and get the OTP from response
-      const res = await axios.post('/users/send-phone-otp', { phoneNo: formData.phone })
-      if (!res.data.success) {
-        throw new Error(res.data.message || 'Failed to send OTP')
-      }
+      // Check if phone number already exists
+      const res = await axios.post('/users/send-phone-otp-register', { phoneNo: formData.phone })
       setVerificationStatus(prev => ({ ...prev, phone: 'sent' }))
       toast.success('OTP sent to your phone!')
       // Show OTP in alert if present in response
-      if (res.data && res.data.otp) {
-        window.alert(`Your phone OTP is: ${res.data.otp}`)
+      if (res.data.data && res.data.data.otp) {
+        window.alert(`Your phone OTP is: ${res.data.data.otp}`)
       }
-    } catch (error) {
-      toast.error('Failed to send OTP')
+    } catch (error: any) {
+      if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already registered')) {
+        toast.error('This phone number is already registered. Please use a different number or try logging in.')
+      } else {
+        toast.error(error?.response?.data?.message || 'Failed to send OTP')
+      }
     }
   }
 
@@ -88,13 +137,29 @@ export default function SignUpPage() {
       toast.error('Please enter email address')
       return
     }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
     try {
       // API call to send email verification
-      axios.post('/users/send-verification-code', { email: formData.email })
+      const res = await axios.post('/users/send-verification-code', { email: formData.email })
       setVerificationStatus(prev => ({ ...prev, email: 'sent' }))
       toast.success('Verification email sent!')
-    } catch (error) {
-      toast.error('Failed to send verification email')
+      // Show verification code in alert if present in response
+      if (res.data.data && res.data.data.code) {
+        window.alert(`Your email verification code is: ${res.data.data.code}`)
+      }
+    } catch (error: any) {
+      if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already registered')) {
+        toast.error('This email is already registered. Please use a different email or try logging in.')
+      } else {
+        toast.error(error?.response?.data?.message || 'Failed to send verification email')
+      }
     }
   }
 
@@ -103,20 +168,16 @@ export default function SignUpPage() {
       toast.error('Please enter OTP')
       return
     }
-    // TODO: Implement phone OTP verification
     try {
       // API call to verify phone OTP
       const response = await axios.post('/users/verify-phone-otp', {
         phoneNo: formData.phone,
         otp: phoneOtp,
       })
-      if (!response.data.success) {
-        throw new Error('Invalid OTP')
-      }
       setVerificationStatus(prev => ({ ...prev, phone: 'verified' }))
       toast.success('Phone number verified!')
-    } catch (error) {
-      toast.error('Invalid OTP')
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Invalid OTP')
     }
   }
 
@@ -130,10 +191,6 @@ export default function SignUpPage() {
         email: formData.email,
         code: emailOtp,
       })
-      // Check for HTTP 200 or message
-      if (response.status !== 200) {
-        throw new Error('Invalid verification code')
-      }
       setVerificationStatus(prev => ({ ...prev, email: 'verified' }))
       toast.success('Email verified!')
     } catch (error: any) {
@@ -143,18 +200,8 @@ export default function SignUpPage() {
     }
   }
 
-  const handleSkipPhone = () => {
-    setVerificationStatus(prev => ({ ...prev, phone: 'skipped' }))
-    toast('Phone verification skipped. You can verify later in profile.')
-  }
-
-  const handleSkipEmail = () => {
-    setVerificationStatus(prev => ({ ...prev, email: 'skipped' }))
-    toast('Email verification skipped. You can verify later in profile.')
-  }
-
   const canProceedToStep2 = () => {
-    const { phone, email, password, confirmPassword } = formData
+    const { phone, email, password, confirmPassword, motherTongue } = formData
     
     // Check if passwords match
     if (password !== confirmPassword) {
@@ -167,19 +214,31 @@ export default function SignUpPage() {
       return false
     }
     
-    // Check based on selected auth method
-    if (authMethod === 'phone' && !phone) {
-      toast.error('Please provide phone number for phone-based authentication')
+    // Both phone and email are required for registration
+    if (!phone) {
+      toast.error('Please provide phone number')
       return false
     }
     
-    if (authMethod === 'email' && !email) {
-      toast.error('Please provide email address for email-based authentication')
+    if (!validatePhoneNumber(phone)) {
+      toast.error('Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9')
       return false
     }
     
-    if (authMethod === 'both' && (!phone || !email)) {
-      toast.error('Please provide both phone number and email address')
+    if (!email) {
+      toast.error('Please provide email address')
+      return false
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address')
+      return false
+    }
+    
+    if (!motherTongue) {
+      toast.error('Please select your mother tongue')
       return false
     }
     
@@ -191,26 +250,42 @@ export default function SignUpPage() {
     
     if (!canProceedToStep2()) return
     
-    setStep(2)
+    // Check if user already exists before proceeding to verification step
+    setIsCheckingExistence(true)
+    
+    try {
+      // Try to check user existence using a dedicated endpoint if available
+      const userExists = await checkUserExistence(formData.phone, formData.email)
+      
+      if (userExists) {
+        toast.error('A user with this phone number or email already exists. Please use different credentials or try logging in.')
+        setIsCheckingExistence(false)
+        return
+      }
+      
+      // If no dedicated endpoint, we'll proceed and let the OTP sending functions handle the check
+      setStep(2)
+    } catch (error: any) {
+      // If checking fails, we'll still proceed but the OTP functions will handle existence checking
+      console.log('User existence check failed, proceeding to step 2')
+      setStep(2)
+    } finally {
+      setIsCheckingExistence(false)
+    }
   }
 
   const canCreateAccount = () => {
     const hasVerifiedPhone = verificationStatus.phone === 'verified'
     const hasVerifiedEmail = verificationStatus.email === 'verified'
     
-    // Check based on selected auth method
-    if (authMethod === 'phone' && !hasVerifiedPhone) {
+    // Backend requires both email and phone verification for registration
+    if (!hasVerifiedPhone) {
       toast.error('Please verify your phone number to create account')
       return false
     }
     
-    if (authMethod === 'email' && !hasVerifiedEmail) {
+    if (!hasVerifiedEmail) {
       toast.error('Please verify your email address to create account')
-      return false
-    }
-    
-    if (authMethod === 'both' && (!hasVerifiedPhone || !hasVerifiedEmail)) {
-      toast.error('Please verify both phone number and email address')
       return false
     }
     
@@ -222,20 +297,43 @@ export default function SignUpPage() {
     
     if (!canCreateAccount()) return
     
-    // TODO: Implement form submission
     try {
-      // API call to create account
-      await axios.post('/users/register', {
-        ...formData,
+      // Prepare the registration data
+      const registrationData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        gender: formData.gender,
+        dob: formData.dob,
         phoneNo: formData.phone, // map phone to phoneNo
+        city: formData.city,
+        motherTongue: formData.motherTongue,
         knownLanguages: formData.knownLanguages.join(','), // convert array to string
-      })
+      }
+
+      // API call to create account
+      const response = await axios.post('/users/register', registrationData)
+      
+      // Handle successful registration
       toast.success('Account created successfully!')
       navigate('/dashboard')
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || 'Failed to create account'
-      )
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      if (error?.response?.status === 400) {
+        const errorMessage = error?.response?.data?.message || 'Registration failed'
+        
+        if (errorMessage.includes('already exists') || errorMessage.includes('already registered')) {
+          toast.error('A user with this email or phone number already exists. Please use different credentials or try logging in.')
+        } else if (errorMessage.includes('verify your email')) {
+          toast.error('Please verify your email address before creating account')
+        } else if (errorMessage.includes('verify your phone')) {
+          toast.error('Please verify your phone number before creating account')
+        } else {
+          toast.error(errorMessage)
+        }
+      } else {
+        toast.error('Failed to create account. Please try again.')
+      }
     }
   }
 
@@ -288,49 +386,6 @@ export default function SignUpPage() {
           >
             {step === 1 ? (
               <form onSubmit={handleNext} className="space-y-6">
-                {/* Authentication Method Selection */}
-                <div className="bg-gray-700 p-4 rounded-lg mb-6">
-                  <h3 className="text-lg font-semibold mb-4 text-center">Choose Your Authentication Method</h3>
-                  <p className="text-sm text-gray-300 mb-4 text-center">
-                    Select how you want to sign in to your account in the future
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setAuthMethod('phone')}
-                      className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
-                        authMethod === 'phone'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-600 text-gray-300'
-                      }`}
-                    >
-                      Phone + OTP
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAuthMethod('email')}
-                      className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
-                        authMethod === 'email'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-600 text-gray-300'
-                      }`}
-                    >
-                      Email + Password
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAuthMethod('both')}
-                      className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
-                        authMethod === 'both'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-600 text-gray-300'
-                      }`}
-                    >
-                      Both Options
-                    </button>
-                  </div>
-                </div>
-
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium mb-2">
@@ -404,7 +459,7 @@ export default function SignUpPage() {
 
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium mb-2">
-                      Phone Number {(authMethod === 'phone' || authMethod === 'both') && '*'}
+                      Phone Number *
                     </label>
                     <input
                       type="tel"
@@ -413,14 +468,17 @@ export default function SignUpPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      required={authMethod === 'phone' || authMethod === 'both'}
+                      required
+                      placeholder="Enter 10-digit number"
+                      maxLength={10}
                       className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
                     />
+                    <p className="text-xs text-gray-400 mt-1">Enter a 10-digit number starting with 6, 7, 8, or 9</p>
                   </div>
 
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium mb-2">
-                      Email Address {(authMethod === 'email' || authMethod === 'both') && '*'}
+                      Email Address *
                     </label>
                     <input
                       type="email"
@@ -429,47 +487,85 @@ export default function SignUpPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      required={authMethod === 'email' || authMethod === 'both'}
+                      required
                       className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="motherTongue" className="block text-sm font-medium mb-2">
+                      Mother Tongue *
+                    </label>
+                    <select
+                      id="motherTongue"
+                      value={formData.motherTongue}
+                      onChange={(e) =>
+                        setFormData({ ...formData, motherTongue: e.target.value })
+                      }
+                      required
+                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="">Select language</option>
+                      {languages.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium mb-2">
                       Password *
                     </label>
-                    <input
-                      type="password"
-                      id="password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value })
-                      }
-                      required
-                      minLength={6}
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        id="password"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
+                        required
+                        minLength={6}
+                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 pr-10"
+                      />
+                      <span
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </span>
+                    </div>
                   </div>
 
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
                       Confirm Password *
                     </label>
-                    <input
-                      type="password"
-                      id="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        setFormData({ ...formData, confirmPassword: e.target.value })
-                      }
-                      required
-                      minLength={6}
-                      className={`w-full px-4 py-2 rounded-lg bg-gray-700 border focus:outline-none ${
-                        formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword
-                          ? 'border-red-500 focus:border-red-500'
-                          : 'border-gray-600 focus:border-blue-500'
-                      }`}
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        id="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={(e) =>
+                          setFormData({ ...formData, confirmPassword: e.target.value })
+                        }
+                        required
+                        minLength={6}
+                        className={`w-full px-4 py-2 rounded-lg bg-gray-700 border focus:outline-none ${
+                          formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword
+                            ? 'border-red-500 focus:border-red-500'
+                            : 'border-gray-600 focus:border-blue-500'
+                        } pr-10`}
+                      />
+                      <span
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
+                      >
+                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </span>
+                    </div>
                     {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
                       <p className="text-red-400 text-sm mt-1">Passwords do not match</p>
                     )}
@@ -477,30 +573,32 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="text-sm text-gray-400">
-                  * Required fields based on your selected authentication method.
+                  * Required fields for account creation.
                 </div>
 
                 <motion.button
                   type="submit"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                  disabled={isCheckingExistence}
+                  whileHover={{ scale: isCheckingExistence ? 1 : 1.05 }}
+                  whileTap={{ scale: isCheckingExistence ? 1 : 0.95 }}
+                  className={`w-full text-white px-8 py-3 rounded-lg font-semibold ${
+                    isCheckingExistence 
+                      ? 'bg-gray-600 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
-                  Next - Verify Contact Details
+                  {isCheckingExistence ? 'Checking...' : 'Next - Verify Contact Details'}
                 </motion.button>
               </form>
             ) : (
               <div className="space-y-8">
                 {/* Phone Verification */}
-                {(authMethod === 'phone' || authMethod === 'both') && formData.phone && (
+                {formData.phone && (
                   <div className="border border-gray-600 rounded-lg p-6">
                     <h3 className="text-lg font-semibold mb-4 flex items-center">
                       Phone Verification
                       {verificationStatus.phone === 'verified' && (
                         <span className="ml-2 text-green-400">✓ Verified</span>
-                      )}
-                      {verificationStatus.phone === 'skipped' && (
-                        <span className="ml-2 text-yellow-400">⚠ Skipped</span>
                       )}
                     </h3>
                     
@@ -512,14 +610,6 @@ export default function SignUpPage() {
                         >
                           Send OTP
                         </button>
-                        {authMethod !== 'phone' && (
-                          <button
-                            onClick={handleSkipPhone}
-                            className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg"
-                          >
-                            Skip for now
-                          </button>
-                        )}
                       </div>
                     )}
                     
@@ -546,14 +636,6 @@ export default function SignUpPage() {
                           >
                             Resend OTP
                           </button>
-                          {authMethod !== 'phone' && (
-                            <button
-                              onClick={handleSkipPhone}
-                              className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg"
-                            >
-                              Skip for now
-                            </button>
-                          )}
                         </div>
                       </div>
                     )}
@@ -561,15 +643,12 @@ export default function SignUpPage() {
                 )}
 
                 {/* Email Verification */}
-                {(authMethod === 'email' || authMethod === 'both') && formData.email && (
+                {formData.email && (
                   <div className="border border-gray-600 rounded-lg p-6">
                     <h3 className="text-lg font-semibold mb-4 flex items-center">
                       Email Verification
                       {verificationStatus.email === 'verified' && (
                         <span className="ml-2 text-green-400">✓ Verified</span>
-                      )}
-                      {verificationStatus.email === 'skipped' && (
-                        <span className="ml-2 text-yellow-400">⚠ Skipped</span>
                       )}
                     </h3>
                     
@@ -581,14 +660,6 @@ export default function SignUpPage() {
                         >
                           Send Verification Email
                         </button>
-                        {authMethod !== 'email' && (
-                          <button
-                            onClick={handleSkipEmail}
-                            className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg"
-                          >
-                            Skip for now
-                          </button>
-                        )}
                       </div>
                     )}
                     
@@ -615,14 +686,6 @@ export default function SignUpPage() {
                           >
                             Resend Email
                           </button>
-                          {authMethod !== 'email' && (
-                            <button
-                              onClick={handleSkipEmail}
-                              className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg"
-                            >
-                              Skip for now
-                            </button>
-                          )}
                         </div>
                       </div>
                     )}
@@ -631,31 +694,6 @@ export default function SignUpPage() {
 
                 {/* Language Information */}
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label
-                      htmlFor="motherTongue"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Mother Tongue *
-                    </label>
-                    <select
-                      id="motherTongue"
-                      value={formData.motherTongue}
-                      onChange={(e) =>
-                        setFormData({ ...formData, motherTongue: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">Select language</option>
-                      {languages.map((lang) => (
-                        <option key={lang} value={lang}>
-                          {lang}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Known Languages

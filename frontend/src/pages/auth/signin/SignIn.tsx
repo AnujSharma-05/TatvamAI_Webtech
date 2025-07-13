@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from "../../../config/axios"
 import { handleLoginResponse } from "../../../utils/auth"
-
+import { Eye, EyeOff } from 'lucide-react'
 
 type AuthMethod = 'phone' | 'email'
 
@@ -16,20 +16,36 @@ export default function SignInPage() {
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
+  // Phone number validation
+  const validatePhoneNumber = (phone: string) => {
+    const phoneRegex = /^[6-9]\d{9}$/
+    return phoneRegex.test(phone)
+  }
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    // TODO: Implement OTP sending
+    
+    if (!validatePhoneNumber(contact)) {
+      toast.error('Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9')
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await axios.post('/users/send-phone-otp-login', { phoneNo: contact })
-      if (res.data.success) {
-        toast.success('OTP sent successfully!')
-      } else {
-        throw new Error('Failed to send OTP')
+      setIsOtpSent(true)
+      toast.success('OTP sent successfully!')
+      // Show OTP in alert if present in response
+      if (res.data.data && res.data.data.otp) {
+        window.alert(`Your phone OTP is: ${res.data.data.otp}`)
       }
     } catch (err: any) {
-      if (err.response?.data?.message) {
+      if (err.response?.status === 400 && err.response?.data?.message?.includes('does not exist')) {
+        toast.error('This phone number is not registered. Please sign up first.')
+      } else if (err.response?.data?.message) {
         toast.error(err.response.data.message)
       } else {
         toast.error('Failed to send OTP')
@@ -37,8 +53,6 @@ export default function SignInPage() {
     } finally {
       setLoading(false)
     }
-    setIsOtpSent(true)
-    toast.success('OTP sent successfully!')
   }
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -62,6 +76,8 @@ export default function SignInPage() {
     } catch (err: any) {
       if (err.response?.status === 403) {
         toast.error('Please verify your email and phone number before logging in');
+      } else if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
       } else {
         toast.error('OTP verification failed');
       }
@@ -75,6 +91,15 @@ export default function SignInPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(contact)) {
+      toast.error('Please enter a valid email address')
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await axios.post('/users/login', {
         email: contact,
@@ -91,7 +116,9 @@ export default function SignInPage() {
         toast.error('Login failed - no tokens received');
       }
     } catch (err: any) {
-      if (err.response?.status === 403) {
+      if (err.response?.status === 404) {
+        toast.error('This email is not registered. Please sign up first.');
+      } else if (err.response?.status === 403) {
         toast.error('Please verify your email and phone number before logging in');
       } else if (err.response?.data?.message) {
         toast.error(err.response.data.message);
@@ -169,15 +196,23 @@ export default function SignInPage() {
                   <label htmlFor="password" className="block text-sm font-medium mb-2">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 pr-10"
+                    />
+                    <span
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                    </span>
+                  </div>
                 </div>
                 <motion.button
                   type="submit"
@@ -202,10 +237,12 @@ export default function SignInPage() {
                       id="contact"
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
-                      placeholder="Enter your phone number"
+                      placeholder="Enter 10-digit number"
                       required
+                      maxLength={10}
                       className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
                     />
+                    <p className="text-xs text-gray-400 mt-1">Enter a 10-digit number starting with 6, 7, 8, or 9</p>
                   </div>
                   <motion.button
                     type="submit"
