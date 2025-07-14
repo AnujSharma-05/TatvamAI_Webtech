@@ -207,6 +207,7 @@ const verifyPhoneOtp = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, {}, "Phone number verified successfully"));
 });
 
+// email login
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
