@@ -10,9 +10,9 @@ const instance: AxiosInstance = axios.create({
 
 instance.interceptors.request.use(
     (config) => {
-        console.log('Making request to:', config.url);
-        console.log('Request method:', config.method);
-        console.log('Request headers:', config.headers);
+        // console.log('Making request to:', config.url);
+        // console.log('Request method:', config.method);
+        // console.log('Request headers:', config.headers);
         
         const token = localStorage.getItem('accessToken');
         if (token) {
@@ -30,7 +30,7 @@ instance.interceptors.request.use(
 
 instance.interceptors.response.use(
     (response) => {
-        console.log('Response received:', response.status, response.data);
+        // console.log('Response received:', response.status, response.data);
         return response;
     },
     (error) => {
