@@ -9,7 +9,6 @@ const Footer: FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         
         {/* Logo and Description */}
-        {/* Logo and Description */}
         <div className="flex items-center space-x-4">
           <img
             src="/logo.png"
@@ -28,20 +27,20 @@ const Footer: FC = () => {
 
 
         {/* Products */}
-        <div>
+        {/* <div>
           <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Products</h3>
           <ul className="space-y-2 text-sm">
             <li><Link to="/asr" className="hover:underline">ASR Tools</Link></li>
             <li><Link to="/tts" className="hover:underline">TTS Models</Link></li>
             <li><Link to="/datasets" className="hover:underline">Speech Datasets</Link></li>
           </ul>
-        </div>
+        </div> */}
 
         {/* Resources */}
         <div>
           <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Resources</h3>
           <ul className="space-y-2 text-sm">
-            <li><Link to="/docs" className="hover:underline">Documentation</Link></li>
+            {/* <li><Link to="/docs" className="hover:underline">Documentation</Link></li> */}
             <li><Link to="/blog" className="hover:underline">Blog</Link></li>
             <li><Link to="/faq" className="hover:underline">FAQs</Link></li>
           </ul>
@@ -52,7 +51,7 @@ const Footer: FC = () => {
           <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Company</h3>
           <ul className="space-y-2 text-sm">
             <li><Link to="/about" className="hover:underline">About Us</Link></li>
-            <li><Link to="/careers" className="hover:underline">Careers</Link></li>
+            {/* <li><Link to="/careers" className="hover:underline">Careers</Link></li> */}
             <li><Link to="/contact" className="hover:underline">Contact</Link></li>
           </ul>
         </div>
