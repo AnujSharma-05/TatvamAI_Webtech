@@ -5,8 +5,8 @@ import { InView } from 'react-intersection-observer';
 const About = () => {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const headingScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const headingOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
   const sections = [
     {
@@ -39,48 +39,67 @@ const About = () => {
   return (
     <div
       ref={containerRef}
-      className="relative bg-slate-900 text-white min-h-screen py-24 overflow-x-hidden"
+      className="relative bg-slate-900 text-white min-h-screen py-24 px-6 overflow-x-hidden"
     >
-      {/* Floating Ambient Glows */}
+      {/* Ambient Glows */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute w-72 h-72 bg-blue-500 blur-3xl rounded-full opacity-20 top-20 left-10 animate-pulse" />
-        <div className="absolute w-96 h-96 bg-purple-500 blur-3xl rounded-full opacity-20 bottom-0 right-0 animate-ping" />
+        <div className="absolute w-96 h-96 bg-blue-500 blur-[140px] rounded-full top-10 left-10 opacity-20 animate-slow-bounce" />
+        <div className="absolute w-[600px] h-[600px] bg-white blur-[180px] rounded-full bottom-0 right-0 opacity-20 animate-pulse" />
       </div>
 
-      {/* Animated Heading */}
+      {/* Heading */}
       <motion.h1
-        className="text-5xl md:text-6xl font-extrabold text-center pl-4 sm:pl-10 mb-24 glow-hover"
-        style={{ scale, opacity }}
+        style={{ scale: headingScale, opacity: headingOpacity }}
+        className="text-5xl md:text-7xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400  to-white mb-24 tracking-tight"
       >
         About Tatvam AI
       </motion.h1>
 
-      {/* Animated Sections */}
-      <div className="max-w-5xl mx-auto space-y-32 px-4 sm:px-8">
+      {/* Sections */}
+      <div className="space-y-28 max-w-6xl mx-auto">
         {sections.map((section, index) => (
-          <InView triggerOnce threshold={0.2} key={index}>
+          <InView key={index} triggerOnce threshold={0.3}>
             {({ inView, ref }) => (
-              <motion.section
+              <motion.div
                 ref={ref}
-                initial={{ opacity: 0, x: -100, scale: 0.98 }}
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
                 animate={
-                  inView
-                    ? { opacity: 1, x: 0, scale: 1 }
-                    : { opacity: 0, x: -100, scale: 0.98 }
+                  inView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 50, scale: 0.95 }
                 }
                 transition={{
-                  type: 'spring',
-                  stiffness: 60,
-                  damping: 20,
-                  delay: 0.6 * index,
+                  duration: 0.8,
+                  ease: 'easeOut',
+                  delay: index * 0.2,
                 }}
-                className="prose prose-lg prose-invert max-w-3xl glow-hover"
+                className={`flex flex-col md:flex-row ${
+                  index % 2 === 0 ? '' : 'md:flex-row-reverse'
+                } items-center gap-10`}
               >
-                {section.title && (
-                  <h2 className="font-semibold underline-grow">{section.title}</h2>
-                )}
-                <p>{section.content}</p>
-              </motion.section>
+                <div className="md:w-1/2">
+                  <motion.div
+                    className="bg-[#101729] border border-slate-700/50 rounded-2xl p-8 shadow-lg hover:shadow-purple-500/30 transition-all duration-300"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    {section.title && (
+                      <h2 className="text-2xl font-semibold mb-4 text-blue-400 tracking-wide underline underline-offset-8 decoration-purple-500">
+                        {section.title}
+                      </h2>
+                    )}
+                    <p className="text-lg text-slate-300 leading-relaxed">{section.content}</p>
+                  </motion.div>
+                </div>
+                <div className="md:w-1/2">
+                  <motion.div
+                    className="w-full h-64 rounded-2xl bg-gradient-to-tr from-[#1e293b] via-[#111827] to-[#1e293b] shadow-inner border border-slate-700/30"
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    {/* Placeholder for illustrations / Lottie / AI Art */}
+                    <div className="flex items-center justify-center h-full text-slate-500 font-bold text-xl tracking-wide">
+                      ✨ Visual Element
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
             )}
           </InView>
         ))}

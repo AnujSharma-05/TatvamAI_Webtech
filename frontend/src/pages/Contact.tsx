@@ -1,12 +1,15 @@
 import { useForm } from "react-hook-form";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import { Button } from "../components/ui/button";
+import { useState } from "react";
 import { toast } from "../components/ui/sonner";
+import emailjs from "@emailjs/browser";
 import { FaGithub, FaTwitter, FaLinkedin, FaEnvelope, FaPhone } from "react-icons/fa";
 
-const Contact = () => {
+// ←─── Your actual EmailJS values ───→
+const SERVICE_ID  = "service_iknpru9";
+const TEMPLATE_ID = "template_l7hnfuo";
+const PUBLIC_KEY  = "aYn2S4Cy8WRnXVJ40";
+
+export default function Contact() {
   const {
     register,
     handleSubmit,
@@ -14,138 +17,124 @@ const Contact = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  const onSubmit = async (data: any) => {
-    // Simulate API call or processing
-    toast.success("Your message has been sent successfully!");
-    reset();
+  const [submitted, setSubmitted] = useState(false);
+
+  const onSubmit = async (formData: any) => {
+    // Add date & time for your template variables {{date}} and {{time}}
+    const now = new Date();
+    const data = {
+      ...formData,
+      date: now.toLocaleDateString(),
+      time: now.toLocaleTimeString(),
+    };
+
+    try {
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, data, PUBLIC_KEY);
+      toast.success("✨ Message beamed successfully!");
+      setSubmitted(true);
+      reset();
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (err) {
+      console.error("EmailJS Error:", err);
+      toast.error("⚠️ Signal lost. Try again.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-slate-100 dark:from-slate-900 dark:to-slate-950 py-16 px-4 flex items-center justify-center">
-      <div className="max-w-6xl w-full grid md:grid-cols-2 gap-12 animate-in fade-in duration-500">
-        {/* Contact Form */}
-        <Card className="shadow-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition hover:scale-[1.01] duration-300">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center text-slate-800 dark:text-white mb-2">
-              Get in Touch
-            </CardTitle>
-            <p className="text-center text-muted-foreground">
-              Fill out the form and we’ll get back to you soon.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-              <div>
-                <label className="block mb-1 font-medium">Name</label>
-                <Input
-                  {...register("name", { required: "Name is required" })}
-                  placeholder="Enter your name"
-                />
-                {errors.name && (
-                  <span className="text-red-500 text-sm">{errors.name.message as string}</span>
-                )}
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Email</label>
-                <Input
-                  type="email"
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Enter a valid email",
-                    },
-                  })}
-                  placeholder="your@email.com"
-                />
-                {errors.email && (
-                  <span className="text-red-500 text-sm">{errors.email.message as string}</span>
-                )}
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Subject</label>
-                <Input
-                  {...register("subject", { required: "Subject is required" })}
-                  placeholder="Message subject"
-                />
-                {errors.subject && (
-                  <span className="text-red-500 text-sm">{errors.subject.message as string}</span>
-                )}
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Message</label>
-                <Textarea
-                  {...register("message", { required: "Message is required" })}
-                  placeholder="Write your message here..."
-                  rows={4}
-                />
-                {errors.message && (
-                  <span className="text-red-500 text-sm">{errors.message.message as string}</span>
-                )}
-              </div>
-              <Button
-                type="submit"
-                className="w-full text-base font-semibold tracking-wide"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Sending..." : "Send Message"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-black bg-[radial-gradient(circle_at_20%_20%,#0f172a,transparent)] text-white py-20 px-6 flex items-center justify-center">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-12 items-center">
+        {/* Left Panel: Info */}
+        <div className="bg-[#101729]/80 rounded-3xl p-10 shadow-2xl backdrop-blur-lg hover:shadow-blue-500/20 transition-all duration-300 animate-in fade-in">
+          <h2 className="text-4xl font-bold text-gradient bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent mb-4">
+            Let’s Talk.
+          </h2>
+          <p className="text-slate-400 mb-8">
+            Whether you’re a contributor, enterprise, or just curious — we’re listening.
+          </p>
 
-        {/* Contact Info */}
-        <Card className="shadow-2xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl flex flex-col justify-center transition hover:scale-[1.01] duration-300">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-              Connect with Us
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Reach out via email or follow us on social media.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6 mt-4">
-              <div className="flex items-center gap-3 text-lg text-slate-700 dark:text-slate-300">
-                <FaEnvelope className="text-blue-600 dark:text-blue-400" />
-                <span>support@tatvam.ai</span>
-              </div>
-              <div className="flex items-center gap-3 text-lg text-slate-700 dark:text-slate-300">
-                <FaPhone className="text-green-600 dark:text-green-400" />
-                <span>+91-9876543210</span>
-              </div>
-              <div className="flex gap-6 mt-8 text-2xl text-slate-600 dark:text-slate-300">
-                <a
-                  href="https://github.com/tatvam-ai"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-black dark:hover:text-white transition-transform hover:scale-110"
-                >
-                  <FaGithub />
-                </a>
-                <a
-                  href="https://twitter.com/tatvam_ai"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-500 transition-transform hover:scale-110"
-                >
-                  <FaTwitter />
-                </a>
-                <a
-                  href="https://linkedin.com/company/tatvam-ai"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-700 transition-transform hover:scale-110"
-                >
-                  <FaLinkedin />
-                </a>
-              </div>
+          <div className="space-y-4 text-slate-300">
+            <div className="flex items-center gap-3 text-lg">
+              <FaEnvelope className="text-blue-400" />
+              <span>tatvamai.official@gmail.com</span>
             </div>
-          </CardContent>
-        </Card>
+            {/* <div className="flex items-center gap-3 text-lg">
+              <FaPhone className="text-green-400" />
+              <span>+91-9876543210</span>
+            </div> */}
+            <div className="flex gap-6 mt-6 text-2xl">
+            <a
+                href="https://github.com/tatvam-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition hover:scale-110"
+              >
+                <FaGithub />
+              </a>              {/* <a href="https://twitter.com/tatvam_ai" className="hover:text-blue-400 transition hover:scale-110"><FaTwitter /></a> */}
+              <a
+                href="https://www.linkedin.com/company/tatvamai/posts/?feedView=all"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-blue-500 transition hover:scale-110"
+              >
+                <FaLinkedin />
+              </a>            </div>
+          </div>
+        </div>
+
+        {/* Right Panel: Form */}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-[#101729]/80 rounded-3xl p-10 shadow-2xl backdrop-blur-lg hover:shadow-purple-500/20 transition-all duration-300 animate-in fade-in"
+        >
+          <h3 className="text-3xl font-bold mb-6 text-white">Send a Message</h3>
+
+          {["name", "email", "subject", "message"].map((field) => (
+            <div key={field} className="mb-6">
+              <label className="block text-slate-300 mb-1 capitalize">{field}</label>
+              {field === "message" ? (
+                <textarea
+                  {...register(field, { required: `${field} is required` })}
+                  placeholder={`Enter your ${field}`}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-[#181f36] border border-slate-700 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                />
+              ) : (
+                <input
+                  type={field === "email" ? "email" : "text"}
+                  {...register(field, {
+                    required: `${field} is required`,
+                    ...(field === "email" && {
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "Enter a valid email",
+                      },
+                    }),
+                  })}
+                  placeholder={`Enter your ${field}`}
+                  className="w-full px-4 py-3 bg-[#181f36] border border-slate-700 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+              )}
+              {errors[field] && (
+                <p className="text-red-400 text-sm mt-1">
+                  {(errors as any)[field]?.message}
+                </p>
+              )}
+            </div>
+          ))}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`w-full mt-4 py-3 rounded-xl text-white font-semibold transition-all duration-300 ${
+              submitted
+                ? "bg-emerald-500 hover:bg-emerald-600"
+                : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            }`}
+          >
+            {isSubmitting ? "Transmitting..." : submitted ? "Sent ✓" : "Send Message"}
+          </button>
+        </form>
       </div>
     </div>
   );
-};
-
-export default Contact;
+}
