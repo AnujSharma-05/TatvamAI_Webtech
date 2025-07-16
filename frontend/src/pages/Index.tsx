@@ -149,7 +149,7 @@ const Index = () => {
               <Button 
                 size="lg"
                 className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={() => navigate("/auth/signin")}
+                onClick={() => navigate("/qr-recording")}
               >
                 Get Started Now
                 <ChevronRight className="w-5 h-5 ml-2" />
@@ -158,6 +158,7 @@ const Index = () => {
                 variant="outline"
                 size="lg"
                 className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300"
+                onClick={() => navigate("/about")}
               >
                 Learn More
               </Button>
