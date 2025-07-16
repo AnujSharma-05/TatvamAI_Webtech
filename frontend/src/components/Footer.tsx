@@ -9,14 +9,23 @@ const Footer: FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         
         {/* Logo and Description */}
-        <div>
-          <h2 className="text-xl font-bold text-primary bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
-            TatvamAI
-          </h2>
-          <p className="text-sm text-muted-foreground mt-2">
-            Empowering voice AI for 22+ Indic languages and dialects.
-          </p>
+        {/* Logo and Description */}
+        <div className="flex items-center space-x-4">
+          <img
+            src="/logo.png"
+            alt="TatvamAI Logo"
+            className="w-10 h-10 rounded-md shadow-md"
+          />
+          <div>
+            {/* <h2 className="text-xl font-bold text-primary bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
+              TatvamAI
+            </h2> */}
+            <p className="text-sm text-muted-foreground mt-1">
+              Empowering voice AI for 22+ Indic languages and dialects.
+            </p>
+          </div>
         </div>
+
 
         {/* Products */}
         <div>

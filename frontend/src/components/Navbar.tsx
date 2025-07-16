@@ -68,14 +68,17 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center h-20">
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex-shrink-0 flex items-center hover:scale-105 transition-transform duration-300 mr-8"
-          >
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              TatvamAI
-            </span>
-          </Link>
+          <Link href="/" className="flex items-center space-x-3 hover:scale-105 transition-transform duration-300">
+          <img
+            src="/logo.png"
+            alt="TatvamAI Logo"
+            className="w-10 h-10 rounded-md shadow-md"
+          />
+          <span className="text-xl font-bold bg-white bg-clip-text text-transparent">
+            TatvamAI
+          </span>
+        </Link> 
+
 
           {/* Desktop Nav */}
           <div className="flex-1 hidden lg:flex items-center justify-center space-x-8">
