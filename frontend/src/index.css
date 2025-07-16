@@ -151,3 +151,25 @@
     @apply bg-gradient-to-br from-[#306b34ff] via-[#1c5253ff] via-[#f3ffc6dd] via-[#c3eb78dd] to-[#b6174bff];
   }
 }
+
+.glow-hover:hover {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  transition: text-shadow 0.3s ease-in-out;
+}
+.glow-hover:hover {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  transition: text-shadow 0.3s ease-in-out;
+}
+
+.underline-grow::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 2px;
+  background: #38bdf8;
+  transition: width 0.4s ease-in-out;
+}
+
+.underline-grow:hover::after {
+  width: 100%;
+}
