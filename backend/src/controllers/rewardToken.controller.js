@@ -61,9 +61,26 @@ const getTokenStats = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, stats, "Token stats aggregated"));
 });
 
+const getTokenByRecordingId = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const reward = await RewardToken.findOne({ recordingId: id });
+
+  if (!reward) {
+    throw new ApiError(404, "No token found for this recording");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, { amount: reward.amount }, "Token info retrieved")
+    );
+});
+
 
 export {
     getAllUserRewards,
     getAllTokensAdmin,
-    getTokenStats
+    getTokenStats,
+    getTokenByRecordingId
 }

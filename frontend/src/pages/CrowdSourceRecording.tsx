@@ -274,38 +274,54 @@ const QRRecording = () => {
   }, [audioUrl, stream]);
 
   const handleUpload = async () => {
-    if (!audioBlob) return;
+  if (!audioBlob) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
+  setIsUploading(true);
+  setUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append("audio", audioBlob, `recording-${Date.now()}.wav`);
-    formData.append("duration", recordingTime.toFixed(2));
-    formData.append("language", language);
-    formData.append("domain", domain);
-    formData.append("recordedVia", "web");
-    formData.append("paragraph", generatedParagraph);
+  const formData = new FormData();
+  formData.append("audio", audioBlob, `recording-${Date.now()}.wav`);
+  formData.append("duration", recordingTime.toFixed(2));
+  formData.append("language", language);
+  formData.append("domain", domain);
+  formData.append("recordedVia", "web");
+  formData.append("paragraph", generatedParagraph);
 
-    try {
-      const response = await axios.post("/recordings/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        },
-        onUploadProgress: (progressEvent) => {
-          const total = progressEvent.total ?? 1;
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
-          setUploadProgress(percentCompleted);
-        }
-      });
-      setStep(7);
-    } catch (err) {
-      setError("Upload failed. Please try again.");
-      console.error(err);
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  try {
+    // 1. Upload the recording to /recordings
+    const uploadResponse = await axios.post("/recordings/", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+      onUploadProgress: (progressEvent) => {
+        const total = progressEvent.total ?? 1;
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / total);
+        setUploadProgress(percentCompleted);
+      }
+    });
+
+    const audioId = uploadResponse?.data?.data?._id;
+    if (!audioId) throw new Error("Server didn't return a recording ID.");
+
+    // 2. Evaluate the recording by calling /recordings/:id/evaluate
+    const evaluateResponse = await axios.post(`/recordings/${audioId}/evaluate`);
+
+    const { final_quality, amount, recordingId } = evaluateResponse.data.data;
+    console.log("Evaluation result:", { final_quality, recordingId, amount });
+
+    // 3. Continue to the next step in UI
+    setStep(7);
+
+    // Optional: You can set this info in a context or state if dashboard needs it
+    // setLatestEvaluation({ final_quality, score, duration });
+
+  } catch (err) {
+    console.error("Upload or evaluation failed:", err);
+    setError("Something went wrong while uploading or evaluating. Try again.");
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const handleRecordAgain = () => {
     if (audioUrl) {
