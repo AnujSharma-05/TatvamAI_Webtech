@@ -60,12 +60,9 @@ const userSchema = new mongoose.Schema(
         ref: "Recording", // reference to the Recording model
       },
     ],
-    rewardTokens: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "RewardToken", // reference to the RewardToken model
-      },
-    ],
+    rewardTokens: {
+      type: Number,
+    },
     emailVerified: {
       type: Boolean,
       default: false, // email verification status
