@@ -17,6 +17,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
 import NotFound from './pages/NotFound'; // Optional 404
 import Profile from './pages/Profile'; // Create this page if not present
+import FAQ from './pages/FAQs';
+import Documentation from './pages/Documentation';
+import Careers from './pages/Careers';
 
 function App() {
   return (
@@ -31,6 +34,9 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/docs" element={<Documentation />} />
+            <Route path="/careers" element={<Careers />} />
 
             {/* 🔐 Protected Routes */}
             <Route

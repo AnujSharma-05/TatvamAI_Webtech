@@ -90,8 +90,8 @@ const Blogs = () => {
               const handleMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
                 const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
                 setMousePos({
-                  x: (e.clientX - left - width / 2) / 10,
-                  y: -(e.clientY - top - height / 2) / 20,
+                  x: (e.clientX - left - width / 2) / 50,
+                  y: -(e.clientY - top - height / 2) / 50,
                 });
               };
 
@@ -117,7 +117,11 @@ const Blogs = () => {
                         className="relative group cursor-pointer"
                       >
                         <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-30 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 blur-md transition-opacity duration-500 pointer-events-none" />
-                        <div className="relative z-10 bg-[#101729] border border-slate-700/50 rounded-2xl p-8 shadow-xl transition-all duration-300 h-[18rem] flex flex-col justify-between">
+                        {/* <div className="relative z-10 bg-[#101729]/80 border border-slate-700/50 rounded-2xl p-8 h-[18rem] flex flex-col justify-between shadow-2xl backdrop-blur-lg transition-all duration-300 group-hover:shadow-blue-500/20 hover:shadow-purple-500/20"> */}
+                        
+                        {/* <div className="relative z-10 bg-[#101729] border border-slate-700/50 rounded-2xl p-8 shadow-xl transition-all duration-300 h-[18rem] flex flex-col justify-between"> */}
+                        <div className="relative z-10 bg-[#101729]/80 border border-slate-700/50 rounded-2xl p-8 h-[18rem] flex flex-col justify-between shadow-2xl backdrop-blur-lg transform transition-all duration-300 group-hover:scale-[1.03]  hover:shadow-purple-500/30 transition-all duration-300">
+
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-blue-400">{blog.category}</span>
                             <span className="text-sm text-slate-500">{blog.date}</span>

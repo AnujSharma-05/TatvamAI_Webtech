@@ -112,18 +112,11 @@ export const Navbar = () => {
                 className="absolute top-[100%] left-0 w-56 bg-[#1e293b] border border-slate-700 shadow-xl rounded-2xl py-3 z-50 opacity-0 scale-95 transform transition duration-200 ease-in-out pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto hover:opacity-100 hover:scale-100 hover:pointer-events-auto"
                 style={{ marginTop: "0.75rem", paddingTop: "1rem" }} // Smooth hover bridge
               >
-                <Link
-                  to="/products"
-                  className="block px-6 py-3 text-sm text-white hover:bg-slate-700"
-                >
-                  Voice Datasets
-                </Link>
-                <Link
-                  to="/qr"
-                  className="block px-6 py-3 text-sm text-white hover:bg-slate-700"
-                >
-                  QR Scanner
-                </Link>
+
+                <Link to="/products" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Our Models</Link>
+                {/* <Link to="/demo" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Live Demo</Link> */}
+                <Link to="/qr" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">DhvaniShilp</Link>
+
               </div>
             </div>
 
