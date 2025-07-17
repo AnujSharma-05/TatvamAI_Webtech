@@ -589,15 +589,22 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
 
+// to get user total tokens (TODO: to be done) return the final token amount from all the user documents
 const getUserIncentives = asyncHandler(async (req, res) => {
   const tokens = await RewardToken.find({ userId: req.user?._id }).sort({
     createdAt: -1,
   });
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, tokens, "Incentive history fetched"));
+  const totalTokens = tokens.reduce((sum, token) => sum + (token.amount || 0), 0);
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      tokens,
+      totalTokens
+    }, "Incentive history fetched")
+  );
 });
+
 
 const getUserContributionStats = asyncHandler(async (req, res) => {
   const stats = await Recording.aggregate([

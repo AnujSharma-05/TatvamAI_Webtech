@@ -11,6 +11,9 @@ const rewardTokenSchema = new mongoose.Schema({
       ref: 'Recording',
       required: true,
    },
+   final_quality: {
+        type: String,
+    },
    amount: {
       type: Number,
       required: true,
@@ -25,7 +28,7 @@ const rewardTokenSchema = new mongoose.Schema({
     },
     method: {
         type: String,
-        enum: ['bank_transfer', 'upi'],
+        enum: ['bank_transfer', 'upi', 'token'],
         required: true,
     }
     
