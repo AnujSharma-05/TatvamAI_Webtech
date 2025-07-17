@@ -9,7 +9,7 @@ import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
 import QR from './pages/QR';
 import Demo from './pages/Demo';
-import Contributor from './pages/Contributor';
+// import Contributor from './pages/Contributor';
 import SignInPage from './pages/auth/signin/SignIn';
 import SignUpPage from './pages/auth/signup/SignUp';
 import Recording from './pages/CrowdSourceRecording';
@@ -44,14 +44,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/contributor"
-              element={
-                <ProtectedRoute>
-                  <Contributor />
                 </ProtectedRoute>
               }
             />

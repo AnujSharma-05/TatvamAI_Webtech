@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { Recording } from "../models/recording.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
-// import { RewardToken } from "../models/rewardToken.model.js";
+import { RewardToken } from "../models/rewardToken.model.js";
 
 import axios from "axios";
 import uploadFileToS3 from "../utils/aws_s3.js";
@@ -48,32 +48,57 @@ const evaluateRecording = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Recording not found");
   }
 
-  // Send to Python model via HTTP API
-  const response = await axios.post(
-    process.env.PYTHON_SERVER_URL + "/evaluate",
-    { audioUrl: recording.url }
-  );
+  // Extract the S3 key from the URL
+  let s3Key;
+  try {
+    const s3Url = new URL(recording.recordingUrl);
+    s3Key = decodeURIComponent(s3Url.pathname.slice(1)); // Remove leading slash
+  } catch (err) {
+    throw new ApiError(400, "Invalid recording URL");
+  }
 
-  const { quality, duration, score } = response.data;
+  // Send s3Key to Python API
+  let response;
+  try {
+    response = await axios.post(`${process.env.PYTHON_SERVER_URL}/analyze`, {
+      s3Key
+    });
+  } catch (err) {
+    throw new ApiError(500, "Failed to evaluate audio: " + err.message);
+  }
 
-  recording.quality = quality;
-  recording.duration = duration;
+  const { final_quality } = response.data;
+
+  const rewardMap = {
+    bad: 0,
+    average: 1,
+    good: 2,
+    excellent: 3
+  };
+
+  const score = rewardMap[final_quality] ?? 0;
+
+  // Update the recording
+  recording.quality = final_quality;
   await recording.save();
 
-  // Reward user
-  await Token.create({
+  // Issue reward token
+  const rewardToken = await RewardToken.create({
     userId: recording.userId,
     recordingId: recording._id,
+    final_quality,
     amount: score,
     reason: "evaluated_contribution",
     method: "token",
     status: "approved",
   });
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, recording, "Recording evaluated and rewarded"));
+  return res.status(200).json(
+    new ApiResponse(200, rewardToken, "Recording evaluated and rewarded")
+  );
 });
+
+
 
 // for admin only
 const getAllRecordings = asyncHandler(async (req, res) => {

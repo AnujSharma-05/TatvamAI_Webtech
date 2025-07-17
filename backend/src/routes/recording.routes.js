@@ -16,6 +16,9 @@ const router = Router();
 router.route('/')
     .post(verifyJWT, upload.single('audio'), uploadRecording) // Upload recording
 
+router.route('/:id/evaluate')
+    .post(verifyJWT, evaluateRecording);
+
 router.route('/pending-evaluation')
     .get(verifyJWT, getPendingRecordingsForEvaluation); // Get recordings pending evaluation
 

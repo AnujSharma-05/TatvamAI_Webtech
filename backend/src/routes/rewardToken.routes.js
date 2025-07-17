@@ -2,7 +2,8 @@ import { Router }  from 'express';
 import {
     getAllUserRewards,
     getAllTokensAdmin,
-    getTokenStats
+    getTokenStats,
+    getTokenByRecordingId
 } from '../controllers/rewardToken.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -16,5 +17,8 @@ router.route('/admin')
 
 router.route('/stats')
     .get(verifyJWT, getTokenStats); // Get token stats
+
+router.route('/api/tokens/recording/:id')
+    .get(verifyJWT, getTokenByRecordingId);
 
 export default router;

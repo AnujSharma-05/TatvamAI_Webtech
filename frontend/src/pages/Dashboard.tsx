@@ -1,12 +1,12 @@
 import { MotionCard } from '../components/MotionProvider';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import axios from '../config/axios'; // Adjust the import path as necessary
-
+import axios from '../config/axios';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [recordings, setRecordings] = useState([]);
+  const [incentives, setIncentives] = useState([]);
   const [stats, setStats] = useState({
     totalRecordings: 0,
     minsContributed: 0,
@@ -16,29 +16,21 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch user recordings
   const fetchRecordings = async () => {
-    try {
-      const response = await axios.get('/users/recordings');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching recordings:', error);
-      throw error;
-    }
+    const res = await axios.get('/users/recordings');
+    return res.data.data;
   };
 
-  // Fetch contribution stats
   const fetchContributionStats = async () => {
-    try {
-      const response = await axios.get('/users/contribution-stats');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching contribution stats:', error);
-      throw error;
-    }
+    const res = await axios.get('/users/contribution-stats');
+    return res.data.data;
   };
 
-  // Convert seconds to minutes with proper formatting
+  const fetchIncentives = async () => {
+    const res = await axios.get('/users/incentives');
+    return res.data.data;
+  };
+
   const secondsToMinutes = (seconds) => {
     if (!seconds || seconds === 0) return '0:00';
     const minutes = Math.floor(seconds / 60);
@@ -46,23 +38,15 @@ const Dashboard = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Calculate derived stats from recordings
-  const calculateStats = (recordingsData, contributionData) => {
+  const calculateStats = (recordingsData, contributionData, incentivesData) => {
     const totalRecordings = contributionData.totalRecordings || recordingsData.length;
-    
-    // Calculate minutes contributed (convert seconds to minutes)
-    const totalSecondsContributed = recordingsData.reduce((sum, recording) => {
-      return sum + (recording.duration || 0); // duration is in seconds from backend
-    }, 0);
+
+    const totalSecondsContributed = recordingsData.reduce((sum, r) => sum + (r.duration || 0), 0);
     const minsContributed = Math.round(totalSecondsContributed / 60);
 
-    // Get unique languages
     const uniqueLanguages = new Set(recordingsData.map(r => r.language)).size;
 
-    // Calculate total tokens from approved recordings
-    const totalTokens = recordingsData.reduce((sum, recording) => {
-      return sum + (recording.totalTokens || 0);
-    }, 0);
+    const totalTokens = incentivesData.totalTokens;
 
     return {
       totalRecordings,
@@ -72,7 +56,6 @@ const Dashboard = () => {
     };
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -81,22 +64,24 @@ const Dashboard = () => {
     });
   };
 
-  // Load data on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const [recordingsData, contributionData] = await Promise.all([
+        const [recordingsData, contributionData, incentivesResponse] = await Promise.all([
           fetchRecordings(),
-          fetchContributionStats()
+          fetchContributionStats(),
+          fetchIncentives()
         ]);
 
-        setRecordings(recordingsData);
-        const calculatedStats = calculateStats(recordingsData, contributionData);
-        setStats(calculatedStats);
+        const { tokens, totalTokens } = incentivesResponse;
 
+        setRecordings(recordingsData);
+        setIncentives(tokens);
+        const calculatedStats = calculateStats(recordingsData, contributionData, { totalTokens });
+        setStats(calculatedStats);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load data');
         console.error('Error loading dashboard data:', err);
@@ -114,6 +99,11 @@ const Dashboard = () => {
     { label: 'Languages', value: stats.languages.toString() },
     { label: 'Tokens', value: stats.totalTokens.toString() },
   ];
+
+  const getTokensForRecording = (recordingId) => {
+    const tokenDoc = incentives.find((t) => t.recordingId?.toString() === recordingId?.toString());
+    return tokenDoc ? tokenDoc.amount : '--';
+  };
 
   if (loading) {
     return (
@@ -159,7 +149,6 @@ const Dashboard = () => {
           </button>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {statsArray.map((stat, index) => (
             <MotionCard key={index} className="bg-slate-800 p-6 rounded-xl">
@@ -169,7 +158,6 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Recent Recordings Table */}
         <div className="bg-slate-800 rounded-xl p-6">
           <h2 className="text-xl font-bold mb-6">Recent Recordings</h2>
           {recordings.length === 0 ? (
@@ -209,7 +197,7 @@ const Dashboard = () => {
                           Pending
                         </span>
                       </td>
-                      <td className="py-4">--</td>
+                      <td className="py-4">{getTokensForRecording(recording._id)}</td>
                     </tr>
                   ))}
                 </tbody>
