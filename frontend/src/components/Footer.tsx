@@ -29,12 +29,12 @@ const Footer: FC = () => {
 
         {/* Products */}
         <div>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Products</h3>
-          <ul className="space-y-2 text-sm">
+          <h3 className="text-sm font-semibold mb-3 text-muted-foreground"><Link to= "/products">Products</Link></h3>
+          {/* <ul className="space-y-2 text-sm">
             <li><Link to="/asr" className="hover:underline">ASR Tools</Link></li>
             <li><Link to="/tts" className="hover:underline">TTS Models</Link></li>
             <li><Link to="/datasets" className="hover:underline">Speech Datasets</Link></li>
-          </ul>
+          </ul> */}
         </div>
 
         {/* Resources */}
@@ -42,7 +42,7 @@ const Footer: FC = () => {
           <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Resources</h3>
           <ul className="space-y-2 text-sm">
             <li><Link to="/docs" className="hover:underline">Documentation</Link></li>
-            <li><Link to="/blog" className="hover:underline">Blog</Link></li>
+            <li><Link to="/blogs" className="hover:underline">Blog</Link></li>
             <li><Link to="/faq" className="hover:underline">FAQs</Link></li>
           </ul>
         </div>

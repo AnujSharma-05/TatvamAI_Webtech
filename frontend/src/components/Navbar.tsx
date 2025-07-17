@@ -99,9 +99,9 @@ export const Navbar = () => {
                 className="absolute top-full left-0 mt-2 w-56 bg-[#1e293b] border border-slate-700 shadow-xl rounded-2xl py-3 z-50
                   opacity-0 scale-95 transform transition duration-200 ease-in-out pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto"
               >
-                <Link to="/products" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Voice Datasets</Link>
-                <Link to="/demo" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Live Demo</Link>
-                <Link to="/qr" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">QR Scanner</Link>
+                <Link to="/products" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Our Models</Link>
+                {/* <Link to="/demo" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Live Demo</Link> */}
+                <Link to="/qr" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">DhvaniShilp</Link>
               </div>
             </div>
 

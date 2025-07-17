@@ -3,33 +3,23 @@ import { MotionCard } from '../components/MotionProvider';
 const Products = () => {
   const products = [
     {
-      title: 'Voice Dataset Collection',
-      description: 'High-quality voice datasets in multiple Indian languages for training AI models.',
+      title: 'ASR Model',
+      description: 'Convert spoken language into written text with high accuracy, supporting Indian accents.',
       features: [
-        'Multiple regional accents',
-        'Diverse age groups',
-        'Various recording environments',
-        'Quality-checked data',
+        'Multi-language recognition',
+        'Handles diverse accents',
+        'Noise-robust models',
+        'Real-time transcription',
       ],
     },
     {
-      title: 'Custom Voice Solutions',
-      description: 'Tailored voice technology solutions for your specific needs.',
+      title: 'TTS Model',
+      description: 'Convert text to natural-sounding speech in multiple Indian languages and tones.',
       features: [
-        'Voice recognition',
-        'Speech synthesis',
-        'Language processing',
-        'Custom integrations',
-      ],
-    },
-    {
-      title: 'Voice API Access',
-      description: 'Access our voice technology through simple API integrations.',
-      features: [
-        'RESTful API',
-        'Real-time processing',
-        'Multiple language support',
-        'Scalable infrastructure',
+        'Natural prosody',
+        'Customizable voices',
+        'Multi-language support',
+        'Fast inference',
       ],
     },
   ];
@@ -37,10 +27,13 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-slate-900 text-white py-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <h1 className="text-4xl font-bold mb-8 text-center">Our Products</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <h1 className="text-4xl font-bold mb-8 text-center">Our Voice AI Models</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {products.map((product, index) => (
-            <MotionCard key={index} className="bg-slate-800 p-8 rounded-xl">
+            <MotionCard
+              key={index}
+              className="bg-slate-800 p-8 rounded-xl shadow-md transition duration-300 hover:shadow-blue-500/40 hover:shadow-lg hover:scale-[1.02]"
+            >
               <h2 className="text-2xl font-bold mb-4">{product.title}</h2>
               <p className="text-slate-300 mb-6">{product.description}</p>
               <ul className="space-y-2">
@@ -71,4 +64,4 @@ const Products = () => {
   );
 };
 
-export default Products; 
+export default Products;
