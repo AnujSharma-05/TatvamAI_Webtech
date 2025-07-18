@@ -120,6 +120,14 @@ const evaluateRecording = asyncHandler(async (req, res) => {
     status: "approved",
   });
 
+  const user = await User.findById(recording.userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  user.rewardTokens = (user.rewardTokens || 0) + score;
+  await user.save();
+
   return res.status(200).json(
     new ApiResponse(200, rewardToken, "Recording evaluated and rewarded")
   );
