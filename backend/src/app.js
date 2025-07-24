@@ -11,6 +11,8 @@ app.use((req, res, next) => {
     console.log('Headers:', req.headers);
     
     const allowedOrigins = [
+        "https://www.tatvamai.in",
+        "https://tatvamai.in",
         "https://tatvam-ai.vercel.app", 
         "http://localhost:8080", 
         "https://localhost:8080", 
