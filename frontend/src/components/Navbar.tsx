@@ -250,45 +250,45 @@ export const Navbar = () => {
               <p className="font-semibold text-sm text-white mb-1">Products</p>
               <Link
                 to="/products"
-                className="block text-sm text-white hover:text-blue-400 py-1"
+                className="block text-sm text-white hover:bg-slate-700 px-6 py-3 rounded-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Voice Datasets
+                Our Models
               </Link>
-              <Link
+              {/* <Link
                 to="/demo"
-                className="block text-sm text-white hover:text-blue-400 py-1"
+                className="block text-sm text-white hover:bg-slate-700 px-6 py-3 rounded-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Live Demo
-              </Link>
+              </Link> */}
               <Link
                 to="/qr"
-                className="block text-sm text-white hover:text-blue-400 py-1"
+                className="block text-sm text-white hover:bg-slate-700 px-6 py-3 rounded-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                QR Scanner
+                DhvaniShilp
               </Link>
             </div>
             <div>
               <p className="font-semibold text-sm text-white mb-1">Resources</p>
               <Link
                 to="/blogs"
-                className="block text-sm text-white hover:text-blue-400 py-1"
+                className="block text-sm text-white hover:bg-slate-700 px-6 py-3 rounded-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Blog
               </Link>
               <Link
-                to="/contributor"
-                className="block text-sm text-white hover:text-blue-400 py-1"
+                to="/qr-recording"
+                className="block text-sm text-white hover:bg-slate-700 px-6 py-3 rounded-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Become a Contributor
               </Link>
               <Link
                 to="/dashboard"
-                className="block text-sm text-white hover:text-blue-400 py-1"
+                className="block text-sm text-white hover:bg-slate-700 px-6 py-3 rounded-lg"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Dashboard
