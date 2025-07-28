@@ -54,34 +54,61 @@ const evaluateRecording = asyncHandler(async (req, res) => {
     const s3Url = new URL(recording.recordingUrl);
     s3Key = decodeURIComponent(s3Url.pathname.slice(1)); // Remove leading slash
   } catch (err) {
+    console.error("S3 URL Error: ", err);
     throw new ApiError(400, "Invalid recording URL");
   }
-
+  console.log("SR key:", s3Key);
+  
   // Send s3Key to Python API
   let response;
   try {
     response = await axios.post(`${process.env.PYTHON_SERVER_URL}/analyze`, {
-      s3Key
-    });
+      s3Key,
+      domain: 50,
+      language: 50
+    },
+    {
+      headers: {
+        "Content-Type": "application/json"
+      },
+      timeout: 10000 // 10 seconds
+    }
+  );
   } catch (err) {
-    throw new ApiError(500, "Failed to evaluate audio: " + err.message);
+    console.error("ERRROR:" ,err);
+    throw new ApiError(500, "Failed to evaluate audio: " + (err.response?.data?.error || err.message));
   }
 
-  const { final_quality } = response.data;
+  const { overall_score } = response.data;
 
-  const rewardMap = {
-    bad: 0,
-    average: 1,
-    good: 2,
-    excellent: 3
-  };
+  if (!overall_score) {
+    throw new ApiError(500, "Invalid response from audio analysis server");
+  }
 
-  const score = rewardMap[final_quality] ?? 0;
+  // const rewardMap = {
+  //   bad: 0,
+  //   average: 1,
+  //   good: 2,
+  //   excellent: 3
+  // };
+
+  let score = 0;
+  let final_quality = "";
+  if(overall_score >= 50.00){
+    score = 5;
+    final_quality = "good";
+  }else{
+    score = 1;
+    final_quality = "bad";
+  }
+
+  // const score = rewardMap[final_quality] ?? 0;
 
   // Update the recording
   recording.quality = final_quality;
   await recording.save();
-
+  console.log("Overall Score: ", overall_score);
+  
   // Issue reward token
   const rewardToken = await RewardToken.create({
     userId: recording.userId,
@@ -92,6 +119,14 @@ const evaluateRecording = asyncHandler(async (req, res) => {
     method: "token",
     status: "approved",
   });
+
+  const user = await User.findById(recording.userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  user.rewardTokens = (user.rewardTokens || 0) + score;
+  await user.save();
 
   return res.status(200).json(
     new ApiResponse(200, rewardToken, "Recording evaluated and rewarded")

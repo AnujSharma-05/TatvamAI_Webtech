@@ -597,6 +597,16 @@ const getUserIncentives = asyncHandler(async (req, res) => {
 
   const totalTokens = tokens.reduce((sum, token) => sum + (token.amount || 0), 0);
 
+  // const user = await User.findById(req.user?._id);
+
+  // if (!user) {
+  //   throw new ApiError(400, "User not found");
+  // }
+
+  // // Add to the existing rewardTokens value
+  // user.rewardTokens = (user.rewardTokens || 0) + totalTokens;
+  // await user.save();
+
   return res.status(200).json(
     new ApiResponse(200, {
       tokens,
