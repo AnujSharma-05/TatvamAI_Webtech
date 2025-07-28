@@ -1,148 +1,161 @@
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import { toast } from 'react-hot-toast' 
-import { useNavigate, Link } from 'react-router-dom'
-import axios from "../../../config/axios"
-import { handleLoginResponse } from "../../../utils/auth"
-import { Eye, EyeOff } from 'lucide-react'
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
+import { useNavigate, Link } from "react-router-dom";
+import axios from "../../../config/axios";
+import { handleLoginResponse } from "../../../utils/auth";
+import { Eye, EyeOff } from "lucide-react";
+import { log } from "console";
 
-type AuthMethod = 'phone' | 'email'
+type AuthMethod = "phone" | "email";
 
 export default function SignInPage() {
-  const navigate = useNavigate()
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('phone')
-  const [contact, setContact] = useState('')
-  const [otp, setOtp] = useState('')
-  const [isOtpSent, setIsOtpSent] = useState(false)
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [contact, setContact] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
 
   // Phone number validation
   const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^[6-9]\d{9}$/
-    return phoneRegex.test(phone)
-  }
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return phoneRegex.test(phone);
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    
+    e.preventDefault();
+    setLoading(true);
+
     if (!validatePhoneNumber(contact)) {
-      toast.error('Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9')
-      setLoading(false)
-      return
+      toast.error(
+        "Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9"
+      );
+      setLoading(false);
+      return;
     }
 
     try {
-      const res = await axios.post('/users/send-phone-otp-login', { phoneNo: contact })
-      const sessionId = res.data.sessionId
-      setOtpSessionId(sessionId)
-      setIsOtpSent(true)
-      toast.success('OTP sent successfully!')
-      // Show OTP in alert if present in response
-      // if (res.data.data && res.data.data.otp) {
-      //   window.alert(`Your phone OTP is: ${res.data.data.otp}`)
-      // }
+      const res = await axios.post("/users/send-phone-otp-login", {
+        phoneNo: contact,
+      });
+      // console.log("Response from send-phone-otp-login:", res.data.data);
+      // Correctly extract sessionId from the response
+      const sessionId = res.data.data.data.Details; // <-- Fix: Access the correct path
+      setOtpSessionId(sessionId);
+      setIsOtpSent(true);
+      toast.success("OTP sent successfully!");
+
+      // Optional: Log the OTP for debugging (remove in production)
+      console.log("OTP:", res.data.data.data.OTP);
     } catch (err: any) {
-      console.log('Signin phone OTP error:', err.response?.data)
-      if (err.response?.status === 400 && err.response?.data?.message?.includes('does not exist')) {
-        toast.error('This phone number is not registered. Please sign up first.')
+      console.log("Signin phone OTP error:", err.response?.data);
+      if (
+        err.response?.status === 400 &&
+        err.response?.data?.message?.includes("does not exist")
+      ) {
+        toast.error(
+          "This phone number is not registered. Please sign up first."
+        );
       } else if (err.response?.data?.message) {
-        toast.error(err.response.data.message)
+        toast.error(err.response.data.message);
       } else {
-        toast.error('Failed to send OTP')
+        toast.error("Failed to send OTP");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     if (!otpSessionId) {
-      toast.error('Session ID missing. Please request a new OTP.');
+      toast.error("Session ID missing. Please request a new OTP.");
       setLoading(false);
       return;
     }
 
     try {
-      const res = await axios.post('/users/login-phone-otp', {
+      const res = await axios.post("/users/login-phone-otp", {
         phoneNo: contact,
         otp,
         sessionId: otpSessionId,
       });
-  
+
       const tokens = handleLoginResponse(res);
       if (tokens) {
-        toast.success('Signed in successfully!');
+        toast.success("Signed in successfully!");
         // Trigger a storage event to update navbar
-        window.dispatchEvent(new Event('storage'));
-        navigate('/dashboard');
+        window.dispatchEvent(new Event("storage"));
+        navigate("/dashboard");
       } else {
-        toast.error('Login failed - no tokens received');
+        toast.error("Login failed - no tokens received");
       }
     } catch (err: any) {
       if (err.response?.status === 403) {
-        toast.error('Please verify your email and phone number before logging in');
+        toast.error(
+          "Please verify your email and phone number before logging in"
+        );
       } else if (err.response?.data?.message) {
         toast.error(err.response.data.message);
       } else {
-        toast.error('OTP verification failed');
+        toast.error("OTP verification failed");
       }
     } finally {
       setLoading(false);
     }
   };
-  
 
   // Email login handler
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(contact)) {
-      toast.error('Please enter a valid email address')
-      setLoading(false)
-      return
+      toast.error("Please enter a valid email address");
+      setLoading(false);
+      return;
     }
-    
+
     try {
-      const res = await axios.post('/users/login', {
+      const res = await axios.post("/users/login", {
         email: contact,
         password,
       });
-  
+
       const tokens = handleLoginResponse(res);
       if (tokens) {
-        toast.success('Signed in successfully!');
+        toast.success("Signed in successfully!");
         // Trigger a storage event to update navbar
-        window.dispatchEvent(new Event('storage'));
-        navigate('/dashboard');
+        window.dispatchEvent(new Event("storage"));
+        navigate("/dashboard");
       } else {
-        toast.error('Login failed - no tokens received');
+        toast.error("Login failed - no tokens received");
       }
     } catch (err: any) {
-      console.log('Email login error:', err.response?.data)
+      console.log("Email login error:", err.response?.data);
       if (err.response?.status === 404) {
-        toast.error('This email is not registered. Please sign up first.');
+        toast.error("This email is not registered. Please sign up first.");
       } else if (err.response?.status === 403) {
-        toast.error('Please verify your email and phone number before logging in');
+        toast.error(
+          "Please verify your email and phone number before logging in"
+        );
       } else if (err.response?.data?.message) {
         toast.error(err.response.data.message);
       } else {
-        toast.error('Login failed');
+        toast.error("Login failed");
       }
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white py-20">
@@ -155,7 +168,9 @@ export default function SignInPage() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
-            <p className="text-gray-300">Sign in to continue your contribution</p>
+            <p className="text-gray-300">
+              Sign in to continue your contribution
+            </p>
           </motion.div>
 
           <motion.div
@@ -167,21 +182,21 @@ export default function SignInPage() {
             {/* Auth Method Selection */}
             <div className="flex gap-4 mb-8">
               <button
-                onClick={() => setAuthMethod('phone')}
+                onClick={() => setAuthMethod("phone")}
                 className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  authMethod === 'phone'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300'
+                  authMethod === "phone"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-700 text-gray-300"
                 }`}
               >
                 Phone
               </button>
               <button
-                onClick={() => setAuthMethod('email')}
+                onClick={() => setAuthMethod("email")}
                 className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  authMethod === 'email'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300'
+                  authMethod === "email"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-700 text-gray-300"
                 }`}
               >
                 Email
@@ -189,10 +204,13 @@ export default function SignInPage() {
             </div>
 
             {/* Email login with password */}
-            {authMethod === 'email' ? (
+            {authMethod === "email" ? (
               <form onSubmit={handleEmailLogin} className="space-y-6">
                 <div>
-                  <label htmlFor="contact" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="contact"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Email Address
                   </label>
                   <input
@@ -206,7 +224,10 @@ export default function SignInPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -223,7 +244,11 @@ export default function SignInPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400" />
+                      )}
                     </span>
                   </div>
                 </div>
@@ -234,72 +259,78 @@ export default function SignInPage() {
                   disabled={loading}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
                 >
-                  {loading ? 'Signing in...' : 'Sign In'}
+                  {loading ? "Signing in..." : "Sign In"}
+                </motion.button>
+              </form>
+            ) : // Phone OTP login (existing)
+            !isOtpSent ? (
+              <form onSubmit={handleSendOtp} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="contact"
+                    className="block text-sm font-medium mb-2"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="contact"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    placeholder="Enter 10-digit number"
+                    required
+                    maxLength={10}
+                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Enter a 10-digit number starting with 6, 7, 8, or 9
+                  </p>
+                </div>
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                >
+                  Send OTP
                 </motion.button>
               </form>
             ) : (
-              // Phone OTP login (existing)
-              !isOtpSent ? (
-                <form onSubmit={handleSendOtp} className="space-y-6">
-                  <div>
-                    <label htmlFor="contact" className="block text-sm font-medium mb-2">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      id="contact"
-                      value={contact}
-                      onChange={(e) => setContact(e.target.value)}
-                      placeholder="Enter 10-digit number"
-                      required
-                      maxLength={10}
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Enter a 10-digit number starting with 6, 7, 8, or 9</p>
-                  </div>
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+              <form onSubmit={handleVerifyOtp} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="otp"
+                    className="block text-sm font-medium mb-2"
                   >
-                    Send OTP
-                  </motion.button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-6">
-                  <div>
-                    <label htmlFor="otp" className="block text-sm font-medium mb-2">
-                      Enter OTP
-                    </label>
-                    <input
-                      type="text"
-                      id="otp"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      placeholder="Enter the OTP sent to you"
-                      required
-                      maxLength={6}
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-center text-2xl tracking-wider"
-                    />
-                  </div>
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-                  >
-                    Verify OTP
-                  </motion.button>
-                  <button
-                    type="button"
-                    onClick={() => setIsOtpSent(false)}
-                    className="w-full text-gray-400 hover:text-white text-sm"
-                  >
-                    Change phone number
-                  </button>
-                </form>
-              )
+                    Enter OTP
+                  </label>
+                  <input
+                    type="text"
+                    id="otp"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter the OTP sent to you"
+                    required
+                    maxLength={6}
+                    className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-center text-2xl tracking-wider"
+                  />
+                </div>
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                >
+                  Verify OTP
+                </motion.button>
+                <button
+                  type="button"
+                  onClick={() => setIsOtpSent(false)}
+                  className="w-full text-gray-400 hover:text-white text-sm"
+                >
+                  Change phone number
+                </button>
+              </form>
             )}
           </motion.div>
 
@@ -309,7 +340,7 @@ export default function SignInPage() {
             transition={{ duration: 1, delay: 0.8 }}
             className="text-center mt-8 text-gray-400"
           >
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <Link to="/auth/signup" className="text-blue-400 hover:underline">
               Sign up
             </Link>
@@ -317,5 +348,5 @@ export default function SignInPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }
