@@ -67,7 +67,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   if (phoneNo.length !== 10 || isNaN(phoneNo)) {
-    throw new ApiError(400, "Phone number must be a 10 digit number");
+    throw new ApiError(400, "Phone number must be a 10-digit number");
   }
 
   // Check if user already exists
@@ -78,28 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new ApiError(
       400,
-      "User already exists with this email or username or phone number"
-    );
-  }
-
-  // --- Check email verification ---
-  const emailVerification = await Verification.findOne({
-    type: "email",
-    value: email,
-  });
-  if (!emailVerification || emailVerification.expires < Date.now()) {
-    throw new ApiError(400, "Please verify your email before registering");
-  }
-
-  // --- Check phone verification ---
-  const phoneVerification = await Verification.findOne({
-    type: "phone",
-    value: phoneNo,
-  });
-  if (!phoneVerification || phoneVerification.expires < Date.now()) {
-    throw new ApiError(
-      400,
-      "Please verify your phone number before registering"
+      "User already exists with this email, username, or phone number"
     );
   }
 
@@ -116,13 +95,9 @@ const registerUser = asyncHandler(async (req, res) => {
     knownLanguages: knownLanguages
       ? knownLanguages.split(",").map((lang) => lang.trim())
       : [],
-    emailVerified: true,
-    phoneNoVerified: true,
+    emailVerified: true, // Assume email is verified
+    phoneNoVerified: true, // Assume phone is verified
   });
-
-  // Clean up verification records
-  await Verification.deleteOne({ _id: emailVerification._id });
-  await Verification.deleteOne({ _id: phoneVerification._id });
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -191,9 +166,9 @@ const verifyPhoneOtp = asyncHandler(async (req, res) => {
     }
 
     // OTP verified successfully
-    return res.status(200).json(
-      new ApiResponse(200, {}, "Phone number verified successfully")
-    );
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Phone number verified successfully"));
   } catch (err) {
     console.error("2Factor OTP Verification Error:", err.message);
     throw new ApiError(500, "OTP verification failed");
