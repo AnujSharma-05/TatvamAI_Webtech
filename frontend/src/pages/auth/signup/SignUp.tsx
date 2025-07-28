@@ -140,7 +140,7 @@ export default function SignUpPage() {
       const sessionId = res.data.data.sessionId;
       setOtpSessionId(sessionId);
       console.log("OTP session ID:", sessionId);
-      
+
       // Update verification status
       setVerificationStatus((prev) => ({ ...prev, phone: "sent" }));
       toast.success("OTP sent to your phone!");
@@ -175,13 +175,11 @@ export default function SignUpPage() {
 
     setIsVerifyingPhoneOtp(true);
     try {
-      // API call to verify phone OTP
       const response = await axios.post("/users/verify-phone-otp", {
         sessionId: otpSessionId,
         otp: phoneOtp,
       });
 
-      // Update verification status
       setVerificationStatus((prev) => ({ ...prev, phone: "verified" }));
       toast.success("Phone number verified!");
     } catch (error: any) {
@@ -349,14 +347,13 @@ export default function SignUpPage() {
     const hasVerifiedPhone = verificationStatus.phone === "verified";
     const hasVerifiedEmail = verificationStatus.email === "verified";
 
-    // Backend requires both email and phone verification for registration
     if (!hasVerifiedPhone) {
-      toast.error("Please verify your phone number to create account");
+      toast.error("Please verify your phone number to create an account");
       return false;
     }
 
     if (!hasVerifiedEmail) {
-      toast.error("Please verify your email address to create account");
+      toast.error("Please verify your email address to create an account");
       return false;
     }
 
@@ -400,14 +397,6 @@ export default function SignUpPage() {
         ) {
           toast.error(
             "A user with this email or phone number already exists. Please use different credentials or try logging in."
-          );
-        } else if (errorMessage.includes("verify your email")) {
-          toast.error(
-            "Please verify your email address before creating account"
-          );
-        } else if (errorMessage.includes("verify your phone")) {
-          toast.error(
-            "Please verify your phone number before creating account"
           );
         } else {
           toast.error(errorMessage);
