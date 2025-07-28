@@ -137,6 +137,7 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
+// otp for verification
 const sendPhoneOtpRegister = asyncHandler(async (req, res) => {
   const { phoneNo } = req.body;
 
@@ -166,6 +167,36 @@ const sendPhoneOtpRegister = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error("2Factor OTP Error:", err.message);
     throw new ApiError(500, "OTP service failed");
+  }
+});
+
+// verify during phone OTP verification (register)
+const verifyPhoneOtp = asyncHandler(async (req, res) => {
+  const { sessionId, otp } = req.body;
+
+  if (!sessionId || !otp) {
+    throw new ApiError(400, "Session ID and OTP are required");
+  }
+
+  // Verify OTP using 2Factor.in
+  const apiKey = process.env.TWO_FACTOR_API_KEY; // store in .env file
+  const verifyUrl = `https://2factor.in/API/V1/${apiKey}/SMS/VERIFY/${sessionId}/${otp}`;
+
+  try {
+    const response = await axios.get(verifyUrl);
+    const { Status } = response.data;
+
+    if (Status !== "Success") {
+      throw new ApiError(400, "Invalid or expired OTP");
+    }
+
+    // OTP verified successfully
+    return res.status(200).json(
+      new ApiResponse(200, {}, "Phone number verified successfully")
+    );
+  } catch (err) {
+    console.error("2Factor OTP Verification Error:", err.message);
+    throw new ApiError(500, "OTP verification failed");
   }
 });
 
@@ -211,35 +242,6 @@ const sendEmailVerificationCode = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(new ApiResponse(200, { code }, "Verification code sent to email"));
-});
-
-const verifyPhoneOtp = asyncHandler(async (req, res) => {
-  const { sessionId, otp } = req.body;
-
-  if (!sessionId || !otp) {
-    throw new ApiError(400, "Session ID and OTP are required");
-  }
-
-  // Verify OTP using 2Factor.in
-  const apiKey = process.env.TWO_FACTOR_API_KEY; // store in .env file
-  const verifyUrl = `https://2factor.in/API/V1/${apiKey}/SMS/VERIFY/${sessionId}/${otp}`;
-
-  try {
-    const response = await axios.get(verifyUrl);
-    const { Status } = response.data;
-
-    if (Status !== "Success") {
-      throw new ApiError(400, "Invalid or expired OTP");
-    }
-
-    // OTP verified successfully
-    return res.status(200).json(
-      new ApiResponse(200, {}, "Phone number verified successfully")
-    );
-  } catch (err) {
-    console.error("2Factor OTP Verification Error:", err.message);
-    throw new ApiError(500, "OTP verification failed");
-  }
 });
 
 // email login
