@@ -3,182 +3,155 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Mic, Globe, Users, Award, ChevronRight, Play, QrCode } from "lucide-react";
-import { Link } from "react-router-dom";
-// import QRContribution from "../components/QRContribution";
-// import AuthModal from "../components/AuthModal";
+
+const COLORS = {
+  lightYellow: "#ffffe3",
+  midnightGreen: "#003642",
+  teaGreen: "#d0e6a5",
+  nyanza: "#f1ffe3",
+  cadetGray: "#83a0a0",
+};
 
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
-  // const [showQRModal, setShowQRModal] = useState(false);
-  // const [showAuthModal, setShowAuthModal] = useState(false);
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    setIsVisible(true);
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const features = [
-    {
-      icon: <Mic className="w-8 h-8" />,
-      title: "Voice Contribution",
-      description: "Contribute your voice in your native language and help build inclusive AI systems.",
-      color: "from-[#1e3a8a] to-[#6366f1]"
-    },
-    {
-      icon: <Globe className="w-8 h-8" />,
-      title: "Multilingual Support",
-      description: "Support for 100+ languages and dialects, preserving linguistic diversity.",
-      color: "from-[#1e3a8a] to-[#6366f1]"
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: "Community Driven",
-      description: "Join thousands of contributors building the future of voice AI together.",
-      color: "from-[#1e3a8a] to-[#6366f1]"
-    },
-    {
-      icon: <Award className="w-8 h-8" />,
-      title: "Earn Rewards",
-      description: "Get rewarded for your contributions with tokens and recognition.",
-      color: "from-[#1e3a8a] to-[#6366f1]"
-    }
+    { icon: <Mic />, title: "Voice Contribution", description: "Contribute your voice in your native language." },
+    { icon: <Globe />, title: "Multilingual Support", description: "Support for 100+ languages and dialects." },
+    { icon: <Users />, title: "Community Driven", description: "Join thousands of contributors building the future." },
+    { icon: <Award />, title: "Earn Rewards", description: "Get rewarded for your valuable contributions." },
   ];
 
   return (
-    <div className="min-h-screen bg-[#101729] overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow"></div>
-      </div>
-
+    <div className="min-h-screen overflow-x-hidden" style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }}>
       {/* Hero Section */}
-      <section className="relative z-10 px-6 py-20">
-        <div className="max-w-7xl mx-auto">
-          <div className={`text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              Your Voice
-              <span className="block text-gradient">Shapes AI</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Join the world's largest voice contribution platform. Help build inclusive AI that understands everyone, in every language.
-            </p>
+      <section className="relative flex items-center justify-center min-h-screen text-center px-6 pt-24 pb-12">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-teal-900 to-transparent opacity-20"></div>
+          <div className="absolute bottom-0 right-0 w-1/2 h-full bg-gradient-to-tl from-yellow-900 to-transparent opacity-10"></div>
+        </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={() => navigate("/qr-recording")}
-              >
-                <Play className="w-5 h-5 mr-2" />
-                Start Contributing
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
+        <div className={`relative z-10 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-6 leading-tight" style={{ color: COLORS.nyanza }}>
+            Your Voice <span style={{ color: COLORS.teaGreen }}>Shapes AI</span>
+          </h1>
+          <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto" style={{ color: COLORS.cadetGray }}>
+            Join the world's largest voice contribution platform. Help build inclusive AI that understands everyone, in every language.
+          </p>
 
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300 transform hover:scale-105"
-                onClick={() => navigate("/qr")}
-              >
-                <QrCode className="w-5 h-5 mr-2" />
-                Scan QR Code
-              </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button
+              size="lg"
+              className="px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+              style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen, border: "none" }}
+              onClick={() => navigate("/qr-recording")}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Start Contributing
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105"
+              style={{ borderColor: COLORS.cadetGray, color: COLORS.cadetGray, background: "transparent" }}
+              onClick={() => navigate("/qr")}
+            >
+              <QrCode className="w-5 h-5 mr-2" />
+              Scan QR Code
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-opacity-5" style={{ backgroundColor: "rgba(0,0,0,0.2)"}}>
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="p-4">
+              <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>10M+</p>
+              <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Voice Samples</p>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-2">10M+</div>
-                <div className="text-slate-400">Voice Samples</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-2">100+</div>
-                <div className="text-slate-400">Languages</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-2">50K+</div>
-                <div className="text-slate-400">Contributors</div>
-              </div>
+            <div className="p-4">
+              <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>100+</p>
+              <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Languages</p>
+            </div>
+            <div className="p-4">
+              <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>50K+</p>
+              <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Contributors</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="relative z-10 px-6 py-20">
-        <div className="max-w-7xl mx-auto">
+      {/* How It Works / Features Section */}
+      <section className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Why Contribute to TatvamAI?</h2>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-              Be part of building AI that truly understands and represents everyone
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: COLORS.nyanza }}>
+              Why Contribute to TatvamAI?
+            </h2>
+            <p className="text-xl max-w-3xl mx-auto" style={{ color: COLORS.cadetGray }}>
+              Be part of building AI that truly understands and represents everyone.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {features.map((feature, index) => (
-              <Card 
-                key={index}
-                className="p-8 glass border-0 hover:scale-105 transition-all duration-500 animate-fade-in"
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-6 mx-auto`}>
-                  <div className="text-white">
-                    {feature.icon}
-                  </div>
+              <div key={index} className="p-6 rounded-2xl hover:bg-white hover:bg-opacity-10 transition-all duration-300 transform hover:-translate-y-2">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto transition-all duration-300"
+                  style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
+                >
+                  {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3 text-center">{feature.title}</h3>
-                <p className="text-slate-300 text-center leading-relaxed">{feature.description}</p>
-              </Card>
+                <h3 className="text-xl font-semibold mb-2" style={{ color: COLORS.nyanza }}>
+                  {feature.title}
+                </h3>
+                <p style={{ color: COLORS.cadetGray }}>{feature.description}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="relative z-10 px-6 py-20">
+      {/* Final CTA Section */}
+      <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <Card className="glass border-0 p-12">
-            <h2 className="text-4xl font-bold text-white mb-6">Ready to Make a Difference?</h2>
-            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-              Your voice matters. Join our community and help build AI that understands everyone.
+          <Card
+            className="border-0 p-10 md:p-16 rounded-3xl"
+            style={{
+              background: `linear-gradient(135deg, ${COLORS.teaGreen} -20%, ${COLORS.midnightGreen} 50%)`,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
+            }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: COLORS.nyanza }}>
+              Ready to Make a Difference?
+            </h2>
+            <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: COLORS.cadetGray }}>
+              Your voice matters. Join our community and help build the future of AI.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg"
-                className="bg-gradient-to-r from-[#1e3a8a] to-[#6366f1] hover:from-[#1e40af] hover:to-[#818cf8] text-white px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={() => navigate("/qr-recording")}
-              >
-                Get Started Now
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button 
-                variant="outline"
-                size="lg"
-                className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 text-lg rounded-full transition-all duration-300"
-                onClick={() => navigate("/about")}
-              >
-                Learn More
-              </Button>
-            </div>
+            <Button
+              size="lg"
+              className="px-10 py-6 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+              style={{
+                background: COLORS.nyanza,
+                color: COLORS.midnightGreen,
+                border: "none",
+              }}
+              onClick={() => navigate("/qr-recording")}
+            >
+              Get Started Now
+              <ChevronRight className="w-6 h-6 ml-2" />
+            </Button>
           </Card>
         </div>
       </section>
-
-      {/* Modals */}
-      {/* 
-      <QRContribution 
-        isOpen={showQRModal} 
-        onClose={() => setShowQRModal(false)} 
-      />
-      <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => console.log('Auth successful')}
-      /> 
-      */}
     </div>
   );
 };

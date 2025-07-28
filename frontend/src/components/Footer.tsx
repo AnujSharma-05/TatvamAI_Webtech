@@ -1,78 +1,77 @@
-import type { FC } from "react"
-// import { cn } from "../../lib/utils"
-import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa"
-import { Link } from "react-router-dom"
+import type { FC } from "react";
+import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
-const Footer: FC = () => {
-  return (
-    <footer className="bg-background text-foreground border-t border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
-        
-        {/* Logo and Description */}
-        <div className="flex items-center space-x-4">
-          <img
-            src="/logo.png"
-            alt="TatvamAI Logo"
-            className="w-10 h-10 rounded-md shadow-md"
-          />
-          <div>
-            {/* <h2 className="text-xl font-bold text-primary bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
-              TatvamAI
-            </h2> */}
-            <p className="text-sm text-muted-foreground mt-1">
-              Empowering voice AI for 22+ Indic languages and dialects.
-            </p>
-          </div>
-        </div>
+const COLORS = {
+  lightYellow: '#ffffe3',
+  midnightGreen: '#003642',
+  teaGreen: '#d0e6a5',
+  nyanza: '#f1ffe3',
+  cadetGray: '#83a0a0',
+};
 
-
-        {/* Products */}
-
-        <div>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground"><Link to= "/products">Products</Link></h3>
-          {/* <ul className="space-y-2 text-sm">
-            <li><Link to="/asr" className="hover:underline">ASR Tools</Link></li>
-            <li><Link to="/tts" className="hover:underline">TTS Models</Link></li>
-            <li><Link to="/datasets" className="hover:underline">Speech Datasets</Link></li>
-          </ul> */}
-        </div>
-
-
-        {/* Resources */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Resources</h3>
-          <ul className="space-y-2 text-sm">
-            <li><Link to="/docs" className="hover:underline">Documentation</Link></li>
-            <li><Link to="/blogs" className="hover:underline">Blog</Link></li>
-
-            <li><Link to="/faq" className="hover:underline">FAQs</Link></li>
-          </ul>
-        </div>
-
-        {/* Company */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Company</h3>
-          <ul className="space-y-2 text-sm">
-            <li><Link to="/about" className="hover:underline">About Us</Link></li>
-            {/* <li><Link to="/careers" className="hover:underline">Careers</Link></li> */}
-            <li><Link to="/contact" className="hover:underline">Contact</Link></li>
-          </ul>
-        </div>
+const Footer: FC = () => (
+  <footer
+    className="py-12 px-6"
+    style={{
+      background: "rgba(0,54,66,0.85)", // Glassy midnight green
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      color: COLORS.cadetGray,
+      borderTop: `1px solid ${COLORS.cadetGray}20`,
+    }}
+  >
+    <div className="max-w-6xl mx-auto text-center">
+      <p
+        className="font-bold text-lg mb-4"
+        style={{
+          color: COLORS.nyanza,
+          letterSpacing: "0.05em",
+        }}
+      >
+        TatvamAI
+      </p>
+      <div className="flex justify-center gap-6 mb-8">
+        <Link to="/about" className="hover:text-white transition font-medium">About</Link>
+        <Link to="/blogs" className="hover:text-white transition font-medium">Blog</Link>
+        <Link to="/contact" className="hover:text-white transition font-medium">Contact</Link>
+        <Link to="/privacy" className="hover:text-white transition font-medium">Privacy</Link>
+        <Link to="/terms" className="hover:text-white transition font-medium">Terms</Link>
       </div>
-
-      {/* Social Icons & Bottom Strip */}
-      <div className="border-t border-border py-6">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TatvamAI. All rights reserved.</p>
-          <div className="flex gap-4 text-muted-foreground text-xl">
-            <a href="https://github.com/tatvam-ai" target="_blank" rel="noreferrer" className="hover:text-primary transition-colors"><FaGithub /></a>
-            <a href="https://twitter.com/tatvam_ai" target="_blank" rel="noreferrer" className="hover:text-primary transition-colors"><FaTwitter /></a>
-            <a href="https://linkedin.com/company/tatvam-ai" target="_blank" rel="noreferrer" className="hover:text-primary transition-colors"><FaLinkedin /></a>
-          </div>
-        </div>
+      <div className="flex justify-center gap-6 mb-8 text-xl">
+        <a
+          href="https://github.com/tatvam-ai"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-teaGreen transition-colors duration-300"
+          aria-label="GitHub"
+        >
+          <FaGithub />
+        </a>
+        <a
+          href="https://twitter.com/tatvam_ai"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-teaGreen transition-colors duration-300"
+          aria-label="Twitter"
+        >
+          <FaTwitter />
+        </a>
+        <a
+          href="https://linkedin.com/company/tatvam-ai"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-teaGreen transition-colors duration-300"
+          aria-label="LinkedIn"
+        >
+          <FaLinkedin />
+        </a>
       </div>
-    </footer>
-  )
-}
+      <p style={{ color: COLORS.cadetGray }}>
+        © {new Date().getFullYear()} TatvamAI. All rights reserved.
+      </p>
+    </div>
+  </footer>
+);
 
-export { Footer }
+export { Footer };
