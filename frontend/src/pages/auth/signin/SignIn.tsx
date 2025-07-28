@@ -17,6 +17,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
 
   // Phone number validation
   const validatePhoneNumber = (phone: string) => {
@@ -36,12 +37,14 @@ export default function SignInPage() {
 
     try {
       const res = await axios.post('/users/send-phone-otp-login', { phoneNo: contact })
+      const sessionId = res.data.sessionId
+      setOtpSessionId(sessionId)
       setIsOtpSent(true)
       toast.success('OTP sent successfully!')
       // Show OTP in alert if present in response
-      if (res.data.data && res.data.data.otp) {
-        window.alert(`Your phone OTP is: ${res.data.data.otp}`)
-      }
+      // if (res.data.data && res.data.data.otp) {
+      //   window.alert(`Your phone OTP is: ${res.data.data.otp}`)
+      // }
     } catch (err: any) {
       console.log('Signin phone OTP error:', err.response?.data)
       if (err.response?.status === 400 && err.response?.data?.message?.includes('does not exist')) {
@@ -59,10 +62,18 @@ export default function SignInPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (!otpSessionId) {
+      toast.error('Session ID missing. Please request a new OTP.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await axios.post('/users/login-phone-otp', {
         phoneNo: contact,
         otp,
+        sessionId: otpSessionId,
       });
   
       const tokens = handleLoginResponse(res);
