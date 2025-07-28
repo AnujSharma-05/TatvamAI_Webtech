@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
+import React from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Mic, Globe, Users, Award, ChevronRight, Play, QrCode } from "lucide-react";
 
+// --- Color Palette ---
 const COLORS = {
   lightYellow: "#ffffe3",
   midnightGreen: "#003642",
@@ -12,146 +12,193 @@ const COLORS = {
   cadetGray: "#83a0a0",
 };
 
-const Index = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const navigate = useNavigate();
+// --- Component for the intro slide, visible on load ---
+const HeroSlide = ({ scrollYProgress, onNavigate }) => {
+  const opacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const y = useTransform(scrollYProgress, [0, 0.2], [0, '-50vh']);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const features = [
-    { icon: <Mic />, title: "Voice Contribution", description: "Contribute your voice in your native language." },
-    { icon: <Globe />, title: "Multilingual Support", description: "Support for 100+ languages and dialects." },
-    { icon: <Users />, title: "Community Driven", description: "Join thousands of contributors building the future." },
-    { icon: <Award />, title: "Earn Rewards", description: "Get rewarded for your valuable contributions." },
-  ];
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+  };
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }}>
-      {/* Hero Section */}
-      <section className="relative flex items-center justify-center min-h-screen text-center px-6 pt-24 pb-12">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-teal-900 to-transparent opacity-20"></div>
-          <div className="absolute bottom-0 right-0 w-1/2 h-full bg-gradient-to-tl from-yellow-900 to-transparent opacity-10"></div>
+    <motion.div style={{ y, opacity }} className="w-full h-full absolute flex items-center justify-center text-center px-6">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-4xl">
+        <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-6 leading-tight" style={{ color: COLORS.nyanza, textShadow: `0 0 30px ${COLORS.teaGreen}30` }}>
+          Your Voice <span style={{ color: COLORS.teaGreen }}>Shapes AI</span>
+        </motion.h1>
+        <motion.p variants={itemVariants} className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto" style={{ color: COLORS.cadetGray }}>
+          Join the world's largest voice contribution platform. Help build inclusive AI that understands everyone.
+        </motion.p>
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <button onClick={() => onNavigate("/qr-recording")} className="flex items-center px-8 py-5 text-lg font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105" style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}>
+            <Play className="w-5 h-5 mr-2" /> Start Contributing
+          </button>
+          <button onClick={() => onNavigate("/qr")} className="flex items-center px-8 py-5 text-lg font-semibold rounded-full transition-transform transform hover:scale-105" style={{ border: `1px solid ${COLORS.cadetGray}80`, color: COLORS.cadetGray, background: `${COLORS.midnightGreen}30`, backdropFilter: 'blur(5px)' }}>
+            <QrCode className="w-5 h-5 mr-2" /> Explore Dhvani-Shilp
+          </button>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// --- Helper Component for subsequent animated "slides" ---
+const AnimatedSlide = ({ scrollYProgress, children, range }) => {
+  const start = range[0];
+  const end = range[1];
+  const mid = start + (end - start) / 2;
+
+  const y = useTransform(scrollYProgress, [start, mid, end], ['50vh', '0vh', '-50vh']);
+  const opacity = useTransform(scrollYProgress, [start, start + 0.05, end - 0.05, end], [0, 1, 1, 0]);
+
+  return (
+    <motion.div style={{ y, opacity }} className="w-full h-full absolute flex items-center justify-center text-center px-6">
+      {children}
+    </motion.div>
+  );
+};
+
+// --- Horizontal Marquee Component ---
+const HorizontalMarquee = ({ features }) => {
+  const marqueeVariants = {
+    animate: {
+      x: [0, -1088],
+      transition: { x: { repeat: Infinity, repeatType: "loop", duration: 20, ease: "linear" } },
+    },
+  };
+  return (
+    <div className="w-full overflow-hidden whitespace-nowrap">
+      <motion.div className="inline-block" variants={marqueeVariants} animate="animate">
+        {[...features, ...features].map((feature, index) => (
+          <span key={index} className="inline-flex items-center mx-8 text-2xl font-semibold" style={{ color: COLORS.cadetGray }}>
+            <span className="mr-4 p-3 rounded-full" style={{ background: `${COLORS.teaGreen}20`, color: COLORS.teaGreen }}>{feature.icon}</span>
+            {feature.title}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+};
+
+
+const Index = () => {
+  const navigate = useNavigate();
+  const scrollRef = React.useRef(null);
+
+  const { scrollYProgress } = useScroll({ target: scrollRef, offset: ["start start", "end end"] });
+  const progressBarScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  const features = [
+    { icon: <Mic size={24}/>, title: "Voice Contribution" },
+    { icon: <Globe size={24}/>, title: "Multilingual Support" },
+    { icon: <Users size={24}/>, title: "Community Driven" },
+    { icon: <Award size={24}/>, title: "Earn Rewards" },
+  ];
+  
+  return (
+    <div ref={scrollRef} style={{ height: '450vh', background: COLORS.midnightGreen }}>
+      <div className="sticky top-0 h-screen overflow-hidden">
+        
+        <div className="absolute inset-0 w-full h-full pointer-events-none">
+          <div className="absolute w-[40vw] h-[40vw] rounded-full filter blur-3xl opacity-20 revolve-1" style={{ backgroundColor: COLORS.teaGreen }} />
+          <div className="absolute w-[30vw] h-[30vw] rounded-full filter blur-3xl opacity-15 revolve-2" style={{ backgroundColor: COLORS.cadetGray }} />
+          <div className="absolute w-[25vw] h-[25vw] rounded-full filter blur-2xl opacity-10 revolve-3" style={{ backgroundColor: COLORS.lightYellow }} />
         </div>
+        
+        <motion.div className="absolute top-0 left-0 right-0 h-1 origin-left z-50" style={{ scaleX: progressBarScaleX, background: COLORS.teaGreen }} />
 
-        <div className={`relative z-10 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-6 leading-tight" style={{ color: COLORS.nyanza }}>
-            Your Voice <span style={{ color: COLORS.teaGreen }}>Shapes AI</span>
-          </h1>
-          <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto" style={{ color: COLORS.cadetGray }}>
-            Join the world's largest voice contribution platform. Help build inclusive AI that understands everyone, in every language.
-          </p>
+        <HeroSlide scrollYProgress={scrollYProgress} onNavigate={navigate} />
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              size="lg"
-              className="px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-              style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen, border: "none" }}
-              onClick={() => navigate("/qr-recording")}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Start Contributing
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 transform hover:scale-105"
-              style={{ borderColor: COLORS.cadetGray, color: COLORS.cadetGray, background: "transparent" }}
-              onClick={() => navigate("/qr")}
-            >
-              <QrCode className="w-5 h-5 mr-2" />
-              Scan QR Code
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-opacity-5" style={{ backgroundColor: "rgba(0,0,0,0.2)"}}>
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="p-4">
-              <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>10M+</p>
-              <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Voice Samples</p>
+        {/* REVISED STATS SECTION */}
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.22, 0.42]}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center w-full max-w-6xl text-left">
+            {/* Left Column: The Problem */}
+            <div className="p-8 rounded-2xl" style={{ border: `1px solid ${COLORS.cadetGray}10` }}>
+              <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.nyanza }}>The Digital Divide is a Language Barrier</h2>
+              <p className="text-lg leading-relaxed" style={{ color: COLORS.cadetGray }}>
+                **665 million Indians** still lack internet access, not just due to availability, but because of a **usability gap**. For many, technology that requires typing and reading complex interfaces is the biggest hurdle.
+              </p>
+              <p className="mt-4 text-lg" style={{ color: COLORS.teaGreen }}>
+                Voice is the most intuitive bridge, bypassing the need for traditional digital literacy.
+              </p>
             </div>
-            <div className="p-4">
-              <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>100+</p>
-              <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Languages</p>
-            </div>
-            <div className="p-4">
-              <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>50K+</p>
-              <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Contributors</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works / Features Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: COLORS.nyanza }}>
-              Why Contribute to TatvamAI?
-            </h2>
-            <p className="text-xl max-w-3xl mx-auto" style={{ color: COLORS.cadetGray }}>
-              Be part of building AI that truly understands and represents everyone.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            {features.map((feature, index) => (
-              <div key={index} className="p-6 rounded-2xl hover:bg-white hover:bg-opacity-10 transition-all duration-300 transform hover:-translate-y-2">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto transition-all duration-300"
-                  style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
-                >
-                  {feature.icon}
+            {/* Right Column: The Solution */}
+            <div>
+              <h2 className="text-3xl font-bold mb-6 text-center md:text-left" style={{ color: COLORS.nyanza }}>How We're Bridging It</h2>
+              <div className="space-y-6">
+                <div>
+                  <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>10M+</p>
+                  <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Voice Samples Collected</p>
                 </div>
-                <h3 className="text-xl font-semibold mb-2" style={{ color: COLORS.nyanza }}>
-                  {feature.title}
-                </h3>
-                <p style={{ color: COLORS.cadetGray }}>{feature.description}</p>
+                <div>
+                  <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>100+</p>
+                  <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Languages & Dialects Covered</p>
+                </div>
+                <div>
+                  <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>50K+</p>
+                  <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Contributors Empowered</p>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </AnimatedSlide>
 
-      {/* Final CTA Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <Card
-            className="border-0 p-10 md:p-16 rounded-3xl"
-            style={{
-              background: `linear-gradient(135deg, ${COLORS.teaGreen} -20%, ${COLORS.midnightGreen} 50%)`,
-              boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
-            }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: COLORS.nyanza }}>
-              Ready to Make a Difference?
-            </h2>
-            <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: COLORS.cadetGray }}>
-              Your voice matters. Join our community and help build the future of AI.
-            </p>
-            <Button
-              size="lg"
-              className="px-10 py-6 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-              style={{
-                background: COLORS.nyanza,
-                color: COLORS.midnightGreen,
-                border: "none",
-              }}
-              onClick={() => navigate("/qr-recording")}
-            >
-              Get Started Now
-              <ChevronRight className="w-6 h-6 ml-2" />
-            </Button>
-          </Card>
-        </div>
-      </section>
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.40, 0.60]}>
+          <div className="max-w-6xl w-full">
+            <h2 className="text-4xl md:text-5xl font-bold mb-16" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.teaGreen}20` }}>Key Features</h2>
+            <HorizontalMarquee features={features} />
+          </div>
+        </AnimatedSlide>
+        
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.58, 0.80]}>
+            <motion.div className="max-w-6xl w-full" initial="hidden" animate={scrollYProgress > 0.62 && scrollYProgress < 0.76 ? "visible" : "hidden"} variants={{ visible: { transition: { staggerChildren: 0.15 } } }}>
+                <motion.h2 variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="text-4xl md:text-5xl font-bold mb-16" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.teaGreen}20` }}>Powering Real-World Applications</motion.h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
+                        <img src="/logo.png" alt="Smarter Assistants" className="w-full h-48 object-cover opacity-50"/>
+                        <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
+                            <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>Smarter Assistants</h3>
+                            <p className="mt-2" style={{color: COLORS.cadetGray}}>Enabling voice assistants to understand diverse accents and local dialects.</p>
+                        </div>
+                    </motion.div>
+                    <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
+                        <img src="/logo.png" alt="Accessible Technology" className="w-full h-48 object-cover opacity-50"/>
+                        <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
+                            <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>Accessible Technology</h3>
+                            <p className="mt-2" style={{color: COLORS.cadetGray}}>Creating tools for literacy and accessibility for underserved communities.</p>
+                        </div>
+                    </motion.div>
+                    <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
+                        <img src="/logo.png" alt="In-Car Voice Control" className="w-full h-48 object-cover opacity-50"/>
+                        <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
+                            <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>In-Car Voice Control</h3>
+                            <p className="mt-2" style={{color: COLORS.cadetGray}}>Improving hands-free systems for navigation, making driving safer for everyone.</p>
+                        </div>
+                    </motion.div>
+                </div>
+            </motion.div>
+        </AnimatedSlide>
+
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.78, 1.0]}>
+          <div className="w-full max-w-4xl">
+            <div className="p-10 md:p-16 rounded-3xl" style={{ background: `linear-gradient(135deg, ${COLORS.teaGreen} -20%, ${COLORS.midnightGreen} 60%)`, boxShadow: `0 8px 40px ${COLORS.teaGreen}10` }}>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.nyanza}30` }}>Ready to Make a Difference?</h2>
+              <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: COLORS.cadetGray }}>
+                Your voice matters. Join our community and help build the future of AI.
+              </p>
+              <button onClick={() => navigate("/qr-recording")} className="flex items-center mx-auto px-10 py-5 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-transform transform hover:scale-105" style={{ background: COLORS.nyanza, color: COLORS.midnightGreen }}>
+                Get Started Now <ChevronRight className="w-6 h-6 ml-2" />
+              </button>
+            </div>
+          </div>
+        </AnimatedSlide>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 /* stylelint-disable at-rule-no-unknown */
 /* postcss-disable at-rule-no-unknown */
 
+@import url('https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap'); 
+
 /* Tailwind base styles */
 @tailwind base;
 @tailwind components;
@@ -9,7 +11,7 @@
 /* Custom Theme and Component Layer */
 @layer base {
   :root {
-    --font-inter: 'Inter', sans-serif;
+    --font-inter: 'Tinos', sans-serif;
     --foreground-rgb: 15, 53, 65; /* #0F3541 */
     --background-start-rgb: 255, 255, 230; /* #FFFFE6 */
     --background-end-rgb: 255, 255, 255;
