@@ -211,10 +211,10 @@ export default function SignUpPage() {
       });
       setVerificationStatus((prev) => ({ ...prev, email: "sent" }));
       toast.success("Verification email sent!");
-      // Show verification code in alert if present in response
-      if (res.data.data && res.data.data.code) {
-        window.alert(`Your email verification code is: ${res.data.data.code}`);
-      }
+      // // Show verification code in alert if present in response
+      // if (res.data.data && res.data.data.code) {
+      //   window.alert(`Your email verification code is: ${res.data.data.code}`);
+      // }
     } catch (error: any) {
       console.log("Email OTP error:", error.response?.data);
       if (
