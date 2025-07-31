@@ -67,7 +67,7 @@ export const Navbar = () => {
 
   // 3. Conditional Rendering Logic
   // If the current path is the homepage, render nothing.
-  if (location.pathname === "/") {
+  if (location.pathname === "/" || location.pathname === "/products") {
     return null;
   }
 
@@ -86,7 +86,7 @@ export const Navbar = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
-              <img src="/logo.png" alt="TatvamAI Logo" className="w-9 h-9" />
+              {/* <img src="/logo.png" alt="TatvamAI Logo" className="w-9 h-9" /> */}
               <span className="text-xl font-bold text-white">TatvamAI</span>
             </Link>
           </div>
