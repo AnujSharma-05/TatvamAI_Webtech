@@ -96,7 +96,9 @@ export const Navbar = () => {
             <Link to="/about" className={navLinkClasses}>About</Link>
             <Link to="/products" className={navLinkClasses}>Our Products</Link>
             
-            <div className="relative group">
+          {/* Commenting the resources dropdown for now */}
+
+            {/* <div className="relative group">
               <button className={`${navLinkClasses} flex items-center`}>
                 Resources <span className="ml-1 text-xs">▼</span>
               </button>
@@ -105,7 +107,7 @@ export const Navbar = () => {
                 <Link to="/qr-recording" className={dropdownLinkClasses}>Become a Contributor</Link>
                 <Link to="/dashboard" className={dropdownLinkClasses}>Dashboard</Link>
               </div>
-            </div>
+            </div> */}
 
             {/* --- ADDED CAREERS LINK --- */}
             <Link to="/careers" className={navLinkClasses}>Careers</Link>
@@ -159,14 +161,16 @@ export const Navbar = () => {
             <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-white">About</Link>
             <Link to="/products" className="block px-3 py-2 rounded-md text-base font-medium text-white">Our Products</Link>
             
-            <div className="px-3 py-2">
+
+            {/* Commenting the resources for now */}
+            {/* <div className="px-3 py-2">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
               <div className="mt-2 space-y-1">
                 <Link to="/blogs" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Blog</Link>
                 <Link to="/qr-recording" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Become a Contributor</Link>
                 <Link to="/dashboard" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Dashboard</Link>
               </div>
-            </div>
+            </div> */}
             
             {/* --- ADDED CAREERS LINK (MOBILE) --- */}
             <Link to="/careers" className="block px-3 py-2 rounded-md text-base font-medium text-white">Careers</Link>
