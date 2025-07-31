@@ -1,16 +1,58 @@
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { toast } from "../components/ui/sonner";
+import { toast } from "sonner"; // Using sonner as in your original component
 import emailjs from "@emailjs/browser";
-import { FaGithub, FaLinkedin, FaEnvelope } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { InView } from "react-intersection-observer";
+import { Mail, Github, Linkedin, Send } from 'lucide-react';
+import AnimatedBlobBackground from '@/components/Blobbg'; // Adjust path as needed
 
+// --- EmailJS Configuration ---
 const SERVICE_ID = "service_iknpru9";
 const TEMPLATE_ID = "template_l7hnfuo";
 const PUBLIC_KEY = "aYn2S4Cy8WRnXVJ40";
 
-export default function Contact() {
+// --- Reusable Color Palette ---
+const COLORS = {
+  lightYellow: "#ffffe3",
+  midnightGreen: "#003642",
+  teaGreen: "#d0e6a5",
+  nyanza: "#f1ffe3",
+  cadetGray: "#83a0a0",
+};
+
+
+
+// --- Reusable Custom Cursor Component ---
+const CustomCursor = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+    };
+  }, []);
+
+  return (
+    <>
+      <div
+        className="custom-cursor-glow"
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      />
+      <div
+        className="custom-cursor-dot"
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      />
+    </>
+  );
+};
+
+
+// --- Main Contact Page Component ---
+export default function ContactPage() {
   const {
     register,
     handleSubmit,
@@ -20,10 +62,20 @@ export default function Contact() {
 
   const [submitted, setSubmitted] = useState(false);
 
+  // --- DEBUGGED onSubmit FUNCTION ---
   const onSubmit = async (formData: any) => {
     const now = new Date();
+    
+    // This data object now contains BOTH key formats.
+    // This ensures that your EmailJS template will find the variables it needs,
+    // whether it's looking for {{name}} or {{from_name}}.
     const data = {
-      ...formData,
+      name: formData.name,         // For templates using {{name}}
+      email: formData.email,       // For templates using {{email}}
+      from_name: formData.name,    // For templates using {{from_name}} (often for Reply-To)
+      from_email: formData.email,  // For templates using {{from_email}} (often for Reply-To)
+      subject: formData.subject,
+      message: formData.message,
       date: now.toLocaleDateString(),
       time: now.toLocaleTimeString(),
     };
@@ -33,124 +85,129 @@ export default function Contact() {
       toast.success("✨ Message beamed successfully!");
       setSubmitted(true);
       reset();
-      setTimeout(() => setSubmitted(false), 3000);
+      setTimeout(() => setSubmitted(false), 4000);
     } catch (err) {
       console.error("EmailJS Error:", err);
-      toast.error("⚠️ Signal lost. Try again.");
+      toast.error("⚠️ Signal lost. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-black bg-[radial-gradient(circle_at_20%_20%,#0f172a,transparent)] text-white py-20 px-6 flex items-center justify-center">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-12 items-center">
+    <div style={{ background: COLORS.midnightGreen }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
+      <CustomCursor />
+      <AnimatedBlobBackground />
 
-        {/* Left Panel: Info */}
-        <InView triggerOnce threshold={0.1}>
-          {({ ref, inView }) => (
-            <motion.div
-              ref={ref}
-              initial={{ opacity: 0, y: 50 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="bg-[#101729]/80 rounded-3xl p-10 shadow-2xl backdrop-blur-lg hover:shadow-blue-500/20 transition-all duration-300"
-            >
-              <h2 className="text-4xl font-bold text-gradient bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent mb-4">
-                Let’s Talk.
-              </h2>
-              <p className="text-slate-400 mb-8">
-                Whether you’re a contributor, enterprise, or just curious — we’re listening.
+      <motion.div
+        className="relative z-10 w-full max-w-6xl"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
+        <div 
+          className="grid md:grid-cols-2 gap-px rounded-2xl overflow-hidden"
+          style={{
+            background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+            border: `1px solid ${COLORS.cadetGray}20`,
+            backdropFilter: 'blur(12px)',
+            boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+          }}
+        >
+          {/* Left Panel: Info */}
+          <div className="p-8 md:p-12 flex flex-col h-full justify-center">
+            
+            <h1 className="text-5xl md:text-6xl font-extrabold" style={{color: COLORS.nyanza}}>
+              Let’s <span style={{ color: COLORS.teaGreen }}>Talk.</span>
+            </h1>
+
+            <div>
+              <p className="text-lg text-slate-300 my-8">
+                Cause Every Voice Matters!
               </p>
-
-              <div className="space-y-4 text-slate-300">
-                <div className="flex items-center gap-3 text-lg">
-                  <FaEnvelope className="text-blue-400" />
-                  <span>tatvamai.official@gmail.com</span>
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 text-lg">
+                  <Mail style={{color: COLORS.teaGreen}} />
+                  <span className="text-slate-300">tatvamai.official@gmail.com</span>
                 </div>
-                <div className="flex gap-6 mt-6 text-2xl">
+                <div className="flex gap-6 pt-4 text-2xl">
                   <a
                     href="https://github.com/tatvam-ai"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-white transition hover:scale-110"
+                    className="text-slate-300 transition-transform hover:scale-110 hover:text-white"
                   >
-                    <FaGithub />
+                    <Github />
                   </a>
                   <a
                     href="https://www.linkedin.com/company/tatvamai/posts/?feedView=all"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-blue-500 transition hover:scale-110"
+                    className="text-slate-300 transition-transform hover:scale-110 hover:text-white"
                   >
-                    <FaLinkedin />
+                    <Linkedin />
                   </a>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </InView>
+            </div>
+          </div>
 
-        {/* Right Panel: Form */}
-        <InView triggerOnce threshold={0.1}>
-          {({ ref, inView }) => (
-            <motion.form
-              ref={ref}
-              onSubmit={handleSubmit(onSubmit)}
-              initial={{ opacity: 0, y: 50 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
-              className="bg-[#101729]/80 rounded-3xl p-10 shadow-2xl backdrop-blur-lg hover:shadow-purple-500/20 transition-all duration-300"
+          {/* Right Panel: Form */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-8 md:p-12"
+            style={{background: `${COLORS.midnightGreen}30`}}
+            noValidate
+          >
+            {["name", "email", "subject", "message"].map((field) => (
+              <div key={field} className="mb-5">
+                <label className="block text-sm font-medium mb-2 capitalize text-slate-300">{field}</label>
+                {field === "message" ? (
+                  <textarea
+                    {...register(field, { required: `${field.charAt(0).toUpperCase() + field.slice(1)} is required` })}
+                    placeholder={`Your ${field}...`}
+                    rows={4}
+                    className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2"
+                    style={{borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen} as React.CSSProperties}
+                  />
+                ) : (
+                  <input
+                    type={field === "email" ? "email" : "text"}
+                    {...register(field, {
+                      required: `${field.charAt(0).toUpperCase() + field.slice(1)} is required`,
+                      ...(field === "email" && {
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Please enter a valid email address",
+                        },
+                      }),
+                    })}
+                    placeholder={`Your ${field}...`}
+                    className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2"
+                    style={{borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen} as React.CSSProperties}
+                  />
+                )}
+                {errors[field] && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {(errors as any)[field]?.message}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            <button
+              type="submit"
+              disabled={isSubmitting || submitted}
+              className={`w-full mt-4 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed`}
+              style={{
+                background: submitted ? '#22c55e' : COLORS.teaGreen, // Emerald green for submitted state
+                color: submitted ? 'white' : COLORS.midnightGreen
+              }}
             >
-              <h3 className="text-3xl font-bold mb-6 text-white">Send a Message</h3>
-
-              {["name", "email", "subject", "message"].map((field) => (
-                <div key={field} className="mb-6">
-                  <label className="block text-slate-300 mb-1 capitalize">{field}</label>
-                  {field === "message" ? (
-                    <textarea
-                      {...register(field, { required: `${field} is required` })}
-                      placeholder={`Enter your ${field}`}
-                      rows={4}
-                      className="w-full px-4 py-3 bg-[#181f36] border border-slate-700 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-                    />
-                  ) : (
-                    <input
-                      type={field === "email" ? "email" : "text"}
-                      {...register(field, {
-                        required: `${field} is required`,
-                        ...(field === "email" && {
-                          pattern: {
-                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                            message: "Enter a valid email",
-                          },
-                        }),
-                      })}
-                      placeholder={`Enter your ${field}`}
-                      className="w-full px-4 py-3 bg-[#181f36] border border-slate-700 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                  )}
-                  {errors[field] && (
-                    <p className="text-red-400 text-sm mt-1">
-                      {(errors as any)[field]?.message}
-                    </p>
-                  )}
-                </div>
-              ))}
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full mt-4 py-3 rounded-xl text-white font-semibold transition-all duration-300 ${
-                  submitted
-                    ? "bg-emerald-500 hover:bg-emerald-600"
-                    : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                }`}
-              >
-                {isSubmitting ? "Transmitting..." : submitted ? "Sent ✓" : "Send Message"}
-              </button>
-            </motion.form>
-          )}
-        </InView>
-      </div>
+              {isSubmitting ? "Transmitting..." : submitted ? "Sent ✓" : "Send Message"}
+              {!isSubmitting && !submitted && <Send className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />}
+            </button>
+          </form>
+        </div>
+      </motion.div>
     </div>
   );
 }
