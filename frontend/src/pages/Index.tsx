@@ -12,6 +12,36 @@ const COLORS = {
   cadetGray: "#83a0a0",
 };
 
+// --- Custom Cursor Component ---
+// This component renders the custom cursor and handles its logic.
+const CustomCursor = () => {
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+
+  React.useEffect(() => {
+    const onMouseMove = (e) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+    };
+  }, []);
+
+  return (
+    <>
+      <div 
+        className="custom-cursor-glow" 
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      />
+      <div 
+        className="custom-cursor-dot" 
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      />
+    </>
+  );
+};
+
+
 // --- Component for the intro slide, visible on load ---
 const HeroSlide = ({ scrollYProgress, onNavigate }) => {
   const opacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
@@ -27,7 +57,7 @@ const HeroSlide = ({ scrollYProgress, onNavigate }) => {
   };
 
   return (
-    <motion.div style={{ y, opacity }} className="w-full h-full absolute flex items-center justify-center text-center px-6">
+    <motion.div style={{ y, opacity, zIndex: 10 }} className="w-full h-full absolute flex items-center justify-center text-center px-6">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-4xl">
         <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-6 leading-tight" style={{ color: COLORS.nyanza, textShadow: `0 0 30px ${COLORS.teaGreen}30` }}>
           Your Voice <span style={{ color: COLORS.teaGreen }}>Shapes AI</span>
@@ -56,13 +86,35 @@ const AnimatedSlide = ({ scrollYProgress, children, range }) => {
 
   const y = useTransform(scrollYProgress, [start, mid, end], ['50vh', '0vh', '-50vh']);
   const opacity = useTransform(scrollYProgress, [start, start + 0.05, end - 0.05, end], [0, 1, 1, 0]);
+  
+  const pointerEvents = useTransform(scrollYProgress, (pos) => {
+    return pos >= start && pos <= end ? 'auto' : 'none';
+  });
 
   return (
-    <motion.div style={{ y, opacity }} className="w-full h-full absolute flex items-center justify-center text-center px-6">
+    <motion.div 
+      style={{ y, opacity, pointerEvents }} 
+      className="w-full h-full absolute flex items-center justify-center px-6"
+    >
       {children}
     </motion.div>
   );
 };
+
+// --- New Card Component for containerizing slides ---
+const Card = ({ children, className = '' }) => (
+    <div 
+        className={`w-full max-w-6xl p-8 md:p-12 rounded-2xl ${className}`}
+        // style={{
+        //     background: `${COLORS.midnightGreen}40`,
+        //     border: `1px solid ${COLORS.cadetGray}20`,
+        //     backdropFilter: 'blur(10px)',
+        //     boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+        // }}
+    >
+        {children}
+    </div>
+);
 
 // --- Horizontal Marquee Component ---
 const HorizontalMarquee = ({ features }) => {
@@ -86,7 +138,6 @@ const HorizontalMarquee = ({ features }) => {
   );
 };
 
-
 const Index = () => {
   const navigate = useNavigate();
   const scrollRef = React.useRef(null);
@@ -102,7 +153,12 @@ const Index = () => {
   ];
   
   return (
-    <div ref={scrollRef} style={{ height: '450vh', background: COLORS.midnightGreen }}>
+    // Add the 'hide-default-cursor' class here to activate the effect
+    <div ref={scrollRef} className="hide-default-cursor" style={{ height: '500vh', background: COLORS.midnightGreen }}>
+      
+      {/* Add the CustomCursor component here */}
+      <CustomCursor />
+
       <div className="sticky top-0 h-screen overflow-hidden">
         
         <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -115,89 +171,102 @@ const Index = () => {
 
         <HeroSlide scrollYProgress={scrollYProgress} onNavigate={navigate} />
 
-        {/* REVISED STATS SECTION */}
-        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.22, 0.42]}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center w-full max-w-6xl text-left">
-            {/* Left Column: The Problem */}
-            <div className="p-8 rounded-2xl" style={{ border: `1px solid ${COLORS.cadetGray}10` }}>
-              <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.nyanza }}>The Digital Divide is a Language Barrier</h2>
-              <p className="text-lg leading-relaxed" style={{ color: COLORS.cadetGray }}>
-                **665 million Indians** still lack internet access, not just due to availability, but because of a **usability gap**. For many, technology that requires typing and reading complex interfaces is the biggest hurdle.
-              </p>
-              <p className="mt-4 text-lg" style={{ color: COLORS.teaGreen }}>
-                Voice is the most intuitive bridge, bypassing the need for traditional digital literacy.
-              </p>
-            </div>
-            {/* Right Column: The Solution */}
-            <div>
-              <h2 className="text-3xl font-bold mb-6 text-center md:text-left" style={{ color: COLORS.nyanza }}>How We're Bridging It</h2>
-              <div className="space-y-6">
-                <div>
-                  <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>10M+</p>
-                  <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Voice Samples Collected</p>
+        {/* --- All your AnimatedSlide sections remain the same --- */}
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.20, 0.38]}>
+            <Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center w-full text-left">
+                    <div>
+                        <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.nyanza }}>The Digital Divide is a Language Barrier</h2>
+                        <p className="text-lg leading-relaxed" style={{ color: COLORS.cadetGray }}>
+                            <strong>665 million Indians</strong> still lack internet access, not just due to availability, but because of a <strong>usability gap</strong>. For many, technology that requires typing and reading complex interfaces is the biggest hurdle.
+                        </p>
+                        <p className="mt-4 text-lg" style={{ color: COLORS.teaGreen }}>
+                            Voice is the most intuitive bridge, bypassing the need for traditional digital literacy.
+                        </p>
+                    </div>
+                    <div className='text-center md:text-left'>
+                        <h2 className="text-3xl font-bold mb-6" style={{ color: COLORS.nyanza }}>How We're Bridging It</h2>
+                        <div className="space-y-6">
+                            <div>
+                                <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>10+ hrs+</p>
+                                <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Voice Samples</p>
+                            </div>
+                            <div>
+                                <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>10+</p>
+                                <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Languages & Dialects Covered</p>
+                            </div>
+                            <div>
+                                <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>500+</p>
+                                <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Contributors Empowered</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                  <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>100+</p>
-                  <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Languages & Dialects Covered</p>
-                </div>
-                <div>
-                  <p className="text-5xl font-bold" style={{ color: COLORS.teaGreen }}>50K+</p>
-                  <p className="text-md uppercase tracking-wider" style={{ color: COLORS.cadetGray }}>Contributors Empowered</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            </Card>
         </AnimatedSlide>
 
-        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.40, 0.60]}>
-          <div className="max-w-6xl w-full">
-            <h2 className="text-4xl md:text-5xl font-bold mb-16" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.teaGreen}20` }}>Key Features</h2>
-            <HorizontalMarquee features={features} />
-          </div>
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.40, 0.58]}>
+            <Card>
+                <h2 className="text-4xl md:text-5xl font-bold mb-16 text-center" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.teaGreen}20` }}>
+                    Key Features
+                </h2>
+                <HorizontalMarquee features={features} />
+            </Card>
         </AnimatedSlide>
         
-        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.58, 0.80]}>
-            <motion.div className="max-w-6xl w-full" initial="hidden" animate={scrollYProgress > 0.62 && scrollYProgress < 0.76 ? "visible" : "hidden"} variants={{ visible: { transition: { staggerChildren: 0.15 } } }}>
-                <motion.h2 variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="text-4xl md:text-5xl font-bold mb-16" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.teaGreen}20` }}>Powering Real-World Applications</motion.h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
-                        <img src="/logo.png" alt="Smarter Assistants" className="w-full h-48 object-cover opacity-50"/>
-                        <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
-                            <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>Smarter Assistants</h3>
-                            <p className="mt-2" style={{color: COLORS.cadetGray}}>Enabling voice assistants to understand diverse accents and local dialects.</p>
-                        </div>
-                    </motion.div>
-                    <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
-                        <img src="/logo.png" alt="Accessible Technology" className="w-full h-48 object-cover opacity-50"/>
-                        <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
-                            <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>Accessible Technology</h3>
-                            <p className="mt-2" style={{color: COLORS.cadetGray}}>Creating tools for literacy and accessibility for underserved communities.</p>
-                        </div>
-                    </motion.div>
-                    <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
-                        <img src="/logo.png" alt="In-Car Voice Control" className="w-full h-48 object-cover opacity-50"/>
-                        <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
-                            <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>In-Car Voice Control</h3>
-                            <p className="mt-2" style={{color: COLORS.cadetGray}}>Improving hands-free systems for navigation, making driving safer for everyone.</p>
-                        </div>
-                    </motion.div>
-                </div>
-            </motion.div>
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.60, 0.78]}>
+            <Card>
+                <motion.div 
+                    className="w-full"
+                    initial="hidden" 
+                    whileInView="visible"
+                    viewport={{ once: false, amount: 0.2 }}
+                    variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+                >
+                    <motion.h2 variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="text-center text-4xl md:text-5xl font-bold mb-16" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.teaGreen}20` }}>
+                        Powering Real-World Applications
+                    </motion.h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
+                            <img src="/logo.png" alt="Smarter Assistants" className="w-full h-48 object-cover opacity-50"/>
+                            <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
+                                <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>Smarter Assistants</h3>
+                                <p className="mt-2" style={{color: COLORS.cadetGray}}>Enabling voice assistants to understand diverse accents and local dialects.</p>
+                            </div>
+                        </motion.div>
+                        <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
+                            <img src="/logo.png" alt="Accessible Technology" className="w-full h-48 object-cover opacity-50"/>
+                            <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
+                                <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>Accessible Technology</h3>
+                                <p className="mt-2" style={{color: COLORS.cadetGray}}>Creating tools for literacy and accessibility for underserved communities.</p>
+                            </div>
+                        </motion.div>
+                        <motion.div variants={{hidden: {opacity: 0, y: 20}, visible: {opacity: 1, y: 0}}} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${COLORS.cadetGray}20`}}>
+                            <img src="/logo.png" alt="In-Car Voice Control" className="w-full h-48 object-cover opacity-50"/>
+                            <div className="p-6 text-left" style={{background: `linear-gradient(145deg, ${COLORS.midnightGreen}, #002a35)`}}>
+                                <h3 className="text-xl font-bold" style={{color: COLORS.nyanza}}>In-Car Voice Control</h3>
+                                <p className="mt-2" style={{color: COLORS.cadetGray}}>Improving hands-free systems for navigation, making driving safer for everyone.</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                </motion.div>
+            </Card>
         </AnimatedSlide>
 
-        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.78, 1.0]}>
-          <div className="w-full max-w-4xl">
-            <div className="p-10 md:p-16 rounded-3xl" style={{ background: `linear-gradient(135deg, ${COLORS.teaGreen} -20%, ${COLORS.midnightGreen} 60%)`, boxShadow: `0 8px 40px ${COLORS.teaGreen}10` }}>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.nyanza}30` }}>Ready to Make a Difference?</h2>
-              <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: COLORS.cadetGray }}>
-                Your voice matters. Join our community and help build the future of AI.
-              </p>
-              <button onClick={() => navigate("/qr-recording")} className="flex items-center mx-auto px-10 py-5 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-transform transform hover:scale-105" style={{ background: COLORS.nyanza, color: COLORS.midnightGreen }}>
-                Get Started Now <ChevronRight className="w-6 h-6 ml-2" />
-              </button>
+        <AnimatedSlide scrollYProgress={scrollYProgress} range={[0.80, 1.0]}>
+            <div className="w-full max-w-4xl text-center">
+                <div className="p-10 md:p-16 rounded-3xl" style={{ background: `linear-gradient(135deg, ${COLORS.teaGreen} -20%, ${COLORS.midnightGreen} 60%)`, boxShadow: `0 8px 40px ${COLORS.teaGreen}10` }}>
+                    <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: COLORS.nyanza, textShadow: `0 0 20px ${COLORS.nyanza}30` }}>Ready to Make a Difference?</h2>
+                    <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: COLORS.cadetGray }}>
+                        Your voice matters. Join our community and help build the future of AI.
+                    </p>
+                    <button onClick={() => navigate("/qr-recording")} className="flex items-center mx-auto px-10 py-5 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-transform transform hover:scale-105" style={{ background: COLORS.nyanza, color: COLORS.midnightGreen }}>
+                        Get Started Now <ChevronRight className="w-6 h-6 ml-2" />
+                    </button>
+                </div>
             </div>
-          </div>
         </AnimatedSlide>
+
       </div>
     </div>
   );
