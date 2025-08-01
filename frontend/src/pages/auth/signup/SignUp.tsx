@@ -136,11 +136,6 @@ export default function SignUpPage() {
         phoneNo: formData.phone,
       });
 
-      // Extract sessionId from the response
-      const sessionId = res.data.data.sessionId;
-      setOtpSessionId(sessionId);
-      console.log("OTP session ID:", sessionId);
-
       // Update verification status
       setVerificationStatus((prev) => ({ ...prev, phone: "sent" }));
       toast.success("OTP sent to your phone!");
@@ -168,18 +163,15 @@ export default function SignUpPage() {
       return;
     }
 
-    if (!otpSessionId) {
-      toast.error("Session ID is missing. Please request a new OTP.");
-      return;
-    }
-
     setIsVerifyingPhoneOtp(true);
     try {
+      // API call to verify phone OTP
       const response = await axios.post("/users/verify-phone-otp", {
-        sessionId: otpSessionId,
+        phoneNo: formData.phone,
         otp: phoneOtp,
       });
 
+      // Update verification status
       setVerificationStatus((prev) => ({ ...prev, phone: "verified" }));
       toast.success("Phone number verified!");
     } catch (error: any) {
