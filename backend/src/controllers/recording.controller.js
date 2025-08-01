@@ -39,6 +39,53 @@ const uploadRecording = asyncHandler(async (req, res) => {
     );
 });
 
+function calculateRandomizedReward(overall_score) {
+  let score = 0;
+  let final_quality = "";
+  const rand = Math.random(); // Generates a random number between 0 and 1
+
+  if (overall_score >= 90) {
+    final_quality = "excellent";
+    if (rand < 0.6) { // 60% probability
+      score = 15;
+    } else if (rand < 0.9) { // 30% probability
+      score = 20;
+    } else { // 10% probability
+      score = 25;
+    }
+  } else if (overall_score >= 70) {
+    final_quality = "good";
+    if (rand < 0.7) { // 70% probability
+      score = 8;
+    } else if (rand < 0.95) { // 25% probability
+      score = 10;
+    } else { // 5% probability
+      score = 12;
+    }
+  } else if (overall_score >= 50) {
+    final_quality = "average";
+    if (rand < 0.5) { // 50% probability
+      score = 4;
+    } else if (rand < 0.9) { // 40% probability
+      score = 5;
+    } else { // 10% probability
+      score = 6;
+    }
+  } else if (overall_score >= 30) {
+    final_quality = "below_average";
+    if (rand < 0.8) { // 80% probability
+      score = 1;
+    } else { // 20% probability
+      score = 2;
+    }
+  } else {
+    final_quality = "poor";
+    score = 0; // No reward for poor quality
+  }
+
+  return { score, final_quality };
+}
+
 // api request to send the recording to the python model for evaluation
 const evaluateRecording = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -85,24 +132,7 @@ const evaluateRecording = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Invalid response from audio analysis server");
   }
 
-  // const rewardMap = {
-  //   bad: 0,
-  //   average: 1,
-  //   good: 2,
-  //   excellent: 3
-  // };
-
-  let score = 0;
-  let final_quality = "";
-  if(overall_score >= 50.00){
-    score = 5;
-    final_quality = "good";
-  }else{
-    score = 1;
-    final_quality = "bad";
-  }
-
-  // const score = rewardMap[final_quality] ?? 0;
+  const { score, final_quality } = calculateRandomizedReward(overall_score);
 
   // Update the recording
   recording.quality = final_quality;
@@ -132,8 +162,6 @@ const evaluateRecording = asyncHandler(async (req, res) => {
     new ApiResponse(200, rewardToken, "Recording evaluated and rewarded")
   );
 });
-
-
 
 // for admin only
 const getAllRecordings = asyncHandler(async (req, res) => {
@@ -201,7 +229,7 @@ const generateParagraph = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Language and domain are required");
   }
 
-  const prompt = `Write a 100-word paragraph in fluent ${language} on the topic of ${domain}. Use conversational tone and include 1-2 local or code-mixed (${language}-English) words.`
+  const prompt = `Write a 250-word paragraph in fluent ${language} on the topic of ${domain}. Use conversational tone and include 1-2 local or code-mixed (${language}-English) words.`
 
   const response = await axios.post(
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',

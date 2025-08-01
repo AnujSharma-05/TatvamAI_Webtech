@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { toast } from 'react-hot-toast'; 
+import { toast } from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from "../../../config/axios"; 
-import { handleLoginResponse } from "../../../utils/auth"; 
+import axios from "../../../config/axios";
+import { handleLoginResponse } from "../../../utils/auth";
 import { Eye, EyeOff } from 'lucide-react';
-import AnimatedBlobBackground from '@/components/Blobbg'; // Adjust path as needed
+import AnimatedBlobBackground from '@/components/Blobbg'; // Using the visual branch's path
 
 // --- Reusable Color Palette ---
+// **Resolution**: Kept from Anuj's-Branch for consistent styling.
 const COLORS = {
   lightYellow: "#ffffe3",
   midnightGreen: "#003642",
@@ -16,8 +17,8 @@ const COLORS = {
   cadetGray: "#83a0a0",
 };
 
-
 // --- Reusable Custom Cursor Component ---
+// **Resolution**: Kept from Anuj's-Branch for consistent styling.
 const CustomCursor = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   useEffect(() => {
@@ -34,6 +35,7 @@ const CustomCursor = () => {
 };
 
 // --- Helper component for a styled input ---
+// **Resolution**: Kept from Anuj's-Branch for consistent styling.
 const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
   <input
     ref={ref}
@@ -43,20 +45,21 @@ const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) 
   />
 ));
 
-
-type AuthMethod = 'phone' | 'email'
+type AuthMethod = "phone" | "email";
 
 export default function SignInPage() {
-  const navigate = useNavigate()
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('phone')
-  const [contact, setContact] = useState('')
-  const [otp, setOtp] = useState('')
-  const [isOtpSent, setIsOtpSent] = useState(false)
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("phone");
+  const [contact, setContact] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // **Resolution**: We keep this state variable from the 'main' branch. It's essential for the new OTP logic.
+  const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
 
-  // ALL LOGIC FUNCTIONS REMAIN UNCHANGED
   const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -67,10 +70,20 @@ export default function SignInPage() {
     }
     setLoading(true);
     try {
-      const res = await axios.post('/users/send-phone-otp-login', { phoneNo: contact });
+      // **Resolution**: Using the logic from the 'main' branch to get the sessionId.
+      const res = await axios.post("/users/send-phone-otp-login", {
+        phoneNo: contact,
+      });
+      
+      const sessionId = res.data.data.data.Details; // Extract the session ID
+      setOtpSessionId(sessionId); // Store it in state
+      
       setIsOtpSent(true);
-      toast.success('OTP sent successfully!');
-      if (res.data.data?.otp) window.alert(`OTP: ${res.data.data.otp}`);
+      toast.success("OTP sent successfully!");
+
+      // Optional: Log the OTP for debugging (remove in production)
+      console.log("OTP:", res.data.data.data.OTP);
+
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to send OTP';
       toast.error(message.includes('does not exist') ? 'This phone number is not registered.' : message);
@@ -82,15 +95,29 @@ export default function SignInPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // **Resolution**: Using the validation logic from 'main' to ensure we have a session ID.
+    if (!otpSessionId) {
+      toast.error("Session ID missing. Please request a new OTP.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await axios.post('/users/login-phone-otp', { phoneNo: contact, otp });
+      // **Resolution**: Using the request structure from 'main' which includes the sessionId.
+      const res = await axios.post("/users/login-phone-otp", {
+        phoneNo: contact,
+        otp,
+        sessionId: otpSessionId, 
+      });
+
       const tokens = handleLoginResponse(res);
       if (tokens) {
-        toast.success('Signed in successfully!');
-        window.dispatchEvent(new Event('storage'));
-        navigate('/dashboard');
+        toast.success("Signed in successfully!");
+        window.dispatchEvent(new Event("storage"));
+        navigate("/dashboard");
       } else {
-        toast.error('Login failed - no tokens received');
+        toast.error("Login failed - no tokens received");
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'OTP verification failed');
@@ -125,6 +152,7 @@ export default function SignInPage() {
     }
   };
 
+  // **Resolution**: The entire return statement is taken from Anuj's-Branch to keep the new UI.
   return (
     <div style={{ background: COLORS.midnightGreen }} className="relative min-h-screen flex items-center justify-center p-4 hide-default-cursor overflow-hidden">
       <CustomCursor />
@@ -150,7 +178,6 @@ export default function SignInPage() {
             <p style={{color: COLORS.cadetGray}}>Sign in to continue your contribution.</p>
           </div>
 
-          {/* Auth Method Switcher */}
           <div className="flex p-1 rounded-xl mb-8" style={{background: `${COLORS.midnightGreen}40`}}>
             <button
               onClick={() => setAuthMethod('phone')}
@@ -168,7 +195,6 @@ export default function SignInPage() {
             </button>
           </div>
           
-          {/* RENDER FORMS BASED ON METHOD */}
           {authMethod === 'email' ? (
               <form onSubmit={handleEmailLogin} className="space-y-6">
                 <div>
@@ -208,7 +234,6 @@ export default function SignInPage() {
                 </button>
               </form>
           )}
-
         </div>
         
         <p className="text-center mt-8" style={{color: COLORS.cadetGray}}>
@@ -217,7 +242,6 @@ export default function SignInPage() {
             Sign up
           </Link>
         </p>
-
       </motion.div>
     </div>
   )
