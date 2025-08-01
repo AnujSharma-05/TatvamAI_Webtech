@@ -55,8 +55,7 @@ const Home = () => {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          // This delay makes it appear after the main heading but before the button.
-          transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
+          transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
           className="mt-4 text-xl md:text-2xl font-medium tracking-wide"
           style={{ color: COLORS.cadetGray }}
         >

@@ -32,11 +32,15 @@ const Footer: FC = () => (
         TatvamAI
       </p>
       <div className="flex justify-center gap-6 mb-8">
+
+        {/* Commenting the Privacy and terms page for now and adding new route to the main page */}
+
         <Link to="/about" className="hover:text-white transition font-medium">About</Link>
-        <Link to="/blogs" className="hover:text-white transition font-medium">Blog</Link>
+        <Link to="/" className="hover:text-white transition font-medium">Home</Link>
+        {/* <Link to="/blogs" className="hover:text-white transition font-medium">Blog</Link> */}
         <Link to="/contact" className="hover:text-white transition font-medium">Contact</Link>
-        <Link to="/privacy" className="hover:text-white transition font-medium">Privacy</Link>
-        <Link to="/terms" className="hover:text-white transition font-medium">Terms</Link>
+        {/* <Link to="/privacy" className="hover:text-white transition font-medium">Privacy</Link> */}
+        {/* <Link to="/terms" className="hover:text-white transition font-medium">Terms</Link> */}
       </div>
       <div className="flex justify-center gap-6 mb-8 text-xl">
         <a

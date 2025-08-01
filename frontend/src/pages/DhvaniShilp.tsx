@@ -138,7 +138,7 @@ const HorizontalMarquee = ({ features }) => {
   );
 };
 
-const Index = () => {
+const DhvaniShilp = () => {
   const navigate = useNavigate();
   const scrollRef = React.useRef(null);
 
@@ -272,4 +272,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default DhvaniShilp;

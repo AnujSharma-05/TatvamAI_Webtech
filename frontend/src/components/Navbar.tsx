@@ -67,7 +67,7 @@ export const Navbar = () => {
 
   // 3. Conditional Rendering Logic
   // If the current path is the homepage, render nothing.
-  if (location.pathname === "/") {
+  if (location.pathname === "/" || location.pathname === "/products") {
     return null;
   }
 
@@ -86,7 +86,7 @@ export const Navbar = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center space-x-2">
-              <img src="/logo.png" alt="TatvamAI Logo" className="w-9 h-9" />
+              {/* <img src="/logo.png" alt="TatvamAI Logo" className="w-9 h-9" /> */}
               <span className="text-xl font-bold text-white">TatvamAI</span>
             </Link>
           </div>
@@ -94,18 +94,11 @@ export const Navbar = () => {
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex lg:justify-center lg:flex-1 lg:space-x-8">
             <Link to="/about" className={navLinkClasses}>About</Link>
+            <Link to="/products" className={navLinkClasses}>Our Products</Link>
             
-            <div className="relative group">
-              <button className={`${navLinkClasses} flex items-center`}>
-                Products <span className="ml-1 text-xs">▼</span>
-              </button>
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-48 bg-gray-800 bg-opacity-80 backdrop-blur-md rounded-lg shadow-xl p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
-                <Link to="/products" className={dropdownLinkClasses}>Our Models</Link>
-                <Link to="/qr" className={dropdownLinkClasses}>DhvaniShilp</Link>
-              </div>
-            </div>
+          {/* Commenting the resources dropdown for now */}
 
-            <div className="relative group">
+            {/* <div className="relative group">
               <button className={`${navLinkClasses} flex items-center`}>
                 Resources <span className="ml-1 text-xs">▼</span>
               </button>
@@ -114,7 +107,10 @@ export const Navbar = () => {
                 <Link to="/qr-recording" className={dropdownLinkClasses}>Become a Contributor</Link>
                 <Link to="/dashboard" className={dropdownLinkClasses}>Dashboard</Link>
               </div>
-            </div>
+            </div> */}
+
+            {/* --- ADDED CAREERS LINK --- */}
+            <Link to="/careers" className={navLinkClasses}>Careers</Link>
 
             <Link to="/contact" className={navLinkClasses}>Contact</Link>
           </div>
@@ -163,21 +159,22 @@ export const Navbar = () => {
         <div className="lg:hidden bg-gray-900 bg-opacity-95 backdrop-blur-lg absolute top-20 left-0 w-full">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-white">About</Link>
-            <div className="px-3 py-2">
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Products</h3>
-              <div className="mt-2 space-y-1">
-                <Link to="/products" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Our Models</Link>
-                <Link to="/qr" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">DhvaniShilp</Link>
-              </div>
-            </div>
-            <div className="px-3 py-2">
+            <Link to="/products" className="block px-3 py-2 rounded-md text-base font-medium text-white">Our Products</Link>
+            
+
+            {/* Commenting the resources for now */}
+            {/* <div className="px-3 py-2">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
               <div className="mt-2 space-y-1">
                 <Link to="/blogs" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Blog</Link>
                 <Link to="/qr-recording" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Become a Contributor</Link>
                 <Link to="/dashboard" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Dashboard</Link>
               </div>
-            </div>
+            </div> */}
+            
+            {/* --- ADDED CAREERS LINK (MOBILE) --- */}
+            <Link to="/careers" className="block px-3 py-2 rounded-md text-base font-medium text-white">Careers</Link>
+
             <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-white">Contact</Link>
           </div>
           <div className="pt-4 pb-3 border-t border-gray-700">
