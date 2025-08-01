@@ -25,6 +25,8 @@ import FAQ from './pages/FAQs';
 import Documentation from './pages/Documentation';
 import Careers from './pages/Careers';
 
+import CustomCursor from './components/CustomCursor';
+
 function App() {
   return (
     <Router>

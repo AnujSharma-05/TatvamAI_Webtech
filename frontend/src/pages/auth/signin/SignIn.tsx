@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast'; 
 import { useNavigate, Link } from 'react-router-dom';
-import axios from "../../../config/axios"; // Assuming this path is correct
-import { handleLoginResponse } from "../../../utils/auth"; // Assuming this path is correct
+import axios from "../../../config/axios"; 
+import { handleLoginResponse } from "../../../utils/auth"; 
 import { Eye, EyeOff } from 'lucide-react';
+import AnimatedBlobBackground from '@/components/Blobbg'; // Adjust path as needed
 
 // --- Reusable Color Palette ---
 const COLORS = {
@@ -15,14 +16,6 @@ const COLORS = {
   cadetGray: "#83a0a0",
 };
 
-// --- Reusable Animated Background Component ---
-const AnimatedBlobBackground = () => (
-  <div className="absolute inset-0 w-full h-full pointer-events-none">
-    <div className="absolute w-[40vw] h-[40vw] rounded-full filter blur-3xl opacity-20 revolve-1" style={{ backgroundColor: COLORS.teaGreen }}/>
-    <div className="absolute w-[30vw] h-[30vw] rounded-full filter blur-3xl opacity-15 revolve-2" style={{ backgroundColor: COLORS.cadetGray }}/>
-    <div className="absolute w-[25vw] h-[25vw] rounded-full filter blur-2xl opacity-10 revolve-3" style={{ backgroundColor: COLORS.lightYellow }}/>
-  </div>
-);
 
 // --- Reusable Custom Cursor Component ---
 const CustomCursor = () => {
