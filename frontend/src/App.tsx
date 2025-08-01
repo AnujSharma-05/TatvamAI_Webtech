@@ -1,14 +1,18 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import Home from './pages/Index';
+import DhvaniShilp from './pages/DhvaniShilp';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import Products from './pages/Products';
 import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
 import QR from './pages/QR';
 import Demo from './pages/Demo';
+
+import ProductsPage from './pages/ProductsPage';
+
+import Home from './pages/Home';
+
 // import Contributor from './pages/Contributor';
 import SignInPage from './pages/auth/signin/SignIn';
 import SignUpPage from './pages/auth/signup/SignUp';
@@ -21,6 +25,8 @@ import FAQ from './pages/FAQs';
 import Documentation from './pages/Documentation';
 import Careers from './pages/Careers';
 
+import CustomCursor from './components/CustomCursor';
+
 function App() {
   return (
     <Router>
@@ -29,9 +35,10 @@ function App() {
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/dhvani-shilp" element={<DhvaniShilp />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/products" element={<Products />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/faq" element={<FAQ />} />

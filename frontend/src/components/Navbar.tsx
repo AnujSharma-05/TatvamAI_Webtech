@@ -1,20 +1,25 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom"; // 1. Import useLocation
 import { FaCoins } from "react-icons/fa";
-import { isAuthenticated, getAuthTokens, logout } from "../utils/auth";
+import { isAuthenticated, logout } from "../utils/auth";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  const location = useLocation(); // 2. Get the current location object
 
-  // Check authentication status and fetch user details
+  const COLORS = {
+    midnightGreen: "#003642",
+    teaGreen: "#d0e6a5",
+    lightYellow: "#ffffe3",
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       if (isAuthenticated()) {
         try {
-          // Fetch user details from API
           const response = await fetch(
             "https://tatvamai-webtech.onrender.com/api/v1/users/current",
             {
@@ -24,7 +29,6 @@ export const Navbar = () => {
               },
             }
           );
-
           if (response.ok) {
             const userData = await response.json();
             setUser({
@@ -32,11 +36,9 @@ export const Navbar = () => {
               tokens: userData.data.rewardTokens || 0,
             });
           } else {
-            // If API call fails, use basic user info
             setUser({ name: "User", tokens: 0 });
           }
         } catch (error) {
-          // If API call fails, use basic user info
           setUser({ name: "User", tokens: 0 });
         }
       } else {
@@ -45,307 +47,156 @@ export const Navbar = () => {
     };
 
     checkAuth();
-
-    // Listen for storage changes (when user logs in/out in another tab)
     window.addEventListener("storage", checkAuth);
-
     return () => window.removeEventListener("storage", checkAuth);
   }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      // Only check scroll if not on the homepage
+      if (location.pathname !== '/') {
+        setIsScrolled(window.scrollY > 10);
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]); // Re-run effect if path changes
 
+  const navLinkClasses = "text-white font-medium hover:text-opacity-80 transition-opacity duration-300";
+  const dropdownLinkClasses = "block px-4 py-2 text-white hover:bg-opacity-10 hover:bg-white rounded-md";
+
+  // 3. Conditional Rendering Logic
+  // If the current path is the homepage, render nothing.
+  if (location.pathname === "/" || location.pathname === "/products") {
+    return null;
+  }
+
+  // Otherwise, render the full navbar.
   return (
     <nav
-      className={`fixed w-full z-50 top-0 left-0 transition-all duration-500 ${
-        isScrolled
-          ? "bg-[#101729] backdrop-blur-xl"
-          : "bg-[#101729]/90 backdrop-blur-lg"
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        isScrolled ? "bg-opacity-100 shadow-lg" : "bg-opacity-0"
       }`}
+      // When not scrolled, the navbar is transparent.
+      // We set an explicit background color when scrolled.
+      style={{ backgroundColor: isScrolled ? COLORS.midnightGreen : "transparent" }}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex items-center h-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center space-x-3 hover:scale-105 transition-transform duration-300"
-          >
-            <img
-              src="/logo.png"
-              alt="TatvamAI Logo"
-              className="w-10 h-10 rounded-md shadow-md"
-            />
-            <span className="text-xl font-bold bg-white bg-clip-text text-transparent">
-              TatvamAI
-            </span>
-          </Link>
-
-          {/* Desktop Nav */}
-          <div className="flex-1 hidden lg:flex items-center justify-center space-x-8">
-            <Link
-              to="/about"
-              className="text-white hover:text-blue-400 font-medium transition-colors duration-300"
-            >
-              About
-            </Link>
-
-            {/* Products Dropdown */}
-            <div className="relative group">
-              {/* Button */}
-              <div className="">
-                <button className="flex items-center space-x-1 text-white font-medium hover:text-blue-400 transition-colors duration-300">
-                  <span>Products</span>
-                  <span className="text-xs">▼</span>
-                </button>
-              </div>
-
-              {/* Hover buffer bridge (invisible but interactive) */}
-              <div className="absolute top-full left-0 h-3 w-56 z-40 pointer-events-auto group-hover:block" />
-
-              {/* Dropdown */}
-              <div
-                className="absolute top-[100%] left-0 w-56 bg-[#1e293b] border border-slate-700 shadow-xl rounded-2xl py-3 z-50 opacity-0 scale-95 transform transition duration-200 ease-in-out pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto hover:opacity-100 hover:scale-100 hover:pointer-events-auto"
-                style={{ marginTop: "0.75rem", paddingTop: "1rem" }} // Smooth hover bridge
-              >
-
-                <Link to="/products" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Our Models</Link>
-                {/* <Link to="/demo" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">Live Demo</Link> */}
-                <Link to="/qr" className="block px-6 py-3 text-sm text-white hover:bg-slate-700">DhvaniShilp</Link>
-
-              </div>
-            </div>
-
-            {/* Resources Dropdown */}
-            <div className="relative group">
-              {/* Button with bottom padding to add spacing */}
-              <div className="pb-0">
-                <button className="flex items-center space-x-1 text-white font-medium hover:text-blue-400 transition-colors duration-300">
-                  <span>Resources</span>
-                  <span className="text-xs">▼</span>
-                </button>
-              </div>
-
-              {/* Hover buffer bridge (invisible but interactive) */}
-              <div className="absolute top-full left-0 h-3 w-56 z-40 pointer-events-auto group-hover:block" />
-
-              {/* Dropdown */}
-              <div
-                className="absolute top-[100%] left-0 w-56 bg-[#1e293b] border border-slate-700 shadow-xl rounded-2xl py-3 z-50 opacity-0 scale-95 transform transition duration-200 ease-in-out pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto hover:opacity-100 hover:scale-100 hover:pointer-events-auto"
-                style={{ marginTop: "0.75rem", paddingTop: "1rem" }} // Extends hover space
-              >
-                <Link
-                  to="/blogs"
-                  className="block px-6 py-3 text-sm text-white hover:bg-slate-700"
-                >
-                  Blog
-                </Link>
-                <Link
-                  to="/qr-recording"
-                  className="block px-6 py-3 text-sm text-white hover:bg-slate-700"
-                >
-                  Become a Contributor
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="block px-6 py-3 text-sm text-white hover:bg-slate-700"
-                >
-                  Dashboard
-                </Link>
-              </div>
-            </div>
-
-            <Link
-              to="/contact"
-              className="text-white hover:text-blue-400 font-medium transition-colors duration-300"
-            >
-              Contact
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center space-x-2">
+              {/* <img src="/logo.png" alt="TatvamAI Logo" className="w-9 h-9" /> */}
+              <span className="text-xl font-bold text-white">TatvamAI</span>
             </Link>
           </div>
 
-          {/* Desktop User Info / CTA Buttons */}
-          <div className="hidden lg:flex items-center space-x-6 ml-8">
-            {!user ? (
-              <>
-                <Link
-                  to="/auth/signin"
-                  className="text-white hover:text-blue-400 font-medium transition-colors duration-300"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/auth/signup"
-                  className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  Get Started
-                </Link>
-              </>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => navigate("/profile")}
-                  className="text-white font-semibold hover:text-blue-400 transition-colors duration-300"
-                >
-                  {user.name}
-                </button>
-                <div className="flex items-center text-yellow-400 font-bold">
-                  <FaCoins className="mr-1" />
-                  <span>{user.tokens || 0}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    logout();
-                    setUser(null);
-                  }}
-                  className="text-white hover:text-red-400 transition-colors duration-300 text-sm"
-                >
-                  Logout
-                </button>
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex lg:justify-center lg:flex-1 lg:space-x-8">
+            <Link to="/about" className={navLinkClasses}>About</Link>
+            <Link to="/products" className={navLinkClasses}>Our Products</Link>
+            
+          {/* Commenting the resources dropdown for now */}
+
+            {/* <div className="relative group">
+              <button className={`${navLinkClasses} flex items-center`}>
+                Resources <span className="ml-1 text-xs">▼</span>
+              </button>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-48 bg-gray-800 bg-opacity-80 backdrop-blur-md rounded-lg shadow-xl p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
+                <Link to="/blogs" className={dropdownLinkClasses}>Blog</Link>
+                <Link to="/qr-recording" className={dropdownLinkClasses}>Become a Contributor</Link>
+                <Link to="/dashboard" className={dropdownLinkClasses}>Dashboard</Link>
               </div>
-            )}
+            </div> */}
+
+            {/* --- ADDED CAREERS LINK --- */}
+            <Link to="/careers" className={navLinkClasses}>Careers</Link>
+
+            <Link to="/contact" className={navLinkClasses}>Contact</Link>
           </div>
 
-          {/* Mobile User Info / Menu Button */}
-          <div className="lg:hidden flex items-center space-x-3 ml-auto">
-            {user && (
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => navigate("/profile")}
-                  className="text-white font-medium hover:text-blue-400 transition-colors duration-300 text-sm truncate max-w-[120px]"
-                >
-                  {user.name}
-                </button>
-                <div className="flex items-center text-yellow-400 font-bold text-sm">
-                  <FaCoins className="mr-1" />
-                  <span>{user?.tokens || 0}</span>
+          {/* User Actions & Mobile Menu Button */}
+          <div className="flex items-center">
+            <div className="hidden lg:flex items-center space-x-4">
+              {!user ? (
+                <>
+                  <Link to="/auth/signin" className={navLinkClasses}>Sign In</Link>
+                  <Link to="/auth/signup" className="px-5 py-2 text-base font-medium text-black bg-white rounded-full hover:bg-opacity-90 transition-colors">
+                    Get Started
+                  </Link>
+                </>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center text-yellow-400 font-bold">
+                    <FaCoins className="mr-1.5" />
+                    <span>{user.tokens || 0}</span>
+                  </div>
+                  <button onClick={() => navigate("/profile")} className={`${navLinkClasses} flex items-center`}>
+                    {user.name}
+                  </button>
+                  <button onClick={() => { logout(); setUser(null); }} className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Logout
+                  </button>
                 </div>
-              </div>
-            )}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-3 text-white hover:text-blue-400 rounded-xl hover:bg-slate-800 transition-all duration-200"
-            >
-              {!isMobileMenuOpen ? "Menu" : "Close"}
-            </button>
+              )}
+            </div>
+
+            <div className="lg:hidden ml-4">
+              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 rounded-md text-white hover:bg-gray-700">
+                {isMobileMenuOpen ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#101729] backdrop-blur-xl border-t border-slate-700 animate-in slide-in-from-top-2 duration-200">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8 space-y-6">
-            <Link
-              to="/about"
-              className="block text-white hover:text-blue-400 font-medium py-3 text-lg transition-colors duration-300"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-            <div>
-              <p className="font-semibold text-sm text-white mb-1">Products</p>
-              <Link
-                to="/products"
-                className="block text-sm text-white hover:text-blue-400 py-1"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Voice Datasets
-              </Link>
-              <Link
-                to="/demo"
-                className="block text-sm text-white hover:text-blue-400 py-1"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Live Demo
-              </Link>
-              <Link
-                to="/qr"
-                className="block text-sm text-white hover:text-blue-400 py-1"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                QR Scanner
-              </Link>
-            </div>
-            <div>
-              <p className="font-semibold text-sm text-white mb-1">Resources</p>
-              <Link
-                to="/blogs"
-                className="block text-sm text-white hover:text-blue-400 py-1"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Blog
-              </Link>
-              <Link
-                to="/contributor"
-                className="block text-sm text-white hover:text-blue-400 py-1"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Become a Contributor
-              </Link>
-              <Link
-                to="/dashboard"
-                className="block text-sm text-white hover:text-blue-400 py-1"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-            </div>
-            <Link
-              to="/contact"
-              className="block text-white hover:text-blue-400 font-medium py-3 text-lg transition-colors duration-300"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
+        <div className="lg:hidden bg-gray-900 bg-opacity-95 backdrop-blur-lg absolute top-20 left-0 w-full">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link to="/about" className="block px-3 py-2 rounded-md text-base font-medium text-white">About</Link>
+            <Link to="/products" className="block px-3 py-2 rounded-md text-base font-medium text-white">Our Products</Link>
+            
 
-            {/* Mobile Auth Section */}
-            <div className="pt-6 border-t border-slate-700 space-y-6">
-              {!user ? (
-                <>
-                  <Link
-                    to="/auth/signin"
-                    className="block text-white hover:text-blue-400 font-medium py-3 text-lg transition-colors duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/auth/signup"
-                    className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
+            {/* Commenting the resources for now */}
+            {/* <div className="px-3 py-2">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
+              <div className="mt-2 space-y-1">
+                <Link to="/blogs" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Blog</Link>
+                <Link to="/qr-recording" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Become a Contributor</Link>
+                <Link to="/dashboard" className="block pl-3 pr-4 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-md">Dashboard</Link>
+              </div>
+            </div> */}
+            
+            {/* --- ADDED CAREERS LINK (MOBILE) --- */}
+            <Link to="/careers" className="block px-3 py-2 rounded-md text-base font-medium text-white">Careers</Link>
+
+            <Link to="/contact" className="block px-3 py-2 rounded-md text-base font-medium text-white">Contact</Link>
+          </div>
+          <div className="pt-4 pb-3 border-t border-gray-700">
+            {!user ? (
+              <div className="px-2 space-y-2">
+                 <Link to="/auth/signup" className="block w-full text-center px-4 py-2 text-base font-medium text-black bg-white rounded-full hover:bg-opacity-90">
                     Get Started
                   </Link>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-slate-300 text-sm">Logged in as:</div>
-                  <button
-                    onClick={() => {
-                      navigate("/profile");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors duration-300"
-                  >
-                    {user.name}
-                  </button>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setUser(null);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-300"
-                  >
-                    Logout
-                  </button>
+                <Link to="/auth/signin" className="block w-full text-center px-4 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-full">Sign In</Link>
+              </div>
+            ) : (
+              <div className="px-5">
+                <p className="text-base font-medium text-white">{user.name}</p>
+                <div className="flex items-center text-sm text-yellow-400 font-bold mt-1">
+                  <FaCoins className="mr-1.5" />
+                  <span>{user.tokens || 0}</span>
                 </div>
-              )}
-            </div>
+                <button onClick={() => { logout(); setUser(null); setIsMobileMenuOpen(false); }} className="mt-3 w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700">
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

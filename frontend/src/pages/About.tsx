@@ -1,121 +1,181 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
-import { InView } from 'react-intersection-observer';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Hexagon, Coins, ShieldCheck, UserX } from 'lucide-react';
+import AnimatedBlobBackground from '@/components/Blobbg'; 
+// --- Color Palette ---
+const COLORS = {
+  lightYellow: "#ffffe3",
+  midnightGreen: "#003642",
+  teaGreen: "#d0e6a5",
+  nyanza: "#f1ffe3",
+  cadetGray: "#83a0a0",
+};
 
-const About = () => {
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: containerRef });
-  const headingScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
-  const headingOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+// --- Custom Cursor Component ---
+const CustomCursor = () => {
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
 
-  const sections = [
+  React.useEffect(() => {
+    const onMouseMove = (e) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+    };
+  }, []);
+
+  return (
+    <>
+      <div
+        className="custom-cursor-glow"
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      />
+      <div
+        className="custom-cursor-dot"
+        style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      />
+    </>
+  );
+};
+
+
+// --- The Main DhvaniShilp Page Component ---
+const DhvaniShilpPage = () => {
+
+  const timelineSections = [
     {
-      title: null,
-      content:
-        'At Tatvam AI, we are dedicated to empowering Indian languages through the transformative potential of voice technology. Our mission is to bring the rich linguistic diversity of India into the forefront of voice-enabled AI, ensuring that every voice, in every Indian language, is heard and understood.',
-      image: '/logo.png',
+      icon: <Hexagon size={24} />,
+      title: "Crowdsourcing for India's AI",
+      content: "DhvaniShilp is a community-driven platform where every voice matters. Your contributions of speech data are the building blocks for creating more accurate and inclusive AI models for all Indian languages."
     },
     {
-      title: 'Who We Are',
-      content:
-        'Tatvam AI is a passionate team of innovators, linguists, and data experts united by a vision to make voice technology inclusive for India’s diverse linguistic heritage.',
-      image: '/logo.png',
+      icon: <Coins size={24} />,
+      title: 'Earn Tokens, Get Rewards',
+      content: "For your valuable contributions, you earn Dhvani Tokens. These tokens can be accumulated and converted into tangible rewards, acknowledging your crucial role in our mission."
     },
     {
-      title: 'What We Do',
-      content:
-        'Our platform is a hub for collecting high-quality voice data in Indian languages to preserve and promote their unique sounds, accents, and nuances.',
-      image: '/logo.png',
+      icon: <ShieldCheck size={24} />,
+      title: 'DPDP Act Compliant',
+      content: "We are fully compliant with the Digital Personal Data Protection (DPDP) Act, 2025. Your data is processed with the highest standards of security, legality, and transparency."
     },
     {
-      title: 'Why It Matters',
-      content:
-        'India is home to over 1,600 languages and dialects, yet many remain underrepresented in modern technology.',
-      image: '/logo.png',
-    },
-    {
-      title: 'Join Us',
-      content:
-        'Your voice is a vital part of India’s linguistic tapestry. Join us in celebrating and preserving India’s voices, one language at a time.',
-      image: '/logo.png',
+      icon: <UserX size={24} />,
+      title: 'Your Data, Your Control',
+      content: "Your privacy is our priority. We provide clear consent mechanisms and empower you with the choice to opt-out at any time, giving you complete control over your data."
     },
   ];
 
+  const cardVariants = {
+    left: {
+        hidden: { opacity: 0, x: -50 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+    },
+    right: {
+        hidden: { opacity: 0, x: 50 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: 'easeOut' } }
+    }
+  };
+
+
   return (
-    <div
-      ref={containerRef}
-      className="relative bg-slate-900 text-white min-h-screen py-24 px-6 overflow-x-hidden"
-    >
-      {/* Ambient Glows */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-blue-500 blur-[140px] rounded-full top-10 left-10 opacity-20 animate-slow-bounce" />
-        <div className="absolute w-[600px] h-[600px] bg-white blur-[180px] rounded-full bottom-0 right-0 opacity-20 animate-pulse" />
-      </div>
+    <div style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
+      <CustomCursor />
+      <AnimatedBlobBackground />
 
-      {/* Heading
-      <motion.h1
-        style={{ scale: headingScale, opacity: headingOpacity }}
-        className="text-5xl md:text-7xl font-black absolute left-0 -bottom-1 h-[2px] w-0 bg-blue-500 transition-all duration-500 group-hover:w-40"
-      >
-        About Tatvam AI
-      </motion.h1> */}
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* --- Header Section --- */}
+        <motion.div
+            className="text-center mb-24"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+        >
+            <h1 className="text-5xl md:text-7xl font-extrabold mb-4">
+                What is <span style={{ color: COLORS.teaGreen }}>DhvaniShilp</span>?
+            </h1>
+            <p className="text-xl max-w-4xl mx-auto" style={{ color: COLORS.cadetGray }}>
+                An innovative crowdsourcing platform building the future of AI for India. By contributing your voice, you enhance our datasets, earn rewards, and help create technology that understands every Indian language.
+            </p>
+        </motion.div>
 
-      {/* Sections */}
-      <div className="space-y-28 max-w-6xl mx-auto">
-        {sections.map((section, index) => (
-          <InView key={index} triggerOnce threshold={0.3}>
-            {({ inView, ref }) => (
-              <motion.div
-                ref={ref}
-                initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                animate={
-                  inView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 50, scale: 0.95 }
-                }
-                transition={{
-                  duration: 0.8,
-                  ease: 'easeOut',
-                  delay: index * 0.2,
-                }}
-                className={`flex flex-col md:flex-row ${
-                  index % 2 === 0 ? '' : 'md:flex-row-reverse'
-                } items-center gap-10`}
-              >
-                {/* Text Content */}
-                <div className="md:w-1/2 h-full">
-                  <motion.div
-                    className="bg-[#101729] border border-slate-700/50 rounded-2xl p-8 shadow-lg hover:shadow-purple-500/30 transition-all duration-300"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    {section.title && (
-                      <h2 className="text-4xl font-semibold mb-4 text-white tracking-wide group relative inline-block">
-                        {section.title}
-                        <span className = "absolute left-0 -bottom-1 h-[2px] w-0 bg-blue-500 transition-all duration-500 group-hover:w-40"></span>
-                      </h2>
-                    )}
-                    <p className="text-lg text-slate-300 leading-relaxed">{section.content}</p>
-                  </motion.div>
-                </div>
+        {/* --- Timeline Section --- */}
+        <div className="relative">
+            {/* The vertical line for DESKTOP view */}
+            <div className="hidden md:block absolute top-0 h-full w-[2px] left-1/2 -translate-x-1/2" style={{ background: `linear-gradient(to bottom, transparent, ${COLORS.teaGreen}30, transparent)`}}></div>
 
-                {/* Dynamic Image */}
-                <div className="md:w-1/2">
-                  <motion.div
-                    className="w-full h-64 rounded-2xl bg-gradient-to-tr from-[#1e293b] via-[#111827] to-[#1e293b] shadow-inner border border-slate-700/30 overflow-hidden"
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <img
-                      src={section.image}
-                      alt={section.title || 'Tatvam AI'}
-                      className="h-full w-full object-contain p-4"
-                    />
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
-          </InView>
-        ))}
+            {timelineSections.map((section, index) => {
+                const isLeft = index % 2 === 0;
+                return (
+                    <motion.div
+                        key={index}
+                        className="relative flex items-center mb-12 md:mb-0"
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, amount: 0.5 }}
+                    >
+                        {/* --- DESKTOP LAYOUT --- */}
+                        <div className="hidden md:flex justify-between items-center w-full">
+                           {/* Left Card or Spacer */}
+                           {isLeft ? (
+                                <motion.div className="w-5/12" variants={cardVariants.left}>
+                                    <Card content={section} />
+                                </motion.div>
+                           ) : <div className="w-5/12"></div>}
+
+                           {/* Center Icon */}
+                           <div className="z-10 flex items-center justify-center w-12 h-12 rounded-full" style={{ background: COLORS.midnightGreen, border: `2px solid ${COLORS.teaGreen}` }}>
+                                <span style={{ color: COLORS.teaGreen }}>{section.icon}</span>
+                           </div>
+
+                           {/* Right Card or Spacer */}
+                           {!isLeft ? (
+                               <motion.div className="w-5/12" variants={cardVariants.right}>
+                                   <Card content={section} />
+                               </motion.div>
+                           ) : <div className="w-5/12"></div>}
+                        </div>
+
+
+                        {/* --- MOBILE LAYOUT --- */}
+                        <div className="md:hidden flex items-center w-full">
+                            {/* Line and Icon */}
+                            <div className="flex-shrink-0 z-10 mr-6">
+                                <div className="relative">
+                                    <div className="absolute top-full h-screen w-[2px] -translate-x-1/2 left-1/2" style={{background: `linear-gradient(to bottom, ${COLORS.teaGreen}30 10%, transparent)`}}></div>
+                                    <div className="flex items-center justify-center w-12 h-12 rounded-full" style={{ background: COLORS.midnightGreen, border: `2px solid ${COLORS.teaGreen}` }}>
+                                      <span style={{ color: COLORS.teaGreen }}>{section.icon}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Card */}
+                            <motion.div className="w-full" variants={cardVariants.right}>
+                               <Card content={section} />
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                );
+            })}
+        </div>
       </div>
     </div>
   );
 };
 
-export default About;
+// Helper component for the card to avoid repetition
+const Card = ({ content }: { content: { title: string; content: string } }) => (
+    <div
+        className="p-8 rounded-2xl"
+        style={{
+            background: `linear-gradient(145deg, ${COLORS.midnightGreen}30, #002a35)`,
+            border: `1px solid ${COLORS.cadetGray}20`,
+            boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+        }}
+    >
+        <h2 className="text-3xl font-bold mb-3" style={{ color: COLORS.nyanza }}>{content.title}</h2>
+        <p className="text-base" style={{ color: COLORS.cadetGray }}>{content.content}</p>
+    </div>
+);
+
+
+export default DhvaniShilpPage;
