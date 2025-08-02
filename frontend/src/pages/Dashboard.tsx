@@ -179,7 +179,9 @@ const Dashboard = () => {
                 <motion.div 
                   key={rec._id}
                   className="grid grid-cols-2 md:grid-cols-7 gap-4 items-center p-4 rounded-lg"
-                  style={{ background: `${COLORS.midnightGreen}30` }}
+                  style={{ background: `${COLORS.midnightGreen}30` , 
+                    color: COLORS.nyanza
+                  }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.7 + index * 0.05 }}
