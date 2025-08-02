@@ -67,7 +67,6 @@ export default function SignUpPage() {
     password: "",
     confirmPassword: "",
   });
-  const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
 
   // Phone number validation
   const validatePhoneNumber = (phone: string) => {
