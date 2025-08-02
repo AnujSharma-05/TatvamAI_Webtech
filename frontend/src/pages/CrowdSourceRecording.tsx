@@ -1,15 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
 import {
   Mic, Clock, Shield, FileText, CheckCircle, Pause, Play, Square, RotateCcw,
-  Volume2, Download, Upload, ArrowLeft, ArrowRight, Loader2, RefreshCw
+  Volume2, Download, Upload, ArrowLeft, ArrowRight, Loader2, RefreshCw, X
 } from "lucide-react";
 import RecordRTC, { StereoAudioRecorder } from 'recordrtc';
 import axios from '../config/axios';
+import { COLORS } from '@/config/theme';
 
 const QRRecording = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [consent, setConsent] = useState({
     dataUsage: false,
@@ -365,28 +368,45 @@ const QRRecording = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center px-4">
+    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen flex items-center justify-center px-4">
+      {/* Exit Button */}
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="fixed top-6 right-6 z-50 p-3 rounded-full transition-all duration-300 hover:scale-110"
+        style={{
+          background: `${COLORS.midnightGreen}80`,
+          border: `1px solid ${COLORS.cadetGray}40`,
+          backdropFilter: 'blur(12px)',
+          color: COLORS.cadetGray
+        }}
+        title="Exit Recording"
+      >
+        <X className="w-6 h-6" />
+      </button>
+      
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="max-w-2xl mx-auto my-20">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">{getStepTitle()}</h1>
+            <h1 className="text-4xl font-bold mb-4" style={{ color: COLORS.nyanza }}>{getStepTitle()}</h1>
             <div className="flex justify-center items-center space-x-2 mb-6">
               {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                 <div key={num} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-                    step === num 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300`} style={{
+                    background: step === num 
+                      ? COLORS.teaGreen
                       : step > num 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-slate-700 text-slate-400'
-                  }`}>
+                        ? COLORS.teaGreen
+                        : `${COLORS.midnightGreen}40`,
+                    color: step === num || step > num ? COLORS.midnightGreen : COLORS.cadetGray,
+                    border: `1px solid ${COLORS.cadetGray}20`
+                  }}>
                     {step > num ? <CheckCircle className="w-4 h-4" /> : num}
                   </div>
                    {num < 7 && (
-                    <div className={`w-8 h-0.5 transition-all duration-300 ${
-                      step > num ? 'bg-green-500' : 'bg-slate-700'
-                    }`} />
+                    <div className={`w-8 h-0.5 transition-all duration-300`} style={{
+                      background: step > num ? COLORS.teaGreen : `${COLORS.cadetGray}20`
+                    }} />
                   )}
                 </div>
               ))}
@@ -395,43 +415,55 @@ const QRRecording = () => {
 
           {/* Error Display */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6">
+            <div className="p-4 rounded-xl mb-6" style={{
+              background: `linear-gradient(145deg, #ff000010, #ff000005)`,
+              border: `1px solid #ff000020`
+            }}>
               <div className="flex items-center space-x-2">
-                <Shield className="w-5 h-5" />
-                <span className="font-medium">Error</span>
+                <Shield className="w-5 h-5" style={{ color: '#ff6b6b' }} />
+                <span className="font-medium" style={{ color: '#ff6b6b' }}>Error</span>
               </div>
-              <p className="mt-2 text-sm">{error}</p>
+              <p className="mt-2 text-sm" style={{ color: '#ff6b6b' }}>{error}</p>
             </div>
           )}
 
           {/* Step 1: Welcome */}
           {step === 1 && (
-            <div className="bg-slate-800 p-8 rounded-xl text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Mic className="w-10 h-10 text-white" />
+            <div className="p-8 rounded-xl text-center" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{
+                background: COLORS.teaGreen,
+                color: COLORS.midnightGreen
+              }}>
+                <Mic className="w-10 h-10" />
               </div>
-              <h2 className="text-2xl font-bold mb-4">Welcome to TatvamAI</h2>
-              <p className="text-slate-300 text-lg mb-8 leading-relaxed">
+              <h2 className="text-2xl font-bold mb-4" style={{ color: COLORS.nyanza }}>Welcome to TatvamAI</h2>
+              <p className="text-lg mb-8 leading-relaxed" style={{ color: COLORS.cadetGray }}>
                 Help us build more inclusive AI systems by contributing your voice. 
                 Your recordings will be used to train AI models that better understand diverse speech patterns.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="p-4 bg-slate-700 rounded-lg">
-                  <Clock className="w-6 h-6 text-blue-400 mb-2 mx-auto" />
-                  <p className="text-sm text-slate-300">2 minutes max</p>
+                <div className="p-4 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
+                  <Clock className="w-6 h-6 mb-2 mx-auto" style={{ color: COLORS.teaGreen }} />
+                  <p className="text-sm" style={{ color: COLORS.cadetGray }}>2 minutes max</p>
                 </div>
-                <div className="p-4 bg-slate-700 rounded-lg">
-                  <Shield className="w-6 h-6 text-green-400 mb-2 mx-auto" />
-                  <p className="text-sm text-slate-300">Secure & Private</p>
+                <div className="p-4 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
+                  <Shield className="w-6 h-6 mb-2 mx-auto" style={{ color: COLORS.teaGreen }} />
+                  <p className="text-sm" style={{ color: COLORS.cadetGray }}>Secure & Private</p>
                 </div>
-                <div className="p-4 bg-slate-700 rounded-lg">
-                  <FileText className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
-                  <p className="text-sm text-slate-300">Easy Process</p>
+                <div className="p-4 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
+                  <FileText className="w-6 h-6 mb-2 mx-auto" style={{ color: COLORS.teaGreen }} />
+                  <p className="text-sm" style={{ color: COLORS.cadetGray }}>Easy Process</p>
                 </div>
               </div>
               <Button 
                 onClick={() => setStep(2)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-300 px-8 py-3"
+                className="px-8 py-3 font-semibold rounded-full transition-all duration-300 hover:scale-105"
+                style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
               >
                 Get Started
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -441,19 +473,24 @@ const QRRecording = () => {
 
           {/* Step 2: Consent */}
           {step === 2 && (
-            <div className="bg-slate-800 p-8 rounded-xl">
+            <div className="p-8 rounded-xl" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
               <div className="flex items-center space-x-3 mb-6">
-                <Shield className="w-6 h-6 text-blue-400" />
-                <h2 className="text-xl font-semibold">Consent & Privacy</h2>
+                <Shield className="w-6 h-6" style={{ color: COLORS.teaGreen }} />
+                <h2 className="text-xl font-semibold" style={{ color: COLORS.nyanza }}>Consent & Privacy</h2>
               </div>
               
               <div className="space-y-6 mb-8">
                 {[
-                  { key: "dataUsage", text: "I consent to the use of my voice data for AI training purposes", icon: <Mic className="w-5 h-5 text-blue-400" /> },
-                  { key: "recording", text: "I understand that my voice will be securely recorded and processed", icon: <Shield className="w-5 h-5 text-green-400" /> },
-                  { key: "terms", text: "I agree to the Terms of Service and Privacy Policy", icon: <FileText className="w-5 h-5 text-purple-400" /> }
+                  { key: "dataUsage", text: "I consent to the use of my voice data for AI training purposes", icon: <Mic className="w-5 h-5" style={{ color: COLORS.teaGreen }} /> },
+                  { key: "recording", text: "I understand that my voice will be securely recorded and processed", icon: <Shield className="w-5 h-5" style={{ color: COLORS.teaGreen }} /> },
+                  { key: "terms", text: "I agree to the Terms of Service and Privacy Policy", icon: <FileText className="w-5 h-5" style={{ color: COLORS.teaGreen }} /> }
                 ].map(({ key, text, icon }) => (
-                  <div key={key} className="flex items-start space-x-4 p-4 bg-slate-700 rounded-lg">
+                  <div key={key} className="flex items-start space-x-4 p-4 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
                     <div className="flex-shrink-0 mt-1">{icon}</div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
@@ -463,7 +500,7 @@ const QRRecording = () => {
                           onCheckedChange={(val) => handleConsentChange(key as keyof typeof consent, val as boolean)}
                           className="border-slate-500"
                         />
-                        <label htmlFor={key} className="text-slate-300 cursor-pointer">{text}</label>
+                        <label htmlFor={key} className="cursor-pointer" style={{ color: COLORS.cadetGray }}>{text}</label>
                       </div>
                     </div>
                   </div>
@@ -471,13 +508,18 @@ const QRRecording = () => {
               </div>
               
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(1)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button variant="outline" onClick={() => setStep(1)} className="px-6 py-3 font-semibold rounded-full transition-all" style={{ 
+                  border: `1px solid ${COLORS.cadetGray}80`, 
+                  color: COLORS.cadetGray, 
+                  background: `${COLORS.midnightGreen}30` 
+                }}>
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
                 <Button 
                   disabled={!canProceed} 
                   onClick={() => setStep(3)}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 font-semibold rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
                 >
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -487,12 +529,23 @@ const QRRecording = () => {
 
           {/* Step 3: Pick Domain & Language */}
           {step === 3 && (
-            <Card className="p-8 space-y-6 bg-slate-800 border-slate-700">
+            <div className="p-8 space-y-6 rounded-xl" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-slate-300 mb-2 font-medium">Select Domain</label>
+                  <label className="block mb-2 font-medium" style={{ color: COLORS.nyanza }}>Select Domain</label>
                   <select 
-                    className="w-full p-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-blue-500 focus:outline-none transition-colors" 
+                    className="w-full p-3 rounded-lg border focus:outline-none transition-colors" 
+                    style={{
+                      background: `${COLORS.midnightGreen}30`,
+                      color: COLORS.nyanza,
+                      border: `1px solid ${COLORS.cadetGray}40`,
+                      '&:focus': { borderColor: COLORS.teaGreen }
+                    }}
                     value={domain} 
                     onChange={e => setDomain(e.target.value)}
                   >
@@ -504,9 +557,15 @@ const QRRecording = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-slate-300 mb-2 font-medium">Select Language</label>
+                  <label className="block mb-2 font-medium" style={{ color: COLORS.nyanza }}>Select Language</label>
                   <select 
-                    className="w-full p-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-blue-500 focus:outline-none transition-colors" 
+                    className="w-full p-3 rounded-lg border focus:outline-none transition-colors" 
+                    style={{
+                      background: `${COLORS.midnightGreen}30`,
+                      color: COLORS.nyanza,
+                      border: `1px solid ${COLORS.cadetGray}40`,
+                      '&:focus': { borderColor: COLORS.teaGreen }
+                    }}
                     value={language} 
                     onChange={e => setLanguage(e.target.value)}
                   >
@@ -520,15 +579,23 @@ const QRRecording = () => {
 
               {/* Enhanced Generated Paragraph Preview */}
               {(domain && language) && (
-                <div className="bg-slate-700 p-6 rounded-lg border-2 border-blue-500/30">
+                <div className="p-6 rounded-lg border-2" style={{
+                  background: `${COLORS.midnightGreen}30`,
+                  border: `2px solid ${COLORS.teaGreen}30`
+                }}>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-slate-300 font-medium text-lg">Generated Reading Text</h3>
+                    <h3 className="font-medium text-lg" style={{ color: COLORS.nyanza }}>Generated Reading Text</h3>
                     <Button
                       onClick={generateParagraph}
                       disabled={isGeneratingParagraph}
                       variant="outline"
                       size="sm"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-600"
+                      className="font-semibold rounded-full transition-all"
+                      style={{ 
+                        border: `1px solid ${COLORS.cadetGray}80`, 
+                        color: COLORS.cadetGray, 
+                        background: `${COLORS.midnightGreen}30` 
+                      }}
                     >
                       {isGeneratingParagraph ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -540,7 +607,10 @@ const QRRecording = () => {
                   </div>
                   
                   {isGeneratingParagraph ? (
-                    <div className="flex items-center space-x-3 text-slate-400 p-4 bg-slate-800 rounded-lg">
+                    <div className="flex items-center space-x-3 p-4 rounded-lg" style={{
+                      background: `${COLORS.midnightGreen}40`,
+                      color: COLORS.cadetGray
+                    }}>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       <div>
                         <p className="font-medium">Generating paragraph...</p>
@@ -548,82 +618,110 @@ const QRRecording = () => {
                       </div>
                     </div>
                   ) : generatedParagraph ? (
-                    <div className="bg-slate-800 p-4 rounded border-l-4 border-green-500 shadow-lg">
+                    <div className="p-4 rounded border-l-4 shadow-lg" style={{
+                      background: `${COLORS.midnightGreen}40`,
+                      borderLeftColor: COLORS.teaGreen
+                    }}>
                       <div className="flex items-center space-x-2 mb-3">
-                        <CheckCircle className="w-5 h-5 text-green-400" />
-                        <span className="text-green-300 font-medium">Text Ready!</span>
+                        <CheckCircle className="w-5 h-5" style={{ color: COLORS.teaGreen }} />
+                        <span className="font-medium" style={{ color: COLORS.teaGreen }}>Text Ready!</span>
                       </div>
-                      <p className="text-slate-200 leading-relaxed text-lg">{String(generatedParagraph)}</p>
+                      <p className="leading-relaxed text-lg" style={{ color: COLORS.nyanza }}>{String(generatedParagraph)}</p>
                     </div>
                   ) : (
-                    <div className="bg-slate-800 p-4 rounded border-l-4 border-blue-500">
+                    <div className="p-4 rounded border-l-4" style={{
+                      background: `${COLORS.midnightGreen}40`,
+                      borderLeftColor: COLORS.teaGreen
+                    }}>
                       <div className="flex items-center space-x-2 mb-3">
-                        <FileText className="w-5 h-5 text-blue-400" />
-                        <span className="text-blue-300 font-medium">Ready to Generate</span>
+                        <FileText className="w-5 h-5" style={{ color: COLORS.teaGreen }} />
+                        <span className="font-medium" style={{ color: COLORS.teaGreen }}>Ready to Generate</span>
                       </div>
-                      <p className="text-slate-400 italic">Click the regenerate button to create reading text for {domain} in {language}</p>
+                      <p className="italic" style={{ color: COLORS.cadetGray }}>Click the regenerate button to create reading text for {domain} in {language}</p>
                     </div>
                   )}
                 </div>
               )}
               
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(2)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button variant="outline" onClick={() => setStep(2)} className="px-6 py-3 font-semibold rounded-full transition-all" style={{ 
+                  border: `1px solid ${COLORS.cadetGray}80`, 
+                  color: COLORS.cadetGray, 
+                  background: `${COLORS.midnightGreen}30` 
+                }}>
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
                 <Button 
                   disabled={!canProceedPrompt || isGeneratingParagraph || !generatedParagraph} 
                   onClick={() => setStep(4)} 
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 disabled:opacity-50"
+                  className="px-6 py-3 font-semibold rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                  style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
                 >
                   Next <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Step 4: Speaking Prompt */}
           {step === 4 && (
-            <Card className="p-8 space-y-6 bg-slate-800 border-slate-700">
+            <div className="p-8 space-y-6 rounded-xl" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
               <div>
-                <h3 className="text-xl font-semibold mb-4">Reading Instructions</h3>
-                <div className="bg-slate-700 p-4 rounded-lg mb-4">
-                  <p className="text-slate-300 mb-2">
+                <h3 className="text-xl font-semibold mb-4" style={{ color: COLORS.nyanza }}>Reading Instructions</h3>
+                <div className="p-4 rounded-lg mb-4" style={{ background: `${COLORS.midnightGreen}30` }}>
+                  <p className="mb-2" style={{ color: COLORS.cadetGray }}>
                     <strong>Domain:</strong> {domain} | <strong>Language:</strong> {language}
                   </p>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-sm" style={{ color: COLORS.cadetGray }}>
                     Please read the following text clearly and at a natural pace. You'll have up to 2 minutes to complete the recording.
                   </p>
                 </div>
                 
                 {/* Enhanced Text Display */}
-                <div className="bg-slate-700 p-6 rounded-lg border-2 border-blue-500/30">
+                <div className="p-6 rounded-lg border-2" style={{
+                  background: `${COLORS.midnightGreen}30`,
+                  border: `2px solid ${COLORS.teaGreen}30`
+                }}>
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-medium text-blue-400">Text to Read:</h4>
-                    <div className="flex items-center space-x-2 text-sm text-slate-400">
+                    <h4 className="text-lg font-medium" style={{ color: COLORS.teaGreen }}>Text to Read:</h4>
+                    <div className="flex items-center space-x-2 text-sm" style={{ color: COLORS.cadetGray }}>
                       <Mic className="w-4 h-4" />
                       <span>Ready to record</span>
                     </div>
                   </div>
-                  <div className="bg-slate-800 p-6 rounded border-l-4 border-blue-500 shadow-lg">
-                    <p className="text-slate-100 leading-relaxed text-lg font-medium">
+                  <div className="p-6 rounded border-l-4 shadow-lg" style={{
+                    background: `${COLORS.midnightGreen}40`,
+                    borderLeftColor: COLORS.teaGreen
+                  }}>
+                    <p className="leading-relaxed text-lg font-medium" style={{ color: COLORS.nyanza }}>
                       {String(generatedParagraph || promptText || "No text available. Please go back and generate text first.")}
                     </p>
                   </div>
                   {!generatedParagraph && !promptText && (
-                    <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded mt-3">
-                      <p className="text-yellow-300 text-sm">⚠️ No text available. Please go back and generate text first.</p>
+                    <div className="p-3 rounded mt-3" style={{
+                      background: `${COLORS.lightYellow}10`,
+                      border: `1px solid ${COLORS.lightYellow}20`
+                    }}>
+                      <p className="text-sm" style={{ color: COLORS.lightYellow }}>⚠️ No text available. Please go back and generate text first.</p>
                     </div>
                   )}
                 </div>
               </div>
               
-              <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg">
+              <div className="p-4 rounded-lg" style={{
+                background: `${COLORS.teaGreen}10`,
+                border: `1px solid ${COLORS.teaGreen}20`
+              }}>
                 <div className="flex items-start space-x-3">
-                  <Mic className="w-5 h-5 text-blue-400 mt-0.5" />
+                  <Mic className="w-5 h-5 mt-0.5" style={{ color: COLORS.teaGreen }} />
                   <div>
-                    <p className="text-blue-300 font-medium">Recording Tips:</p>
-                    <ul className="text-slate-300 text-sm mt-1 space-y-1">
+                    <p className="font-medium" style={{ color: COLORS.teaGreen }}>Recording Tips:</p>
+                    <ul className="text-sm mt-1 space-y-1" style={{ color: COLORS.cadetGray }}>
                       <li>• Speak clearly and at your natural pace</li>
                       <li>• Find a quiet environment</li>
                       <li>• Keep your device close to your mouth</li>
@@ -635,51 +733,69 @@ const QRRecording = () => {
               </div>
               
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(3)} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button variant="outline" onClick={() => setStep(3)} className="px-6 py-3 font-semibold rounded-full transition-all" style={{ 
+                  border: `1px solid ${COLORS.cadetGray}80`, 
+                  color: COLORS.cadetGray, 
+                  background: `${COLORS.midnightGreen}30` 
+                }}>
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
                 <Button 
                   onClick={startRecording} 
                   disabled={!generatedParagraph && !promptText.trim()} 
-                  className="bg-gradient-to-r from-green-600 to-emerald-500 disabled:opacity-50"
+                  className="px-6 py-3 font-semibold rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                  style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
                 >
                   Start Recording <Mic className="w-4 h-4 ml-2" />
                 </Button>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Step 5: Recording */}
           {step === 5 && (
-            <div className="bg-slate-800 p-6 rounded-xl">
+            <div className="p-6 rounded-xl" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
               {/* Text Display Section - Full Width */}
               <div className="mb-6">
-                <div className="bg-slate-700 p-4 rounded-lg border-2 border-blue-500/30">
+                <div className="p-4 rounded-lg border-2" style={{
+                  background: `${COLORS.midnightGreen}30`,
+                  border: `2px solid ${COLORS.teaGreen}30`
+                }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-blue-400">Read This Text:</h3>
+                    <h3 className="text-lg font-semibold" style={{ color: COLORS.teaGreen }}>Read This Text:</h3>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'}`}></div>
-                      <span className="text-sm text-slate-400">
+                      <div className={`w-2 h-2 rounded-full ${isPaused ? 'animate-pulse' : 'animate-pulse'}`} style={{
+                        backgroundColor: isPaused ? '#fbbf24' : COLORS.teaGreen
+                      }}></div>
+                      <span className="text-sm" style={{ color: COLORS.cadetGray }}>
                         {isPaused ? 'Paused' : 'Recording'}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="bg-slate-800 p-4 rounded border-l-4 border-blue-500 max-h-64 overflow-y-auto shadow-lg">
-                    <p className="text-slate-100 leading-relaxed text-base sm:text-lg font-medium">
+                  <div className="p-4 rounded border-l-4 max-h-64 overflow-y-auto shadow-lg" style={{
+                    background: `${COLORS.midnightGreen}40`,
+                    borderLeftColor: COLORS.teaGreen
+                  }}>
+                    <p className="leading-relaxed text-base sm:text-lg font-medium" style={{ color: COLORS.nyanza }}>
                       {String(generatedParagraph || promptText || "No text available")}
                     </p>
                   </div>
                   
-                  <div className="mt-3 p-3 bg-slate-600 rounded-lg">
+                  <div className="mt-3 p-3 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <span className="text-slate-400">Domain:</span>
-                        <span className="text-slate-200 ml-2 font-medium capitalize">{domain}</span>
+                        <span style={{ color: COLORS.cadetGray }}>Domain:</span>
+                        <span className="ml-2 font-medium capitalize" style={{ color: COLORS.nyanza }}>{domain}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400">Language:</span>
-                        <span className="text-slate-200 ml-2 font-medium">{language}</span>
+                        <span style={{ color: COLORS.cadetGray }}>Language:</span>
+                        <span className="ml-2 font-medium" style={{ color: COLORS.nyanza }}>{language}</span>
                       </div>
                     </div>
                   </div>
@@ -692,19 +808,20 @@ const QRRecording = () => {
                 <div className="flex flex-col items-center space-y-4 mb-6">
                   {/* Compact Mic Icon */}
                   <div className="relative">
-                    <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ${
-                      isPaused 
-                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
-                        : 'bg-gradient-to-r from-red-500 to-pink-500'
-                    } ${!isPaused ? 'animate-pulse' : ''}`}>
-                      <Mic className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                    <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto transition-all duration-300 ${!isPaused ? 'animate-pulse' : ''}`} style={{
+                      background: isPaused 
+                        ? '#fbbf24'
+                        : COLORS.teaGreen
+                    }}>
+                      <Mic className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: COLORS.midnightGreen }} />
                     </div>
                     
                     {/* Subtle Audio Level Indicator */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div
-                        className="w-full h-full rounded-full border-2 border-slate-600"
+                        className="w-full h-full rounded-full border-2"
                         style={{
+                          borderColor: `${COLORS.cadetGray}60`,
                           transform: `scale(${1 + audioLevel / 1000})`,
                           opacity: 0.6 - audioLevel / 500,
                           transition: 'transform 0.1s ease-out, opacity 0.1s ease-out'
@@ -715,15 +832,15 @@ const QRRecording = () => {
 
                   {/* Recording Status */}
                   <div className="text-center">
-                    <h2 className="text-lg sm:text-xl font-bold mb-2">
+                    <h2 className="text-lg sm:text-xl font-bold mb-2" style={{ color: COLORS.nyanza }}>
                       {isPaused ? "Recording Paused" : "Recording in Progress"}
                     </h2>
                     
-                    <div className="text-3xl sm:text-4xl font-mono mb-1 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <div className="text-3xl sm:text-4xl font-mono mb-1" style={{ color: COLORS.teaGreen }}>
                       {formatTime(recordingTime)}
                     </div>
                     
-                    <div className="text-slate-400 text-sm">
+                    <div className="text-sm" style={{ color: COLORS.cadetGray }}>
                       {recordingTime < 120 ? `${120 - recordingTime}s remaining` : 'Maximum duration reached'}
                     </div>
                   </div>
@@ -732,24 +849,36 @@ const QRRecording = () => {
                 {/* Recording Controls */}
                 <div className="flex justify-center space-x-3 sm:space-x-4">
                   {!isPaused ? (
-                    <Button onClick={pauseRecording} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm">
+                    <Button onClick={pauseRecording} className="px-4 py-2 sm:px-6 sm:py-3 text-sm font-semibold rounded-full transition-all" style={{
+                      background: '#fbbf24',
+                      color: COLORS.midnightGreen
+                    }}>
                       <Pause className="w-4 h-4 mr-2" /> Pause
                     </Button>
                   ) : (
-                    <Button onClick={resumeRecording} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm">
+                    <Button onClick={resumeRecording} className="px-4 py-2 sm:px-6 sm:py-3 text-sm font-semibold rounded-full transition-all" style={{
+                      background: COLORS.teaGreen,
+                      color: COLORS.midnightGreen
+                    }}>
                       <Play className="w-4 h-4 mr-2" /> Resume
                     </Button>
                   )}
-                  <Button onClick={stopRecording} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm">
+                  <Button onClick={stopRecording} className="px-4 py-2 sm:px-6 sm:py-3 text-sm font-semibold rounded-full transition-all" style={{
+                    background: '#ef4444',
+                    color: 'white'
+                  }}>
                     <Square className="w-4 h-4 mr-2" /> Stop
                   </Button>
                 </div>
 
                 {/* Recording Tips */}
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg max-w-md mx-auto">
-                  <div className="flex items-center space-x-2 text-blue-300">
-                    <Mic className="w-4 h-4" />
-                    <span className="text-sm font-medium">
+                <div className="mt-4 p-3 rounded-lg max-w-md mx-auto" style={{
+                  background: `${COLORS.teaGreen}10`,
+                  border: `1px solid ${COLORS.teaGreen}20`
+                }}>
+                  <div className="flex items-center space-x-2">
+                    <Mic className="w-4 h-4" style={{ color: COLORS.teaGreen }} />
+                    <span className="text-sm font-medium" style={{ color: COLORS.teaGreen }}>
                       {isPaused ? 'Recording paused - click Resume to continue' : 'Recording active - speak clearly'}
                     </span>
                   </div>
@@ -760,31 +889,49 @@ const QRRecording = () => {
 
           {/* Step 6: Review */}
           {step === 6 && audioUrl && (
-            <div className="bg-slate-800 p-8 rounded-xl">
+            <div className="p-8 rounded-xl" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{
+                  background: COLORS.teaGreen
+                }}>
+                  <CheckCircle className="w-8 h-8" style={{ color: COLORS.midnightGreen }} />
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Review Your Recording</h2>
-                <p className="text-slate-300">Listen to your recording and choose to submit or record again</p>
+                <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.nyanza }}>Review Your Recording</h2>
+                <p style={{ color: COLORS.cadetGray }}>Listen to your recording and choose to submit or record again</p>
               </div>
               
-              <div className="bg-slate-700 p-6 rounded-lg mb-8">
+              <div className="p-6 rounded-lg mb-8" style={{ background: `${COLORS.midnightGreen}30` }}>
                 <div className="flex items-center space-x-3 mb-4">
-                  <Volume2 className="w-5 h-5 text-blue-400" />
-                  <span className="text-slate-300">Duration: {formatTime(recordingTime)}</span>
+                  <Volume2 className="w-5 h-5" style={{ color: COLORS.teaGreen }} />
+                  <span style={{ color: COLORS.cadetGray }}>Duration: {formatTime(recordingTime)}</span>
                 </div>
                 <audio controls src={audioUrl} className="w-full" />
               </div>
               
               <div className="flex justify-center space-x-4 flex-wrap gap-2">
-                <Button onClick={handleRecordAgain} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button onClick={handleRecordAgain} variant="outline" className="px-6 py-3 font-semibold rounded-full transition-all" style={{ 
+                  border: `1px solid ${COLORS.cadetGray}80`, 
+                  color: COLORS.cadetGray, 
+                  background: `${COLORS.midnightGreen}30` 
+                }}>
                   <RotateCcw className="w-4 h-4 mr-2" /> Record Again
                 </Button>
-                <Button onClick={downloadAudio} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Button onClick={downloadAudio} variant="outline" className="px-6 py-3 font-semibold rounded-full transition-all" style={{ 
+                  border: `1px solid ${COLORS.cadetGray}80`, 
+                  color: COLORS.cadetGray, 
+                  background: `${COLORS.midnightGreen}30` 
+                }}>
                   <Download className="w-4 h-4 mr-2" /> Download
                 </Button>
-                <Button onClick={handleUpload} disabled={isUploading} className="bg-gradient-to-r from-green-600 to-emerald-500 hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50">
+                <Button onClick={handleUpload} disabled={isUploading} className="px-6 py-3 font-semibold rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-50" style={{
+                  background: COLORS.teaGreen,
+                  color: COLORS.midnightGreen
+                }}>
                   {isUploading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -801,10 +948,13 @@ const QRRecording = () => {
               
               {isUploading && (
                 <div className="mt-6">
-                  <div className="bg-slate-700 rounded-full h-2">
+                  <div className="rounded-full h-2" style={{ background: `${COLORS.midnightGreen}30` }}>
                     <div 
-                      className="bg-gradient-to-r from-green-600 to-emerald-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${uploadProgress}%`,
+                        background: COLORS.teaGreen
+                      }}
                     />
                   </div>
                 </div>
@@ -814,29 +964,37 @@ const QRRecording = () => {
 
           {/* Step 7: Success */}
           {step === 7 && (
-            <div className="bg-slate-800 p-8 rounded-xl text-center">
-              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-10 h-10 text-white" />
+            <div className="p-8 rounded-xl text-center" style={{
+              background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
+              border: `1px solid ${COLORS.cadetGray}20`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+            }}>
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{
+                background: COLORS.teaGreen
+              }}>
+                <CheckCircle className="w-10 h-10" style={{ color: COLORS.midnightGreen }} />
               </div>
-              <h2 className="text-2xl font-bold mb-4">Thank You!</h2>
-              <p className="text-slate-300 text-lg mb-8 leading-relaxed">
+              <h2 className="text-2xl font-bold mb-4" style={{ color: COLORS.nyanza }}>Thank You!</h2>
+              <p className="text-lg mb-8 leading-relaxed" style={{ color: COLORS.cadetGray }}>
                 Your voice contribution has been successfully submitted. 🎉<br />
                 You're helping build more inclusive AI systems for everyone.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 bg-slate-700 rounded-lg">
-                      <h3 className="font-semibold mb-2">Recording Info</h3>
-                      <p className="text-slate-300">{language} / {domain}</p>
-                      <p className="text-slate-300 mt-1">Duration: {formatTime(recordingTime)}</p>
+                  <div className="p-4 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
+                      <h3 className="font-semibold mb-2" style={{ color: COLORS.nyanza }}>Recording Info</h3>
+                      <p style={{ color: COLORS.cadetGray }}>{language} / {domain}</p>
+                      <p className="mt-1" style={{ color: COLORS.cadetGray }}>Duration: {formatTime(recordingTime)}</p>
                   </div>
-                  <div className="p-4 bg-slate-700 rounded-lg">
-                      <h3 className="font-semibold mb-2">Contribution ID</h3>
-                      <p className="text-slate-300 font-mono text-sm">#{Math.random().toString(36).substring(2, 9).toUpperCase()}</p>
+                  <div className="p-4 rounded-lg" style={{ background: `${COLORS.midnightGreen}30` }}>
+                      <h3 className="font-semibold mb-2" style={{ color: COLORS.nyanza }}>Contribution ID</h3>
+                      <p className="font-mono text-sm" style={{ color: COLORS.cadetGray }}>#{Math.random().toString(36).substring(2, 9).toUpperCase()}</p>
                   </div>
               </div>
               <Button 
                 onClick={resetFlow}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg hover:scale-105 transition-all duration-300 px-8 py-3"
+                className="px-8 py-3 font-semibold rounded-full transition-all duration-300 hover:scale-105"
+                style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Make Another Contribution
