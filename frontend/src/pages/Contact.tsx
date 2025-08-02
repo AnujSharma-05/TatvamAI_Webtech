@@ -1,54 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
-import { toast } from "sonner"; // Using sonner as in your original component
+import { toast } from "sonner"; 
 import emailjs from "@emailjs/browser";
 import { motion } from "framer-motion";
 import { Mail, Github, Linkedin, Send } from 'lucide-react';
-import AnimatedBlobBackground from '@/components/Blobbg'; // Adjust path as needed
-
+import { COLORS } from '@/config/theme'; 
 // --- EmailJS Configuration ---
 const SERVICE_ID = "service_iknpru9";
 const TEMPLATE_ID = "template_l7hnfuo";
 const PUBLIC_KEY = "aYn2S4Cy8WRnXVJ40";
-
-// --- Reusable Color Palette ---
-const COLORS = {
-  lightYellow: "#ffffe3",
-  midnightGreen: "#003642",
-  teaGreen: "#d0e6a5",
-  nyanza: "#f1ffe3",
-  cadetGray: "#83a0a0",
-};
-
-
-
-// --- Reusable Custom Cursor Component ---
-const CustomCursor = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-    };
-  }, []);
-
-  return (
-    <>
-      <div
-        className="custom-cursor-glow"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-      <div
-        className="custom-cursor-dot"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-    </>
-  );
-};
 
 
 // --- Main Contact Page Component ---
@@ -93,9 +53,8 @@ export default function ContactPage() {
   };
 
   return (
-    <div style={{ background: COLORS.midnightGreen }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
-      <CustomCursor />
-      <AnimatedBlobBackground />
+    <div style={{ background: 'transparent' }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
+
 
       <motion.div
         className="relative z-10 w-full max-w-6xl"

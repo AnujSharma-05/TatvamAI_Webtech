@@ -1,5 +1,7 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 
+const CustomCursor = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
@@ -7,13 +9,14 @@ import React, {useState, useEffect} from 'react';
     
     window.addEventListener('mousemove', onMouseMove);
     
-    // Cleanup function to remove the event listener when the component unmounts
+    // The cleanup function removes the event listener when the component unmounts.
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
     };
-  }, []); 
+  }, []); // The empty array ensures this effect runs only once on mount.
 
-  return() => {
+
+  return (
     <>
       <div
         className="custom-cursor-glow"
@@ -24,7 +27,6 @@ import React, {useState, useEffect} from 'react';
         style={{ left: `${position.x}px`, top: `${position.y}px` }}
       />
     </>
-  };
-
-  export default CustomCursor;
-// };
+  );
+}; 
+export default CustomCursor;
