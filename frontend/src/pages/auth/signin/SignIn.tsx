@@ -60,16 +60,15 @@ export default function SignInPage() {
       const res = await axios.post("/users/send-phone-otp-login", {
         phoneNo: contact,
       });
-      
-      const sessionId = res.data.data.data.Details; // Extract the session ID
-      setOtpSessionId(sessionId); // Store it in state
-      
+      // console.log("Response from send-phone-otp-login:", res.data.data);
+      // Correctly extract sessionId from the response
+      const sessionId = res.data.data.data.Details; // <-- Fix: Access the correct path
+      setOtpSessionId(sessionId);
       setIsOtpSent(true);
       toast.success("OTP sent successfully!");
 
       // Optional: Log the OTP for debugging (remove in production)
       console.log("OTP:", res.data.data.data.OTP);
-
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to send OTP';
       toast.error(message.includes('does not exist') ? 'This phone number is not registered.' : message);
@@ -82,7 +81,6 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
 
-    // **Resolution**: Using the validation logic from 'main' to ensure we have a session ID.
     if (!otpSessionId) {
       toast.error("Session ID missing. Please request a new OTP.");
       setLoading(false);
@@ -94,7 +92,7 @@ export default function SignInPage() {
       const res = await axios.post("/users/login-phone-otp", {
         phoneNo: contact,
         otp,
-        sessionId: otpSessionId, 
+        sessionId: otpSessionId,
       });
 
       const tokens = handleLoginResponse(res);

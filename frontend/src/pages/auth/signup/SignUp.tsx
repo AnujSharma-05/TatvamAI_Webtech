@@ -3,12 +3,9 @@ import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../../../config/axios";
-import { handleLoginResponse } from "../../../utils/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { COLORS } from "@/config/theme"; 
 
-
-// --- Styled Helper Components for Forms ---
 const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
     <input ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}/>
 ));
@@ -19,17 +16,14 @@ const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...pr
     </select>
 ));
 
-
-// --- Type Definitions (UNCHANGED) ---
 type Step = 1 | 2;
 type Gender = "male" | "female" | "other";
 type VerificationStatus = { phone: "pending" | "sent" | "verified"; email: "pending" | "sent" | "verified"; };
 type FormData = { name: string; gender: Gender; dob: string; phone: string; email: string; city: string; motherTongue: string; knownLanguages: string[]; password: string; confirmPassword: string; };
 const languages = ["Hindi", "Bengali", "Tamil", "Gujarati", "Punjabi", "Kannada", "Malayalam", "Marathi", "Telugu", "Urdu"];
 
-
 export default function SignUpPage() {
-    // --- ALL STATE AND LOGIC IS PRESERVED ---
+    // --- State Management (Combined) ---
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>(1);
     const [phoneOtp, setPhoneOtp] = useState("");
@@ -43,9 +37,8 @@ export default function SignUpPage() {
     const [isVerifyingPhoneOtp, setIsVerifyingPhoneOtp] = useState(false);
     const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
     const [formData, setFormData] = useState<FormData>({ name: "", gender: "male", dob: "", phone: "", email: "", city: "", motherTongue: "", knownLanguages: [], password: "", confirmPassword: "" });
-    const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
-
-    // --- ALL HANDLER FUNCTIONS ARE PRESERVED ---
+    
+  
     const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
 
     const checkUserExistence = async (phone: string, email: string) => {
@@ -66,8 +59,7 @@ export default function SignUpPage() {
         if (!formData.phone || !validatePhoneNumber(formData.phone)) { toast.error("Please enter a valid 10-digit phone number."); return; }
         setIsSendingPhoneOtp(true);
         try {
-            const res = await axios.post("/users/send-phone-otp-register", { phoneNo: formData.phone });
-            setOtpSessionId(res.data.data.sessionId);
+            await axios.post("/users/send-phone-otp-register", { phoneNo: formData.phone });
             setVerificationStatus((prev) => ({ ...prev, phone: "sent" }));
             toast.success("OTP sent to your phone!");
         } catch (error: any) {
@@ -78,10 +70,10 @@ export default function SignUpPage() {
     };
 
     const handleVerifyPhoneOtp = async () => {
-        if (!phoneOtp || !otpSessionId) { toast.error("Please enter OTP. If session expired, resend OTP."); return; }
+        if (!phoneOtp) { toast.error("Please enter OTP"); return; }
         setIsVerifyingPhoneOtp(true);
         try {
-            await axios.post("/users/verify-phone-otp", { sessionId: otpSessionId, otp: phoneOtp });
+            await axios.post("/users/verify-phone-otp", { phoneNo: formData.phone, otp: phoneOtp });
             setVerificationStatus((prev) => ({ ...prev, phone: "verified" }));
             toast.success("Phone number verified!");
         } catch (error: any) {
@@ -126,6 +118,7 @@ export default function SignUpPage() {
         if (password !== confirmPassword) { toast.error("Passwords do not match!"); return; }
         if (password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
         if (!phone || !email || !motherTongue) { toast.error("Please fill all required fields."); return; }
+        
         setIsCheckingExistence(true);
         try {
             const userExists = await checkUserExistence(phone, email);
@@ -135,7 +128,7 @@ export default function SignUpPage() {
                 setStep(2);
             }
         } catch (error) {
-            toast.error("An error occurred. Please try again.");
+            toast.error("An error occurred while checking. Please try again.");
         } finally {
             setIsCheckingExistence(false);
         }
@@ -159,7 +152,7 @@ export default function SignUpPage() {
     };
 
     return (
-        <div style={{ background: 'transparent' }} className="relative min-h-screen flex items-center justify-center p-4 hide-default-cursor overflow-hidden">
+        <div style={{ background: 'transparent' }} className="relative min-h-screen flex items-center justify-center p-4">
             <motion.div
                 className="relative z-10 w-full max-w-2xl"
                 initial={{ opacity: 0, y: 30 }}
@@ -172,7 +165,6 @@ export default function SignUpPage() {
                         <p style={{ color: COLORS.cadetGray }}>Help us build India's most powerful voice dataset.</p>
                     </div>
 
-                    {/* Progress Steps */}
                     <div className="flex justify-center items-center mb-8">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full font-bold" style={{ background: step >= 1 ? COLORS.teaGreen : `${COLORS.midnightGreen}40`, color: step >= 1 ? COLORS.midnightGreen : COLORS.cadetGray }}>1</div>
                         <div className="w-16 h-1 mx-2 rounded" style={{ background: step >= 2 ? COLORS.teaGreen : `${COLORS.midnightGreen}40` }} />
@@ -210,7 +202,6 @@ export default function SignUpPage() {
                         </form>
                     ) : (
                         <div className="space-y-6">
-                            {/* Verification Sections */}
                             <div className="p-4 rounded-xl" style={{background: `${COLORS.midnightGreen}20`}}>
                                 <h3 className="font-semibold mb-3 flex items-center" style={{color: COLORS.nyanza}}>Phone Verification {verificationStatus.phone === "verified" && <span className="ml-2 text-xs font-bold" style={{color: COLORS.teaGreen}}>✓ VERIFIED</span>}</h3>
                                 {verificationStatus.phone !== 'verified' && (
@@ -225,7 +216,6 @@ export default function SignUpPage() {
                                     : <div className="flex gap-4"><StyledInput type="text" placeholder="Enter Code" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} maxLength={6} /><button onClick={handleVerifyEmailOtp} disabled={isVerifyingEmailOtp} className="px-4 py-2 text-sm rounded-lg font-semibold" style={{background: COLORS.teaGreen, color: COLORS.midnightGreen}}>{isVerifyingEmailOtp ? "Verifying..." : "Verify"}</button></div>
                                 )}
                             </div>
-                            {/* Known Languages */}
                             <div>
                                 <h3 className="font-semibold mb-3" style={{color: COLORS.nyanza}}>Known Languages</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm" style={{color: COLORS.cadetGray}}>

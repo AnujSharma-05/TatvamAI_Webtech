@@ -120,59 +120,101 @@ const sendPhoneOtpRegister = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({ phoneNo });
   if (existingUser) throw new ApiError(400, "Phone number already registered");
 
-  // Send OTP using 2Factor.in
-  const apiKey = process.env.TWO_FACTOR_API_KEY; // store in .env file
-  const formattedPhone = `+91${phoneNo}`; // make sure number is in international format
-  const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/${formattedPhone}/AUTOGEN2/OTP1`;
+  // Generate OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Store OTP in verification collection for later verification
+  await Verification.findOneAndUpdate(
+    { type: "phone", value: phoneNo },
+    { code: otp, expires },
+    { upsert: true, new: true }
+  );
+
+  // Send OTP using Fast2SMS
+  const apiKey = process.env.FAST2SMS_API_KEY;
+
+  if (!apiKey) {
+    throw new ApiError(500, "Fast2SMS API key not configured");
+  }
+
+  const otpUrl = "https://www.fast2sms.com/dev/bulkV2";
+
+  const payload = {
+    variables_values: otp,
+    route: "otp",
+    numbers: phoneNo,
+  };
+
+  console.log("Fast2SMS Payload:", payload);
 
   try {
-    const response = await axios.get(otpUrl);
-    const { Status, Details } = response.data;
+    const response = await axios.post(otpUrl, payload, {
+      headers: {
+        authorization: apiKey,
+        "Content-Type": "application/json",
+      },
+    });
 
-    if (Status !== "Success") {
-      throw new ApiError(500, "Failed to send OTP");
+    console.log("Fast2SMS Response:", response.data);
+
+    if (!response.data.return) {
+      console.error("Fast2SMS Error Response:", response.data);
+      throw new ApiError(
+        500,
+        `Failed to send OTP: ${response.data.message || "Unknown error"}`
+      );
     }
 
-    // Return the OTP session details for verification
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, { sessionId: Details }, "OTP sent successfully")
-      );
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          request_id: response.data.request_id,
+          message: "OTP sent successfully",
+        },
+        "OTP sent successfully"
+      )
+    );
   } catch (err) {
-    console.error("2Factor OTP Error:", err.message);
+    console.error("Fast2SMS OTP Error Details:", {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+    });
+
+    if (err.response?.status === 400) {
+      const errorMsg =
+        err.response?.data?.message || "Invalid request parameters";
+      throw new ApiError(400, `Fast2SMS Error: ${errorMsg}`);
+    }
+
     throw new ApiError(500, "OTP service failed");
   }
 });
 
 // verify during phone OTP verification (register)
 const verifyPhoneOtp = asyncHandler(async (req, res) => {
-  const { sessionId, otp } = req.body;
+  const { phoneNo, otp } = req.body;
 
-  if (!sessionId || !otp) {
-    throw new ApiError(400, "Session ID and OTP are required");
+  if (!phoneNo || !otp) {
+    throw new ApiError(400, "Phone number and OTP are required");
   }
 
-  // Verify OTP using 2Factor.in
-  const apiKey = process.env.TWO_FACTOR_API_KEY; // store in .env file
-  const verifyUrl = `https://2factor.in/API/V1/${apiKey}/SMS/VERIFY/${sessionId}/${otp}`;
+  // Verify OTP from database
+  const record = await Verification.findOne({ type: "phone", value: phoneNo });
 
-  try {
-    const response = await axios.get(verifyUrl);
-    const { Status } = response.data;
-
-    if (Status !== "Success") {
-      throw new ApiError(400, "Invalid or expired OTP");
-    }
-
-    // OTP verified successfully
-    return res
-      .status(200)
-      .json(new ApiResponse(200, {}, "Phone number verified successfully"));
-  } catch (err) {
-    console.error("2Factor OTP Verification Error:", err.message);
-    throw new ApiError(500, "OTP verification failed");
+  if (!record || record.code !== otp || record.expires < Date.now()) {
+    throw new ApiError(400, "Invalid or expired OTP");
   }
+
+  // Delete the verification record after successful verification
+  await Verification.deleteOne({ _id: record._id });
+
+  // OTP verified successfully
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Phone number verified successfully"));
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
@@ -282,48 +324,95 @@ const sendPhoneOtpLogin = asyncHandler(async (req, res) => {
   if (!existingUser)
     throw new ApiError(400, "User does not exist with this phone number");
 
-  // Commenting out custom OTP generation
-  // const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  // const expires = new Date(Date.now() + 10 * 60 * 1000);
+  // Generate OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // await Verification.findOneAndUpdate(
-  //   { type: "phone", value: phoneNo },
-  //   { code: otp, expires },
-  //   { upsert: true, new: true }
-  // );
+  // Store OTP in verification collection for later verification
+  await Verification.findOneAndUpdate(
+    { type: "phone", value: phoneNo },
+    { code: otp, expires },
+    { upsert: true, new: true }
+  );
 
-  // Send OTP using 2Factor.in
-  const apiKey = process.env.TWO_FACTOR_API_KEY; // store in .env file
-  const formattedPhone = `+91${phoneNo}`; // make sure number is in international format
-  const otpUrl = `https://2factor.in/API/V1/${apiKey}/SMS/${formattedPhone}/AUTOGEN2/OTP1`;
+  // Send OTP using Fast2SMS
+  const apiKey = process.env.FAST2SMS_API_KEY;
 
-  // console.log("OTP url: ", otpUrl);
+  // Debug: Check if API key exists
+  if (!apiKey) {
+    throw new ApiError(500, "Fast2SMS API key not configured");
+  }
+
+  const otpUrl = "https://www.fast2sms.com/dev/bulkV2";
+
+  // Prepare the request payload
+  const payload = {
+    variables_values: otp,
+    route: "otp",
+    numbers: phoneNo, // Remove +91 prefix if present
+  };
+
+  // Debug: Log the payload
+  console.log("Fast2SMS Payload:", payload);
+  console.log("API Key (first 10 chars):", apiKey.substring(0, 10) + "...");
 
   try {
-    const response = await axios.get(otpUrl);
-    const { Status } = response.data;
+    const response = await axios.post(otpUrl, payload, {
+      headers: {
+        authorization: apiKey, // No "Bearer" prefix needed
+        "Content-Type": "application/json",
+      },
+    });
 
-    if (Status !== "Success") {
-      throw new ApiError(500, "Failed to send OTP");
+    console.log("Fast2SMS Response:", response.data);
+
+    if (!response.data.return) {
+      console.error("Fast2SMS Error Response:", response.data);
+      throw new ApiError(
+        500,
+        `Failed to send OTP: ${response.data.message || "Unknown error"}`
+      );
     }
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, { data: response.data }, "OTP sent successfully")
-      );
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          request_id: response.data.request_id,
+          message: "OTP sent successfully",
+        },
+        "OTP sent successfully"
+      )
+    );
   } catch (err) {
-    console.error("2Factor OTP Error:", err.message);
+    console.error("Fast2SMS OTP Error Details:", {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      headers: err.response?.headers,
+    });
+
+    // More specific error messages
+    if (err.response?.status === 400) {
+      const errorMsg =
+        err.response?.data?.message || "Invalid request parameters";
+      throw new ApiError(400, `Fast2SMS Error: ${errorMsg}`);
+    } else if (err.response?.status === 401) {
+      throw new ApiError(401, "Invalid Fast2SMS API key");
+    } else if (err.response?.status === 403) {
+      throw new ApiError(403, "Fast2SMS API access forbidden");
+    }
+
     throw new ApiError(500, "OTP service failed");
   }
 });
 
 // for verifying phone OTP and logging in
 const loginWithPhoneOtp = asyncHandler(async (req, res) => {
-  const { phoneNo, sessionId, otp } = req.body;
+  const { phoneNo, otp } = req.body;
 
-  if (!phoneNo || !sessionId || !otp) {
-    throw new ApiError(400, "Phone number, session ID, and OTP are required");
+  if (!phoneNo || !otp) {
+    throw new ApiError(400, "Phone number and OTP are required");
   }
 
   // Check if the user exists
@@ -332,42 +421,36 @@ const loginWithPhoneOtp = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist with this phone number");
   }
 
-  // Verify OTP using 2Factor.in
-  const apiKey = process.env.TWO_FACTOR_API_KEY; // store in .env file
-  const verifyUrl = `https://2factor.in/API/V1/${apiKey}/SMS/VERIFY/${sessionId}/${otp}`;
+  // Verify OTP from database
+  const record = await Verification.findOne({ type: "phone", value: phoneNo });
 
-  try {
-    const response = await axios.get(verifyUrl);
-    const { Status } = response.data;
-
-    if (Status !== "Success") {
-      throw new ApiError(400, "Invalid or expired OTP");
-    }
-
-    // OTP verified successfully, generate tokens
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-      user._id
-    );
-
-    const loggedInUser = await User.findById(user._id).select(
-      "-password -refreshToken"
-    );
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          user: loggedInUser,
-          accessToken,
-          refreshToken,
-        },
-        "User logged in with phone number successfully"
-      )
-    );
-  } catch (err) {
-    console.error("2Factor OTP Verification Error:", err.message);
-    throw new ApiError(500, "OTP verification failed");
+  if (!record || record.code !== otp || record.expires < Date.now()) {
+    throw new ApiError(400, "Invalid or expired OTP");
   }
+
+  // Delete the verification record after successful verification
+  await Verification.deleteOne({ _id: record._id });
+
+  // OTP verified successfully, generate tokens
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        user: loggedInUser,
+        accessToken,
+        refreshToken,
+      },
+      "User logged in with phone number successfully"
+    )
+  );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
