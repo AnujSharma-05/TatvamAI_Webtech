@@ -35,7 +35,7 @@ const Footer: FC = () => (
 
         {/* Commenting the Privacy and terms page for now and adding new route to the main page */}
 
-        <Link to="/about" className="hover:text-white transition font-medium">About</Link>
+        <Link to="/about-tatvam" className="hover:text-white transition font-medium">About</Link>
         <Link to="/" className="hover:text-white transition font-medium">Home</Link>
         {/* <Link to="/blogs" className="hover:text-white transition font-medium">Blog</Link> */}
         <Link to="/contact" className="hover:text-white transition font-medium">Contact</Link>

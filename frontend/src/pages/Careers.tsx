@@ -2,43 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Briefcase, Sparkles, Users, ArrowRight } from 'lucide-react';
-import AnimatedBlobBackground from '@/components/Blobbg'; // Adjust path as needed
-
-const COLORS = {
-  lightYellow: "#ffffe3",
-  midnightGreen: "#003642",
-  teaGreen: "#d0e6a5",
-  nyanza: "#f1ffe3",
-  cadetGray: "#83a0a0",
-};
-
-// --- Custom Cursor Component ---
-const CustomCursor = () => {
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
-
-  React.useEffect(() => {
-    const onMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-    };
-  }, []);
-
-  return (
-    <>
-      <div
-        className="custom-cursor-glow"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-      <div
-        className="custom-cursor-dot"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-    </>
-  );
-};
+import { COLORS } from '@/config/theme'; 
 
 
 const CareersPage = () => {
@@ -58,9 +22,7 @@ const CareersPage = () => {
   ];
 
   return (
-    <div style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
-      <CustomCursor />
-      <AnimatedBlobBackground />
+    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
 
       <motion.div
         className="relative z-10 max-w-4xl w-full text-center p-10 md:p-16 rounded-2xl"
