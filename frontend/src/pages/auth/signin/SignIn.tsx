@@ -4,8 +4,8 @@ import { toast } from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../../../config/axios";
 import { handleLoginResponse } from "../../../utils/auth";
-import { Eye, EyeOff } from "lucide-react";
-import AnimatedBlobBackground from "@/components/Blobbg"; // Using the visual branch's path
+import { Eye, EyeOff } from 'lucide-react';
+import AnimatedBlobBackground from '@/components/Blobbg'; // Using the visual branch's path
 
 // --- Reusable Color Palette ---
 // **Resolution**: Kept from Anuj's-Branch for consistent styling.
@@ -22,43 +22,28 @@ const COLORS = {
 const CustomCursor = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) =>
-      setPosition({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", onMouseMove);
-    return () => window.removeEventListener("mousemove", onMouseMove);
+    const onMouseMove = (e: MouseEvent) => setPosition({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', onMouseMove);
+    return () => window.removeEventListener('mousemove', onMouseMove);
   }, []);
   return (
     <>
-      <div
-        className="custom-cursor-glow"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-      <div
-        className="custom-cursor-dot"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
+      <div className="custom-cursor-glow" style={{ left: `${position.x}px`, top: `${position.y}px` }}/>
+      <div className="custom-cursor-dot" style={{ left: `${position.x}px`, top: `${position.y}px` }}/>
     </>
   );
 };
 
 // --- Helper component for a styled input ---
 // **Resolution**: Kept from Anuj's-Branch for consistent styling.
-const StyledInput = React.forwardRef<HTMLInputElement, any>(
-  ({ ...props }, ref) => (
-    <input
-      ref={ref}
-      {...props}
-      className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2"
-      style={
-        {
-          borderColor: `${COLORS.cadetGray}30`,
-          color: COLORS.nyanza,
-          "--tw-ring-color": COLORS.teaGreen,
-        } as React.CSSProperties
-      }
-    />
-  )
-);
+const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
+  <input
+    ref={ref}
+    {...props}
+    className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2"
+    style={{borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen} as React.CSSProperties}
+  />
+));
 
 type AuthMethod = "phone" | "email";
 
@@ -71,6 +56,9 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // **Resolution**: We keep this state variable from the 'main' branch. It's essential for the new OTP logic.
+  const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
 
   const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
 
@@ -85,9 +73,15 @@ export default function SignInPage() {
       const res = await axios.post("/users/send-phone-otp-login", {
         phoneNo: contact,
       });
-
+      // console.log("Response from send-phone-otp-login:", res.data.data);
+      // Correctly extract sessionId from the response
+      const sessionId = res.data.data.data.Details; // <-- Fix: Access the correct path
+      setOtpSessionId(sessionId);
       setIsOtpSent(true);
       toast.success("OTP sent successfully!");
+
+      // Optional: Log the OTP for debugging (remove in production)
+      console.log("OTP:", res.data.data.data.OTP);
     } catch (err: any) {
       const message = err.response?.data?.message || "Failed to send OTP";
       toast.error(
@@ -104,7 +98,14 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
 
+    if (!otpSessionId) {
+      toast.error("Session ID missing. Please request a new OTP.");
+      setLoading(false);
+      return;
+    }
+
     try {
+      // **Resolution**: Using the request structure from 'main' which includes the sessionId.
       const res = await axios.post("/users/login-phone-otp", {
         phoneNo: contact,
         otp,
@@ -156,12 +157,8 @@ export default function SignInPage() {
     }
   };
 
-  // **Resolution**: The entire return statement is taken from Anuj's-Branch to keep the new UI.
   return (
-    <div
-      style={{ background: COLORS.midnightGreen }}
-      className="relative min-h-screen flex items-center justify-center p-4 hide-default-cursor overflow-hidden"
-    >
+    <div style={{ background: COLORS.midnightGreen }} className="relative min-h-screen flex items-center justify-center p-4 hide-default-cursor overflow-hidden">
       <CustomCursor />
       <AnimatedBlobBackground />
 

@@ -281,7 +281,16 @@
   width: 100%;
 }
 
+.revolve-1,
+.revolve-2,
+.revolve-3 {
+  position: fixed; /* This "sticks" the blobs to the screen */
+  z-index: 0;     /* This pushes them behind your main content */
+}
 
+.revolve-1 {
+  animation: revolve-1 15s linear infinite;
+}
 
 /* Animation for the first, largest blob */
 @keyframes revolve-1 {

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import DhvaniShilp from './pages/DhvaniShilp';
-import About from './pages/About';
+import About from './components/AboutDhvaniShilpContent';
 import Contact from './pages/Contact';
 import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
@@ -19,21 +19,32 @@ import SignUpPage from './pages/auth/signup/SignUp';
 import Recording from './pages/CrowdSourceRecording';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
-import NotFound from './pages/NotFound'; // Optional 404
-import Profile from './pages/Profile'; // Create this page if not present
+import NotFound from './pages/NotFound'; 
+import Profile from './pages/Profile'; 
 import FAQ from './pages/FAQs';
 import Documentation from './pages/Documentation';
 import Careers from './pages/Careers';
 
 import CustomCursor from './components/CustomCursor';
+import AnimatedBlobBackground from './components/Blobbg'; 
+
+import AboutTatvamPage from './pages/AboutTatvam';
+
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background hide-default-cursor  " 
+        style={{ backgroundColor: '#003642' }} >
+        <CustomCursor />
         <Navbar />
+        <AnimatedBlobBackground />
+        
+        {/* --- Main Application Routes --- */}
+        
         <main>
           <Routes>
+            {/* --- Public Routes --- */}
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/dhvani-shilp" element={<DhvaniShilp />} />
@@ -44,6 +55,8 @@ function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/docs" element={<Documentation />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/about-tatvam" element={<AboutTatvamPage />} />
+            
 
             {/* 🔐 Protected Routes */}
             <Route
