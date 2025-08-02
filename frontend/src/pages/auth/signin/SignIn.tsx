@@ -5,23 +5,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from "../../../config/axios";
 import { handleLoginResponse } from "../../../utils/auth";
 import { Eye, EyeOff } from 'lucide-react';
-import AnimatedBlobBackground from '@/components/Blobbg'; 
-import CustomCursor from '@/components/CustomCursor'; 
-
-// --- Reusable Color Palette ---
-// **Resolution**: Kept from Anuj's-Branch for consistent styling.
-const COLORS = {
-  lightYellow: "#ffffe3",
-  midnightGreen: "#003642",
-  teaGreen: "#d0e6a5",
-  nyanza: "#f1ffe3",
-  cadetGray: "#83a0a0",
-};
+import { COLORS } from '../../../config/theme';
 
 
-
-// --- Helper component for a styled input ---
-// **Resolution**: Kept from Anuj's-Branch for consistent styling.
 const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
   <input
     ref={ref}
@@ -43,7 +29,6 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // **Resolution**: We keep this state variable from the 'main' branch. It's essential for the new OTP logic.
   const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
 
   const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
@@ -56,18 +41,14 @@ export default function SignInPage() {
     }
     setLoading(true);
     try {
-      // **Resolution**: Using the logic from the 'main' branch to get the sessionId.
       const res = await axios.post("/users/send-phone-otp-login", {
         phoneNo: contact,
       });
-      // console.log("Response from send-phone-otp-login:", res.data.data);
-      // Correctly extract sessionId from the response
-      const sessionId = res.data.data.data.Details; // <-- Fix: Access the correct path
+      const sessionId = res.data.data.data.Details; 
       setOtpSessionId(sessionId);
       setIsOtpSent(true);
       toast.success("OTP sent successfully!");
 
-      // Optional: Log the OTP for debugging (remove in production)
       console.log("OTP:", res.data.data.data.OTP);
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to send OTP';
@@ -88,7 +69,6 @@ export default function SignInPage() {
     }
 
     try {
-      // **Resolution**: Using the request structure from 'main' which includes the sessionId.
       const res = await axios.post("/users/login-phone-otp", {
         phoneNo: contact,
         otp,
@@ -136,12 +116,9 @@ export default function SignInPage() {
     }
   };
 
-  // **Resolution**: The entire return statement is taken from Anuj's-Branch to keep the new UI.
   return (
     <div style={{ background: COLORS.midnightGreen }} className="relative min-h-screen flex items-center justify-center p-4 hide-default-cursor overflow-hidden">
-      <CustomCursor />
-      <AnimatedBlobBackground />
-
+  
       <motion.div
         className="relative z-10 w-full max-w-md"
         initial={{ opacity: 0, y: 30 }}
