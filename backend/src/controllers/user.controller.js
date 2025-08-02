@@ -131,53 +131,39 @@ const sendPhoneOtpRegister = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
-  // Send OTP using Fast2SMS
-  const apiKey = process.env.FAST2SMS_API_KEY;
+  // Send OTP using Renflair SMS
+  const apiKey = process.env.RENFLAIR_API_KEY;
 
   if (!apiKey) {
-    throw new ApiError(500, "Fast2SMS API key not configured");
+    throw new ApiError(500, "Renflair API key not configured");
   }
 
-  const otpUrl = "https://www.fast2sms.com/dev/bulkV2";
-
-  const payload = {
-    variables_values: otp,
-    route: "otp",
-    numbers: phoneNo,
-  };
-
-  console.log("Fast2SMS Payload:", payload);
+  console.log("Sending OTP via Renflair:", { phoneNo, otp });
 
   try {
-    const response = await axios.post(otpUrl, payload, {
-      headers: {
-        authorization: apiKey,
-        "Content-Type": "application/json",
-      },
-    });
+    // Renflair API uses GET request with query parameters
+    const otpUrl = `https://sms.renflair.in/V1.php?API=${apiKey}&PHONE=${phoneNo}&OTP=${otp}`;
 
-    console.log("Fast2SMS Response:", response.data);
+    const response = await axios.get(otpUrl);
 
-    if (!response.data.return) {
-      console.error("Fast2SMS Error Response:", response.data);
-      throw new ApiError(
-        500,
-        `Failed to send OTP: ${response.data.message || "Unknown error"}`
+    console.log("Renflair Response:", response.data);
+
+    // Check if Renflair returned success (adjust based on their response format)
+    if (response.data && response.status === 200) {
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            message: "OTP sent successfully",
+          },
+          "OTP sent successfully"
+        )
       );
+    } else {
+      throw new ApiError(500, "Failed to send OTP via Renflair");
     }
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          request_id: response.data.request_id,
-          message: "OTP sent successfully",
-        },
-        "OTP sent successfully"
-      )
-    );
   } catch (err) {
-    console.error("Fast2SMS OTP Error Details:", {
+    console.error("Renflair OTP Error Details:", {
       message: err.message,
       response: err.response?.data,
       status: err.response?.status,
@@ -186,7 +172,7 @@ const sendPhoneOtpRegister = asyncHandler(async (req, res) => {
     if (err.response?.status === 400) {
       const errorMsg =
         err.response?.data?.message || "Invalid request parameters";
-      throw new ApiError(400, `Fast2SMS Error: ${errorMsg}`);
+      throw new ApiError(400, `Renflair Error: ${errorMsg}`);
     }
 
     throw new ApiError(500, "OTP service failed");
@@ -335,72 +321,54 @@ const sendPhoneOtpLogin = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
-  // Send OTP using Fast2SMS
-  const apiKey = process.env.FAST2SMS_API_KEY;
+  // Send OTP using Renflair SMS
+  const apiKey = process.env.RENFLAIR_API_KEY;
 
   // Debug: Check if API key exists
   if (!apiKey) {
-    throw new ApiError(500, "Fast2SMS API key not configured");
+    throw new ApiError(500, "Renflair API key not configured");
   }
 
-  const otpUrl = "https://www.fast2sms.com/dev/bulkV2";
-
-  // Prepare the request payload
-  const payload = {
-    variables_values: otp,
-    route: "otp",
-    numbers: phoneNo, // Remove +91 prefix if present
-  };
-
-  // Debug: Log the payload
-  console.log("Fast2SMS Payload:", payload);
+  console.log("Sending OTP via Renflair:", { phoneNo, otp });
   console.log("API Key (first 10 chars):", apiKey.substring(0, 10) + "...");
 
   try {
-    const response = await axios.post(otpUrl, payload, {
-      headers: {
-        authorization: apiKey, // No "Bearer" prefix needed
-        "Content-Type": "application/json",
-      },
-    });
+    // Renflair API uses GET request with query parameters
+    const otpUrl = `https://sms.renflair.in/V1.php?API=${apiKey}&PHONE=${phoneNo}&OTP=${otp}`;
 
-    console.log("Fast2SMS Response:", response.data);
+    const response = await axios.get(otpUrl);
 
-    if (!response.data.return) {
-      console.error("Fast2SMS Error Response:", response.data);
-      throw new ApiError(
-        500,
-        `Failed to send OTP: ${response.data.message || "Unknown error"}`
+    console.log("Renflair Response:", response.data);
+
+    // Check if Renflair returned success (adjust based on their response format)
+    if (response.data && response.status === 200) {
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            message: "OTP sent successfully",
+          },
+          "OTP sent successfully"
+        )
       );
+    } else {
+      throw new ApiError(500, "Failed to send OTP via Renflair");
     }
-
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          request_id: response.data.request_id,
-          message: "OTP sent successfully",
-        },
-        "OTP sent successfully"
-      )
-    );
   } catch (err) {
-    console.error("Fast2SMS OTP Error Details:", {
+    console.error("Renflair OTP Error Details:", {
       message: err.message,
       response: err.response?.data,
       status: err.response?.status,
-      headers: err.response?.headers,
     });
 
-    // More specific error messages
     if (err.response?.status === 400) {
       const errorMsg =
         err.response?.data?.message || "Invalid request parameters";
-      throw new ApiError(400, `Fast2SMS Error: ${errorMsg}`);
+      throw new ApiError(400, `Renflair Error: ${errorMsg}`);
     } else if (err.response?.status === 401) {
-      throw new ApiError(401, "Invalid Fast2SMS API key");
+      throw new ApiError(401, "Invalid Renflair API key");
     } else if (err.response?.status === 403) {
-      throw new ApiError(403, "Fast2SMS API access forbidden");
+      throw new ApiError(403, "Renflair API access forbidden");
     }
 
     throw new ApiError(500, "OTP service failed");
@@ -845,6 +813,114 @@ const checkUserExistence = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user, "User exists"));
 });
 
+// Admin-only routes
+const getAllUsersAdmin = asyncHandler(async (req, res) => {
+  const users = await User.find()
+    .select("-password -refreshToken -phoneOtp -emailVerificationCode")
+    .sort({ createdAt: -1 });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, users, "All users fetched successfully"));
+});
+
+const getAdminStats = asyncHandler(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const totalRecordings = await Recording.countDocuments();
+  const totalTokensIssued = await RewardToken.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalAmount: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const stats = {
+    totalUsers,
+    totalRecordings,
+    totalTokensIssued: totalTokensIssued[0]?.totalAmount || 0,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stats, "Admin stats fetched successfully"));
+});
+
+// Temporary admin registration (remove after creating admin)
+const registerAdmin = asyncHandler(async (req, res) => {
+  const {
+    name,
+    email,
+    password,
+    gender,
+    dob,
+    phoneNo,
+    city,
+    motherTongue,
+    knownLanguages,
+    adminSecret, // Add this for security
+  } = req.body;
+
+  // Security check - only allow admin creation with secret key
+  if (adminSecret !== process.env.ADMIN_SECRET) {
+    throw new ApiError(403, "Invalid admin secret key");
+  }
+
+  if (
+    !name ||
+    !email ||
+    !password ||
+    !dob ||
+    !gender ||
+    !phoneNo ||
+    !city ||
+    !motherTongue
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  // Check if user already exists
+  const existedUser = await User.findOne({
+    $or: [{ email }, { phoneNo }],
+  });
+
+  if (existedUser) {
+    throw new ApiError(
+      400,
+      "User already exists with this email or phone number"
+    );
+  }
+
+  // Create admin user
+  const adminUser = await User.create({
+    name,
+    email,
+    password,
+    gender,
+    dob,
+    phoneNo,
+    city,
+    motherTongue,
+    knownLanguages: knownLanguages
+      ? knownLanguages.split(",").map((lang) => lang.trim())
+      : [],
+    role: "admin", // Set role as admin
+    emailVerified: true,
+    phoneNoVerified: true,
+  });
+
+  const createdAdmin = await User.findById(adminUser._id).select(
+    "-password -refreshToken"
+  );
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, createdAdmin, "Admin user created successfully")
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -865,4 +941,7 @@ export {
   verifyEmailCode,
   deleteUserAccount,
   checkUserExistence,
+  getAllUsersAdmin,
+  getAdminStats,
+  registerAdmin,
 };
