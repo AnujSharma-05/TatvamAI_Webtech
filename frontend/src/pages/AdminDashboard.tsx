@@ -1,109 +1,79 @@
 import React, { useState, useEffect } from "react";
-import { color, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import axios from "../config/axios";
 import { COLORS } from "@/config/theme";
 import {
+  Users,
   ListChecks,
   Clock,
-  Languages,
   Coins,
-  Plus,
   ChevronLeft,
   ChevronRight,
+  Trash2,
+  Eye,
+  Calendar,
+  Shield,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
-// --- Main Dashboard Component ---
-const Dashboard = () => {
+// --- Admin Dashboard Component ---
+const AdminDashboard = () => {
   const navigate = useNavigate();
 
-  // --- ALL STATE AND LOGIC REMAINS UNCHANGED ---
-  const [recordings, setRecordings] = useState([]);
-  const [incentives, setIncentives] = useState([]);
+  // State for admin data
   const [stats, setStats] = useState({
+    totalUsers: 0,
     totalRecordings: 0,
-    minsContributed: 0,
-    languages: 0,
-    totalTokens: 0,
+    totalTokensIssued: 0,
   });
+  const [allRecordings, setAllRecordings] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const recordingsPerPage = 5;
+  const recordingsPerPage = 10;
 
   useEffect(() => {
-    const fetchRecordings = () =>
-      axios.get("/users/recordings").then((res) => res.data.data);
-    const fetchContributionStats = () =>
-      axios.get("/users/contribution-stats").then((res) => res.data.data);
-    const fetchIncentives = () =>
-      axios.get("/users/incentives").then((res) => res.data.data);
-
-    const secondsToMinutes = (seconds) => {
-      if (!seconds || seconds === 0) return 0;
-      return Math.round(seconds / 60);
-    };
-
-    const calculateStats = (
-      recordingsData,
-      contributionData,
-      incentivesData
-    ) => {
-      const totalRecordings =
-        contributionData.totalRecordings || recordingsData.length;
-      const totalSecondsContributed = recordingsData.reduce(
-        (sum, r) => sum + (r.duration || 0),
-        0
-      );
-      const minsContributed = secondsToMinutes(totalSecondsContributed);
-      const uniqueLanguages = new Set(recordingsData.map((r) => r.language))
-        .size;
-      return {
-        totalRecordings,
-        minsContributed,
-        languages: uniqueLanguages,
-        totalTokens: incentivesData.totalTokens || 0,
-      };
-    };
-
-    const loadData = async () => {
+    const fetchAdminData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const [recordingsData, contributionData, incentivesResponse] =
+
+        const [statsResponse, recordingsResponse, usersResponse] =
           await Promise.all([
-            fetchRecordings(),
-            fetchContributionStats(),
-            fetchIncentives(),
+            axios.get("/users/admin/stats"),
+            axios.get("/recordings/admin"),
+            axios.get("/users/admin/users"),
           ]);
-        setRecordings(recordingsData);
-        setIncentives(incentivesResponse.tokens || []);
-        const calculatedStats = calculateStats(
-          recordingsData,
-          contributionData,
-          incentivesResponse
-        );
-        setStats(calculatedStats);
+
+        setStats(statsResponse.data.data);
+        setAllRecordings(recordingsResponse.data.data);
+        setAllUsers(usersResponse.data.data);
       } catch (err: any) {
-        setError(
-          err.response?.data?.message || "Failed to load dashboard data"
-        );
-        console.error("Error loading dashboard data:", err);
+        setError(err.response?.data?.message || "Failed to load admin data");
+        console.error("Error loading admin data:", err);
+
+        // If unauthorized, redirect to login
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          toast.error("Access denied. Admin privileges required.");
+          navigate("/auth/signin");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, []);
+    fetchAdminData();
+  }, [navigate]);
 
   // Pagination logic
-  const totalPages = Math.ceil(recordings.length / recordingsPerPage);
+  const totalPages = Math.ceil(allRecordings.length / recordingsPerPage);
   const startIndex = (currentPage - 1) * recordingsPerPage;
   const endIndex = startIndex + recordingsPerPage;
-  const currentRecordings = recordings.slice(startIndex, endIndex);
+  const currentRecordings = allRecordings.slice(startIndex, endIndex);
 
   const goToPage = (page) => {
     setCurrentPage(page);
@@ -121,23 +91,61 @@ const Dashboard = () => {
     }
   };
 
+  // Helper functions
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
+
   const secondsToMMSS = (seconds) => {
     if (!seconds || seconds === 0) return "0:00";
     return `${Math.floor(seconds / 60)}:${String(
       Math.round(seconds % 60)
     ).padStart(2, "0")}`;
   };
-  const getTokensForRecording = (recordingId) => {
-    const tokenDoc = incentives.find(
-      (t) => t.recordingId?.toString() === recordingId?.toString()
-    );
-    return tokenDoc ? tokenDoc.amount : "--";
+
+  const getUserNameById = (userId) => {
+    const user = allUsers.find((u) => u._id === userId);
+    return user ? user.name : "Unknown User";
+  };
+
+  const handleDeleteRecording = async (recordingId) => {
+    if (!confirm("Are you sure you want to delete this recording?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/recordings/admin/${recordingId}`);
+      setAllRecordings(allRecordings.filter((rec) => rec._id !== recordingId));
+      toast.success("Recording deleted successfully");
+
+      // Update stats
+      setStats((prev) => ({
+        ...prev,
+        totalRecordings: prev.totalRecordings - 1,
+      }));
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete recording"
+      );
+    }
+  };
+
+  const handleEvaluateRecording = async (recordingId) => {
+    try {
+      await axios.post(`/recordings/admin/${recordingId}/evaluate`);
+      toast.success("Recording evaluation initiated");
+
+      // Refresh recordings to show updated status
+      const recordingsResponse = await axios.get("/recordings/admin");
+      setAllRecordings(recordingsResponse.data.data);
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to evaluate recording"
+      );
+    }
   };
 
   if (loading) {
@@ -151,7 +159,7 @@ const Dashboard = () => {
             className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
             style={{ borderColor: COLORS.teaGreen }}
           ></div>
-          <p style={{ color: COLORS.cadetGray }}>Loading your dashboard...</p>
+          <p style={{ color: COLORS.cadetGray }}>Loading admin dashboard...</p>
         </div>
       </div>
     );
@@ -185,23 +193,18 @@ const Dashboard = () => {
 
   const statsArray = [
     {
+      label: "Total Users",
+      value: stats.totalUsers,
+      icon: <Users size={24} />,
+    },
+    {
       label: "Total Recordings",
       value: stats.totalRecordings,
       icon: <ListChecks size={24} />,
     },
     {
-      label: "Minutes Contributed",
-      value: stats.minsContributed,
-      icon: <Clock size={24} />,
-    },
-    {
-      label: "Languages",
-      value: stats.languages,
-      icon: <Languages size={24} />,
-    },
-    {
-      label: "Total Tokens",
-      value: stats.totalTokens,
+      label: "Tokens Issued",
+      value: stats.totalTokensIssued,
       icon: <Coins size={24} />,
     },
   ];
@@ -221,27 +224,24 @@ const Dashboard = () => {
         >
           <div>
             <h1
-              className="text-5xl font-extrabold"
+              className="text-5xl font-extrabold flex items-center"
               style={{ color: COLORS.nyanza }}
             >
-              Dashboard
+              <Shield
+                className="mr-4"
+                size={48}
+                style={{ color: COLORS.teaGreen }}
+              />
+              Admin Dashboard
             </h1>
             <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>
-              Welcome back! Here's your contribution summary.
+              Manage users, recordings, and platform statistics.
             </p>
           </div>
-          <button
-            onClick={() => navigate("/qr-recording")}
-            className="mt-6 md:mt-0 inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full transition-all group"
-            style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            New Recording
-          </button>
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {statsArray.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -274,7 +274,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Recent Recordings List */}
+        {/* All Recordings List */}
         <motion.div
           className="p-6 md:p-8 rounded-2xl"
           style={{
@@ -289,44 +289,36 @@ const Dashboard = () => {
             className="text-2xl font-bold mb-6"
             style={{ color: COLORS.nyanza }}
           >
-            Recent Recordings
+            All Recordings ({allRecordings.length})
           </h2>
-          {recordings.length === 0 ? (
+
+          {allRecordings.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg mb-6" style={{ color: COLORS.cadetGray }}>
-                You haven't made any recordings yet.
+                No recordings found.
               </p>
-              <button
-                onClick={() => navigate("/qr-recording")}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full transition-all group"
-                style={{
-                  background: COLORS.teaGreen,
-                  color: COLORS.midnightGreen,
-                }}
-              >
-                Make Your First Recording
-              </button>
             </div>
           ) : (
             <div className="space-y-4">
               {/* Table Header */}
               <div
-                className="hidden md:grid grid-cols-7 gap-4 px-4 py-2 text-xs font-bold uppercase"
+                className="hidden md:grid grid-cols-8 gap-4 px-4 py-2 text-xs font-bold uppercase"
                 style={{ color: COLORS.cadetGray }}
               >
+                <div className="col-span-1">User</div>
                 <div className="col-span-1">Domain</div>
                 <div className="col-span-1">Language</div>
-                <div className="col-span-1">Source</div>
                 <div className="col-span-1">Date</div>
                 <div className="col-span-1 text-center">Duration</div>
-                <div className="col-span-1 text-center">Status</div>
-                <div className="col-span-1 text-right">Tokens</div>
+                <div className="col-span-1 text-center">Quality</div>
+                <div className="col-span-1 text-center">Actions</div>
               </div>
+
               {/* Table Body */}
               {currentRecordings.map((rec: any, index) => (
                 <motion.div
                   key={rec._id}
-                  className="grid grid-cols-2 md:grid-cols-7 gap-4 items-center p-4 rounded-lg"
+                  className="grid grid-cols-2 md:grid-cols-8 gap-4 items-center p-4 rounded-lg"
                   style={{
                     background: `${COLORS.midnightGreen}30`,
                     color: COLORS.nyanza,
@@ -340,68 +332,115 @@ const Dashboard = () => {
                       className="md:hidden font-bold text-xs uppercase"
                       style={{ color: COLORS.cadetGray }}
                     >
-                      Domain:{" "}
+                      User:
+                    </span>
+                    <span className="text-sm">
+                      {getUserNameById(rec.userId)}
+                    </span>
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <span
+                      className="md:hidden font-bold text-xs uppercase"
+                      style={{ color: COLORS.cadetGray }}
+                    >
+                      Domain:
                     </span>
                     {rec.domain}
                   </div>
+
                   <div className="md:col-span-1">
                     <span
                       className="md:hidden font-bold text-xs uppercase"
                       style={{ color: COLORS.cadetGray }}
                     >
-                      Language:{" "}
+                      Language:
                     </span>
                     {rec.language}
                   </div>
-                  <div className="md:col-span-1 capitalize">
-                    <span
-                      className="md:hidden font-bold text-xs uppercase"
-                      style={{ color: COLORS.cadetGray }}
-                    >
-                      Source:{" "}
-                    </span>
-                    {rec.recordedVia}
-                  </div>
+
                   <div className="md:col-span-1">
                     <span
                       className="md:hidden font-bold text-xs uppercase"
                       style={{ color: COLORS.cadetGray }}
                     >
-                      Date:{" "}
+                      Date:
                     </span>
                     {formatDate(rec.createdAt)}
                   </div>
+
                   <div className="md:col-span-1 text-left md:text-center">
                     <span
                       className="md:hidden font-bold text-xs uppercase"
                       style={{ color: COLORS.cadetGray }}
                     >
-                      Duration:{" "}
+                      Duration:
                     </span>
                     {secondsToMMSS(rec.duration)}
                   </div>
+
                   <div className="md:col-span-1 text-left md:text-center">
-                    <span
-                      className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        background: `${COLORS.teaGreen}10`,
-                        color: COLORS.teaGreen,
-                      }}
-                    >
-                      Pending
-                    </span>
-                  </div>
-                  <div
-                    className="md:col-span-1 text-left md:text-right font-bold"
-                    style={{ color: COLORS.nyanza }}
-                  >
                     <span
                       className="md:hidden font-bold text-xs uppercase"
                       style={{ color: COLORS.cadetGray }}
                     >
-                      Tokens:{" "}
+                      Quality:
                     </span>
-                    {getTokensForRecording(rec._id)}
+                    <span
+                      className="inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                      style={{
+                        background: rec.quality
+                          ? rec.quality === "excellent"
+                            ? `${COLORS.teaGreen}20`
+                            : rec.quality === "good"
+                            ? `#fbbf2420`
+                            : rec.quality === "average"
+                            ? `#f97316220`
+                            : `#ef444420`
+                          : `${COLORS.cadetGray}20`,
+                        color: rec.quality
+                          ? rec.quality === "excellent"
+                            ? COLORS.teaGreen
+                            : rec.quality === "good"
+                            ? "#fbbf24"
+                            : rec.quality === "average"
+                            ? "#f97316"
+                            : "#ef4444"
+                          : COLORS.cadetGray,
+                      }}
+                    >
+                      {rec.quality || "Pending"}
+                    </span>
+                  </div>
+
+                  <div className="md:col-span-1 text-left md:text-center">
+                    <div className="flex gap-2 justify-start md:justify-center">
+                      {!rec.quality && (
+                        <button
+                          onClick={() => handleEvaluateRecording(rec._id)}
+                          className="p-2 rounded-lg transition-all"
+                          style={{
+                            background: `${COLORS.teaGreen}20`,
+                            color: COLORS.teaGreen,
+                          }}
+                          title="Evaluate Recording"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleDeleteRecording(rec._id)}
+                        className="p-2 rounded-lg transition-all hover:bg-red-500/20"
+                        style={{
+                          background: "#ef444420",
+                          color: "#ef4444",
+                        }}
+                        title="Delete Recording"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -485,8 +524,8 @@ const Dashboard = () => {
                     style={{ color: COLORS.cadetGray }}
                   >
                     Showing {startIndex + 1}-
-                    {Math.min(endIndex, recordings.length)} of{" "}
-                    {recordings.length} recordings
+                    {Math.min(endIndex, allRecordings.length)} of{" "}
+                    {allRecordings.length} recordings
                   </div>
                 </motion.div>
               )}
@@ -498,4 +537,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

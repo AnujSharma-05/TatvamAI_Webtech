@@ -813,6 +813,114 @@ const checkUserExistence = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user, "User exists"));
 });
 
+// Admin-only routes
+const getAllUsersAdmin = asyncHandler(async (req, res) => {
+  const users = await User.find()
+    .select("-password -refreshToken -phoneOtp -emailVerificationCode")
+    .sort({ createdAt: -1 });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, users, "All users fetched successfully"));
+});
+
+const getAdminStats = asyncHandler(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const totalRecordings = await Recording.countDocuments();
+  const totalTokensIssued = await RewardToken.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalAmount: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  const stats = {
+    totalUsers,
+    totalRecordings,
+    totalTokensIssued: totalTokensIssued[0]?.totalAmount || 0,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, stats, "Admin stats fetched successfully"));
+});
+
+// Temporary admin registration (remove after creating admin)
+const registerAdmin = asyncHandler(async (req, res) => {
+  const {
+    name,
+    email,
+    password,
+    gender,
+    dob,
+    phoneNo,
+    city,
+    motherTongue,
+    knownLanguages,
+    adminSecret, // Add this for security
+  } = req.body;
+
+  // Security check - only allow admin creation with secret key
+  if (adminSecret !== process.env.ADMIN_SECRET) {
+    throw new ApiError(403, "Invalid admin secret key");
+  }
+
+  if (
+    !name ||
+    !email ||
+    !password ||
+    !dob ||
+    !gender ||
+    !phoneNo ||
+    !city ||
+    !motherTongue
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  // Check if user already exists
+  const existedUser = await User.findOne({
+    $or: [{ email }, { phoneNo }],
+  });
+
+  if (existedUser) {
+    throw new ApiError(
+      400,
+      "User already exists with this email or phone number"
+    );
+  }
+
+  // Create admin user
+  const adminUser = await User.create({
+    name,
+    email,
+    password,
+    gender,
+    dob,
+    phoneNo,
+    city,
+    motherTongue,
+    knownLanguages: knownLanguages
+      ? knownLanguages.split(",").map((lang) => lang.trim())
+      : [],
+    role: "admin", // Set role as admin
+    emailVerified: true,
+    phoneNoVerified: true,
+  });
+
+  const createdAdmin = await User.findById(adminUser._id).select(
+    "-password -refreshToken"
+  );
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, createdAdmin, "Admin user created successfully")
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -833,4 +941,7 @@ export {
   verifyEmailCode,
   deleteUserAccount,
   checkUserExistence,
+  getAllUsersAdmin,
+  getAdminStats,
+  registerAdmin,
 };

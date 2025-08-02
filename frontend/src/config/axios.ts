@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const base = process.env.BACKEND_BASE_URL;
+const base = import.meta.env.VITE_BACKEND_BASE_URL;
 const instance: AxiosInstance = axios.create({
   baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
   timeout: 120000,
