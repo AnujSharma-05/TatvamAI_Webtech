@@ -102,13 +102,13 @@ const ProductsPage = () => {
   ];
 
   return (
-    <div style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
+    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
    
 
       {/* --- Main Content Wrapper --- */}
       <div className="relative z-10">
         <motion.div
-          className="max-w-7xl mx-auto"
+          className="max-w-7xl mx-auto my-10"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}

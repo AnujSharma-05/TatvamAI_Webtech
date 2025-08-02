@@ -218,6 +218,7 @@ export default function SignUpPage() {
                             </div>
                             <div>
                                 <h3 className="font-semibold mb-3" style={{color: COLORS.nyanza}}>Known Languages</h3>
+                                {/* --- THE CORRECTED LINE --- */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm" style={{color: COLORS.cadetGray}}>
                                     {languages.map((lang) => (<label key={lang} className="flex items-center gap-2"><input type="checkbox" checked={formData.knownLanguages.includes(lang)} onChange={(e) => setFormData({...formData, knownLanguages: e.target.checked ? [...formData.knownLanguages, lang] : formData.knownLanguages.filter((l) => l !== lang)})} className="rounded bg-transparent border-2" style={{borderColor: `${COLORS.cadetGray}40`, accentColor: COLORS.teaGreen}}/>{lang}</label>))}
                                 </div>

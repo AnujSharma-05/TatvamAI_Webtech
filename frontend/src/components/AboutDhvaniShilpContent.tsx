@@ -1,11 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Hexagon, Coins, ShieldCheck, UserX } from 'lucide-react';
-import { COLORS } from '@/config/theme'; // Import colors from your theme file
+import { COLORS } from '@/config/theme';
 
+// Helper component for the card to avoid repetition
+const Card = ({ content }: { content: { title: string; content: string } }) => (
+    <div
+        className="p-8 rounded-2xl"
+        style={{
+            background: `linear-gradient(145deg, ${COLORS.midnightGreen}30, #002a35)`,
+            border: `1px solid ${COLORS.cadetGray}20`,
+            boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
+        }}
+    >
+        <h2 className="text-3xl font-bold mb-3" style={{ color: COLORS.nyanza }}>{content.title}</h2>
+        <p className="text-base" style={{ color: COLORS.cadetGray }}>{content.content}</p>
+    </div>
+);
 
-// --- The Main DhvaniShilp Page Component ---
-const DhvaniShilpPage = () => {
+// The component is no longer a full "page" but a block of content.
+const AboutDhvaniShilpContent = () => {
 
   const timelineSections = [
     {
@@ -41,13 +55,10 @@ const DhvaniShilpPage = () => {
     }
   };
 
-
+  // The outermost div that made this a "page" has been removed.
+  // We now return the content directly.
   return (
-    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
-
-
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* --- Header Section --- */}
+      <div className="relative z-10 max-w-7xl mx-auto isolate" style={{ background: 'transaparent'}}>
         <motion.div
             className="text-center mb-24"
             initial={{ opacity: 0, y: -20 }}
@@ -55,18 +66,15 @@ const DhvaniShilpPage = () => {
             transition={{ duration: 0.8 }}
         >
             <h1 className="text-5xl md:text-7xl font-extrabold mb-4">
-                What is <span style={{ color: COLORS.teaGreen }}>DhvaniShilp</span>?
+                <span style={{ color: 'white' }}>What is</span>  <span style={{ color: COLORS.teaGreen }}>DhvaniShilp</span> <span style={{ color: 'white' }}>?</span>
             </h1>
             <p className="text-xl max-w-4xl mx-auto" style={{ color: COLORS.cadetGray }}>
                 An innovative crowdsourcing platform building the future of AI for India. By contributing your voice, you enhance our datasets, earn rewards, and help create technology that understands every Indian language.
             </p>
         </motion.div>
 
-        {/* --- Timeline Section --- */}
         <div className="relative">
-            {/* The vertical line for DESKTOP view */}
             <div className="hidden md:block absolute top-0 h-full w-[2px] left-1/2 -translate-x-1/2" style={{ background: `linear-gradient(to bottom, transparent, ${COLORS.teaGreen}30, transparent)`}}></div>
-
             {timelineSections.map((section, index) => {
                 const isLeft = index % 2 === 0;
                 return (
@@ -77,32 +85,24 @@ const DhvaniShilpPage = () => {
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.5 }}
                     >
-                        {/* --- DESKTOP LAYOUT --- */}
                         <div className="hidden md:flex justify-between items-center w-full">
-                           {/* Left Card or Spacer */}
                            {isLeft ? (
                                 <motion.div className="w-5/12" variants={cardVariants.left}>
                                     <Card content={section} />
                                 </motion.div>
                            ) : <div className="w-5/12"></div>}
 
-                           {/* Center Icon */}
                            <div className="z-10 flex items-center justify-center w-12 h-12 rounded-full" style={{ background: COLORS.midnightGreen, border: `2px solid ${COLORS.teaGreen}` }}>
                                 <span style={{ color: COLORS.teaGreen }}>{section.icon}</span>
                            </div>
 
-                           {/* Right Card or Spacer */}
                            {!isLeft ? (
                                <motion.div className="w-5/12" variants={cardVariants.right}>
                                    <Card content={section} />
                                </motion.div>
                            ) : <div className="w-5/12"></div>}
                         </div>
-
-
-                        {/* --- MOBILE LAYOUT --- */}
                         <div className="md:hidden flex items-center w-full">
-                            {/* Line and Icon */}
                             <div className="flex-shrink-0 z-10 mr-6">
                                 <div className="relative">
                                     <div className="absolute top-full h-screen w-[2px] -translate-x-1/2 left-1/2" style={{background: `linear-gradient(to bottom, ${COLORS.teaGreen}30 10%, transparent)`}}></div>
@@ -111,7 +111,6 @@ const DhvaniShilpPage = () => {
                                     </div>
                                 </div>
                             </div>
-                            {/* Card */}
                             <motion.div className="w-full" variants={cardVariants.right}>
                                <Card content={section} />
                             </motion.div>
@@ -121,24 +120,7 @@ const DhvaniShilpPage = () => {
             })}
         </div>
       </div>
-    </div>
   );
 };
 
-// Helper component for the card to avoid repetition
-const Card = ({ content }: { content: { title: string; content: string } }) => (
-    <div
-        className="p-8 rounded-2xl"
-        style={{
-            background: `linear-gradient(145deg, ${COLORS.midnightGreen}30, #002a35)`,
-            border: `1px solid ${COLORS.cadetGray}20`,
-            boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
-        }}
-    >
-        <h2 className="text-3xl font-bold mb-3" style={{ color: COLORS.nyanza }}>{content.title}</h2>
-        <p className="text-base" style={{ color: COLORS.cadetGray }}>{content.content}</p>
-    </div>
-);
-
-
-export default DhvaniShilpPage;
+export default AboutDhvaniShilpContent;

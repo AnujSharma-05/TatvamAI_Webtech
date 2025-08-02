@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import DhvaniShilp from './pages/DhvaniShilp';
-import About from './pages/About';
+import About from './components/AboutDhvaniShilpContent';
 import Contact from './pages/Contact';
 import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
@@ -28,6 +28,8 @@ import Careers from './pages/Careers';
 import CustomCursor from './components/CustomCursor';
 import AnimatedBlobBackground from './components/Blobbg'; 
 
+import AboutTatvamPage from './pages/AboutTatvam';
+
 
 function App() {
   return (
@@ -42,6 +44,7 @@ function App() {
         
         <main>
           <Routes>
+            {/* --- Public Routes --- */}
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/dhvani-shilp" element={<DhvaniShilp />} />
@@ -52,6 +55,8 @@ function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/docs" element={<Documentation />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/about-tatvam" element={<AboutTatvamPage />} />
+            
 
             {/* 🔐 Protected Routes */}
             <Route

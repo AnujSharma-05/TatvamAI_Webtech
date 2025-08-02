@@ -1,89 +1,59 @@
-import { MotionCard } from '../components/MotionProvider';
+import React, { useState, useEffect } from 'react';
+import { color, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import axios from '../config/axios';
+import { COLORS } from '@/config/theme';
+import { ListChecks, Clock, Languages, Coins, Plus } from 'lucide-react';
 
+// --- Main Dashboard Component ---
 const Dashboard = () => {
   const navigate = useNavigate();
+  
+  // --- ALL STATE AND LOGIC REMAINS UNCHANGED ---
   const [recordings, setRecordings] = useState([]);
   const [incentives, setIncentives] = useState([]);
-  const [stats, setStats] = useState({
-    totalRecordings: 0,
-    minsContributed: 0,
-    languages: 0,
-    totalTokens: 0
-  });
+  const [stats, setStats] = useState({ totalRecordings: 0, minsContributed: 0, languages: 0, totalTokens: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchRecordings = async () => {
-    const res = await axios.get('/users/recordings');
-    return res.data.data;
-  };
-
-  const fetchContributionStats = async () => {
-    const res = await axios.get('/users/contribution-stats');
-    return res.data.data;
-  };
-
-  const fetchIncentives = async () => {
-    const res = await axios.get('/users/incentives');
-    return res.data.data;
-  };
-
-  const secondsToMinutes = (seconds) => {
-    if (!seconds || seconds === 0) return '0:00';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.round(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  const calculateStats = (recordingsData, contributionData, incentivesData) => {
-    const totalRecordings = contributionData.totalRecordings || recordingsData.length;
-
-    const totalSecondsContributed = recordingsData.reduce((sum, r) => sum + (r.duration || 0), 0);
-    const minsContributed = Math.round(totalSecondsContributed / 60);
-
-    const uniqueLanguages = new Set(recordingsData.map(r => r.language)).size;
-
-    const totalTokens = incentivesData.totalTokens;
-
-    return {
-      totalRecordings,
-      minsContributed,
-      languages: uniqueLanguages,
-      totalTokens
-    };
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
   useEffect(() => {
+    const fetchRecordings = () => axios.get('/users/recordings').then(res => res.data.data);
+    const fetchContributionStats = () => axios.get('/users/contribution-stats').then(res => res.data.data);
+    const fetchIncentives = () => axios.get('/users/incentives').then(res => res.data.data);
+
+    const secondsToMinutes = (seconds) => {
+        if (!seconds || seconds === 0) return 0;
+        return Math.round(seconds / 60);
+    };
+
+    const calculateStats = (recordingsData, contributionData, incentivesData) => {
+        const totalRecordings = contributionData.totalRecordings || recordingsData.length;
+        const totalSecondsContributed = recordingsData.reduce((sum, r) => sum + (r.duration || 0), 0);
+        const minsContributed = secondsToMinutes(totalSecondsContributed);
+        const uniqueLanguages = new Set(recordingsData.map(r => r.language)).size;
+        return {
+            totalRecordings,
+            minsContributed,
+            languages: uniqueLanguages,
+            totalTokens: incentivesData.totalTokens || 0
+        };
+    };
+
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const [recordingsData, contributionData, incentivesResponse] = await Promise.all([
           fetchRecordings(),
           fetchContributionStats(),
           fetchIncentives()
         ]);
-
-        const { tokens, totalTokens } = incentivesResponse;
-
         setRecordings(recordingsData);
-        setIncentives(tokens);
-        const calculatedStats = calculateStats(recordingsData, contributionData, { totalTokens });
+        setIncentives(incentivesResponse.tokens || []);
+        const calculatedStats = calculateStats(recordingsData, contributionData, incentivesResponse);
         setStats(calculatedStats);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load data');
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to load dashboard data');
         console.error('Error loading dashboard data:', err);
       } finally {
         setLoading(false);
@@ -92,14 +62,12 @@ const Dashboard = () => {
 
     loadData();
   }, []);
-
-  const statsArray = [
-    { label: 'Total Recordings', value: stats.totalRecordings.toString() },
-    { label: 'Mins Contributed', value: stats.minsContributed.toString() },
-    { label: 'Languages', value: stats.languages.toString() },
-    { label: 'Tokens', value: stats.totalTokens.toString() },
-  ];
-
+  
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const secondsToMMSS = (seconds) => {
+    if (!seconds || seconds === 0) return '0:00';
+    return `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
+  };
   const getTokensForRecording = (recordingId) => {
     const tokenDoc = incentives.find((t) => t.recordingId?.toString() === recordingId?.toString());
     return tokenDoc ? tokenDoc.amount : '--';
@@ -107,10 +75,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white py-24 flex items-center justify-center">
+      <div style={{ background: 'transparent' }} className="min-h-screen flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-300">Loading your dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{borderColor: COLORS.teaGreen}}></div>
+          <p style={{color: COLORS.cadetGray}}>Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -118,93 +86,120 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white py-24 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-400 mb-4">⚠️</div>
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Retry
+      <div style={{ background: 'transparent' }} className="min-h-screen flex items-center justify-center p-8">
+        <div className="text-center max-w-md p-8 rounded-2xl" style={{background: `linear-gradient(145deg, #ff000010, #ff000005)`, border: `1px solid #ff000020`}}>
+          <p className="text-red-400 mb-4 font-semibold">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-6 py-3 text-lg font-semibold rounded-full transition-all group" style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}>
+            Try Again
           </button>
         </div>
       </div>
     );
   }
 
+  const statsArray = [
+    { label: 'Total Recordings', value: stats.totalRecordings, icon: <ListChecks size={24} /> },
+    { label: 'Minutes Contributed', value: stats.minsContributed, icon: <Clock size={24} /> },
+    { label: 'Languages', value: stats.languages, icon: <Languages size={24} /> },
+    { label: 'Total Tokens', value: stats.totalTokens, icon: <Coins size={24} /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white py-24">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start mb-12">
+    <div style={{ background: 'transparent' }} className="relative min-h-screen p-8 md:p-16 overflow-hidden">
+      <div className="relative z-10 max-w-7xl mx-auto my-10">
+        
+        {/* Header */}
+        <motion.div 
+          className="flex flex-col md:flex-row justify-between md:items-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+        >
           <div>
-            <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
-            <p className="text-slate-300">Welcome back! Here's your contribution summary.</p>
+            <h1 className="text-5xl font-extrabold" style={{ color: COLORS.nyanza }}>Dashboard</h1>
+            <p className="text-lg mt-2" style={{ color: COLORS.cadetGray }}>Welcome back! Here's your contribution summary.</p>
           </div>
-          <button
-            onClick={() => navigate('/qr-recording')}
-            className="mt-4 lg:mt-0 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
-          >
+          <button onClick={() => navigate('/qr-recording')} className="mt-6 md:mt-0 inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full transition-all group" style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}>
+            <Plus className="w-5 h-5 mr-2" />
             New Recording
           </button>
-        </div>
+        </motion.div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {statsArray.map((stat, index) => (
-            <MotionCard key={index} className="bg-slate-800 p-6 rounded-xl">
-              <p className="text-sm text-slate-400 mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold">{stat.value}</p>
-            </MotionCard>
+            <motion.div 
+              key={stat.label}
+              className="p-6 rounded-2xl"
+              style={{ background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`, border: `1px solid ${COLORS.cadetGray}20` }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm font-medium" style={{ color: COLORS.cadetGray }}>{stat.label}</p>
+                <span style={{ color: COLORS.teaGreen }}>{stat.icon}</span>
+              </div>
+              <p className="text-4xl font-bold" style={{ color: COLORS.nyanza }}>{stat.value}</p>
+            </motion.div>
           ))}
         </div>
 
-        <div className="bg-slate-800 rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-6">Recent Recordings</h2>
+        {/* Recent Recordings List */}
+        <motion.div 
+          className="p-6 md:p-8 rounded-2xl"
+          style={{ background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`, border: `1px solid ${COLORS.cadetGray}20` }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <h2 className="text-2xl font-bold mb-6" style={{ color: COLORS.nyanza }}>Recent Recordings</h2>
           {recordings.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-400">No recordings found. Start by making your first recording!</p>
-              <button
-                onClick={() => navigate('/qr-recording')}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Make First Recording
+            <div className="text-center py-12">
+              <p className="text-lg mb-6" style={{ color: COLORS.cadetGray }}>You haven't made any recordings yet.</p>
+              <button onClick={() => navigate('/qr-recording')} className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full transition-all group" style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen }}>
+                Make Your First Recording
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-slate-400 border-b border-slate-700">
-                    <th className="pb-4">Domain</th>
-                    <th className="pb-4">Language</th>
-                    <th className="pb-4">Recorded Via</th>
-                    <th className="pb-4">Date</th>
-                    <th className="pb-4">Duration</th>
-                    <th className="pb-4">Status</th>
-                    <th className="pb-4">Tokens Earned</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recordings.map((recording) => (
-                    <tr key={recording._id} className="border-b border-slate-700">
-                      <td className="py-4">{recording.domain}</td>
-                      <td className="py-4">{recording.language}</td>
-                      <td className="py-4 capitalize">{recording.recordedVia}</td>
-                      <td className="py-4">{formatDate(recording.createdAt)}</td>
-                      <td className="py-4">{secondsToMinutes(recording.duration)}</td>
-                      <td className="py-4">
-                        <span className="inline-block px-3 py-1 rounded-full text-sm bg-yellow-500/10 text-yellow-400">
-                          Pending
-                        </span>
-                      </td>
-                      <td className="py-4">{getTokensForRecording(recording._id)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {/* Table Header */}
+              <div className="hidden md:grid grid-cols-7 gap-4 px-4 py-2 text-xs font-bold uppercase" style={{color: COLORS.cadetGray}}>
+                <div className="col-span-1">Domain</div>
+                <div className="col-span-1">Language</div>
+                <div className="col-span-1">Source</div>
+                <div className="col-span-1">Date</div>
+                <div className="col-span-1 text-center">Duration</div>
+                <div className="col-span-1 text-center">Status</div>
+                <div className="col-span-1 text-right">Tokens</div>
+              </div>
+              {/* Table Body */}
+              {recordings.map((rec: any, index) => (
+                <motion.div 
+                  key={rec._id}
+                  className="grid grid-cols-2 md:grid-cols-7 gap-4 items-center p-4 rounded-lg"
+                  style={{ background: `${COLORS.midnightGreen}30` , 
+                    color: COLORS.nyanza
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.7 + index * 0.05 }}
+                >
+                  <div className="md:col-span-1"><span className="md:hidden font-bold text-xs uppercase" style={{color: COLORS.cadetGray}}>Domain: </span>{rec.domain}</div>
+                  <div className="md:col-span-1"><span className="md:hidden font-bold text-xs uppercase" style={{color: COLORS.cadetGray}}>Language: </span>{rec.language}</div>
+                  <div className="md:col-span-1 capitalize"><span className="md:hidden font-bold text-xs uppercase" style={{color: COLORS.cadetGray}}>Source: </span>{rec.recordedVia}</div>
+                  <div className="md:col-span-1"><span className="md:hidden font-bold text-xs uppercase" style={{color: COLORS.cadetGray}}>Date: </span>{formatDate(rec.createdAt)}</div>
+                  <div className="md:col-span-1 text-left md:text-center"><span className="md:hidden font-bold text-xs uppercase" style={{color: COLORS.cadetGray}}>Duration: </span>{secondsToMMSS(rec.duration)}</div>
+                  <div className="md:col-span-1 text-left md:text-center">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold" style={{background: `${COLORS.teaGreen}10`, color: COLORS.teaGreen}}>Pending</span>
+                  </div>
+                  <div className="md:col-span-1 text-left md:text-right font-bold" style={{color: COLORS.nyanza}}><span className="md:hidden font-bold text-xs uppercase" style={{color: COLORS.cadetGray}}>Tokens: </span>{getTokensForRecording(rec._id)}</div>
+                </motion.div>
+              ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
