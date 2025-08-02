@@ -2,45 +2,7 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Mic, Globe, Users, Award, ChevronRight, Play, QrCode } from "lucide-react";
-
-// --- Color Palette ---
-const COLORS = {
-  lightYellow: "#ffffe3",
-  midnightGreen: "#003642",
-  teaGreen: "#d0e6a5",
-  nyanza: "#f1ffe3",
-  cadetGray: "#83a0a0",
-};
-
-// --- Custom Cursor Component ---
-// This component renders the custom cursor and handles its logic.
-const CustomCursor = () => {
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
-
-  React.useEffect(() => {
-    const onMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-    };
-  }, []);
-
-  return (
-    <>
-      <div 
-        className="custom-cursor-glow" 
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-      <div 
-        className="custom-cursor-dot" 
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-    </>
-  );
-};
-
+import { COLORS } from '@/config/theme'; // Import colors from your new theme file
 
 // --- Component for the intro slide, visible on load ---
 const HeroSlide = ({ scrollYProgress, onNavigate }) => {
@@ -101,16 +63,10 @@ const AnimatedSlide = ({ scrollYProgress, children, range }) => {
   );
 };
 
-// --- New Card Component for containerizing slides ---
+
 const Card = ({ children, className = '' }) => (
     <div 
         className={`w-full max-w-6xl p-8 md:p-12 rounded-2xl ${className}`}
-        // style={{
-        //     background: `${COLORS.midnightGreen}40`,
-        //     border: `1px solid ${COLORS.cadetGray}20`,
-        //     backdropFilter: 'blur(10px)',
-        //     boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
-        // }}
     >
         {children}
     </div>
@@ -151,14 +107,9 @@ const DhvaniShilp = () => {
     { icon: <Users size={24}/>, title: "Community Driven" },
     { icon: <Award size={24}/>, title: "Earn Rewards" },
   ];
-  
-  return (
-    // Add the 'hide-default-cursor' class here to activate the effect
-    <div ref={scrollRef} className="hide-default-cursor" style={{ height: '500vh', background: COLORS.midnightGreen }}>
-      
-      {/* Add the CustomCursor component here */}
-      <CustomCursor />
 
+  return (
+      <div ref={scrollRef} style = {{ height: '500vh', background: 'transparent' }} >
       <div className="sticky top-0 h-screen overflow-hidden">
         
         <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -268,7 +219,7 @@ const DhvaniShilp = () => {
         </AnimatedSlide>
 
       </div>
-    </div>
+      </div>
   );
 };
 

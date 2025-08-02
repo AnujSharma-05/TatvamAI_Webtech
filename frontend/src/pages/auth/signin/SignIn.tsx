@@ -5,7 +5,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from "../../../config/axios";
 import { handleLoginResponse } from "../../../utils/auth";
 import { Eye, EyeOff } from 'lucide-react';
-import AnimatedBlobBackground from '@/components/Blobbg'; // Using the visual branch's path
+import AnimatedBlobBackground from '@/components/Blobbg'; 
+import CustomCursor from '@/components/CustomCursor'; 
 
 // --- Reusable Color Palette ---
 // **Resolution**: Kept from Anuj's-Branch for consistent styling.
@@ -17,22 +18,7 @@ const COLORS = {
   cadetGray: "#83a0a0",
 };
 
-// --- Reusable Custom Cursor Component ---
-// **Resolution**: Kept from Anuj's-Branch for consistent styling.
-const CustomCursor = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => setPosition({ x: e.clientX, y: e.clientY });
-    window.addEventListener('mousemove', onMouseMove);
-    return () => window.removeEventListener('mousemove', onMouseMove);
-  }, []);
-  return (
-    <>
-      <div className="custom-cursor-glow" style={{ left: `${position.x}px`, top: `${position.y}px` }}/>
-      <div className="custom-cursor-dot" style={{ left: `${position.x}px`, top: `${position.y}px` }}/>
-    </>
-  );
-};
+
 
 // --- Helper component for a styled input ---
 // **Resolution**: Kept from Anuj's-Branch for consistent styling.

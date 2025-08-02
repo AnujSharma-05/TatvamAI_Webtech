@@ -2,46 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mic, GitBranch, Settings, ChevronRight, CheckCircle, Target, Heart, Eye } from "lucide-react";
-import AnimatedBlobBackground from '@/components/Blobbg';
+import { COLORS } from '@/config/theme';
 
 
-
-// --- Color Palette ---
-const COLORS = {
-  lightYellow: "#ffffe3",
-  midnightGreen: "#003642",
-  teaGreen: "#d0e6a5",
-  nyanza: "#f1ffe3",
-  cadetGray: "#83a0a0",
-};
-
-// --- Custom Cursor Component ---
-const CustomCursor = () => {
-  const [position, setPosition] = React.useState({ x: 0, y: 0 });
-
-  React.useEffect(() => {
-    const onMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', onMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-    };
-  }, []);
-
-  return (
-    <>
-      <div
-        className="custom-cursor-glow"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-      <div
-        className="custom-cursor-dot"
-        style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      />
-    </>
-  );
-};
 
 
 // --- Main Products Page Component ---
@@ -140,9 +103,7 @@ const ProductsPage = () => {
 
   return (
     <div style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
-      <CustomCursor />
-      <AnimatedBlobBackground />
-      
+   
 
       {/* --- Main Content Wrapper --- */}
       <div className="relative z-10">

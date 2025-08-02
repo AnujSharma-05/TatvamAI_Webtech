@@ -1,919 +1,236 @@
+import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../../../config/axios";
 import { Eye, EyeOff } from "lucide-react";
+import { COLORS } from "@/config/theme"; 
+
+const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
+    <input ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}/>
+));
+
+const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...props }, ref) => (
+    <select ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl appearance-none focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}>
+        {children}
+    </select>
+));
 
 type Step = 1 | 2;
 type Gender = "male" | "female" | "other";
-type VerificationStatus = {
-  phone: "pending" | "sent" | "verified";
-  email: "pending" | "sent" | "verified";
-};
-
-type FormData = {
-  name: string;
-  gender: Gender;
-  dob: string;
-  phone: string;
-  email: string;
-  city: string;
-  motherTongue: string;
-  knownLanguages: string[];
-  password: string;
-  confirmPassword: string;
-};
-
-const languages = [
-  "Hindi",
-  "Bengali",
-  "Tamil",
-  "Gujarati",
-  "Punjabi",
-  "Kannada",
-  "Malayalam",
-  "Marathi",
-  "Telugu",
-  "Urdu",
-];
+type VerificationStatus = { phone: "pending" | "sent" | "verified"; email: "pending" | "sent" | "verified"; };
+type FormData = { name: string; gender: Gender; dob: string; phone: string; email: string; city: string; motherTongue: string; knownLanguages: string[]; password: string; confirmPassword: string; };
+const languages = ["Hindi", "Bengali", "Tamil", "Gujarati", "Punjabi", "Kannada", "Malayalam", "Marathi", "Telugu", "Urdu"];
 
 export default function SignUpPage() {
-  const navigate = useNavigate();
-  const [step, setStep] = useState<Step>(1);
-  const [phoneOtp, setPhoneOtp] = useState("");
-  const [emailOtp, setEmailOtp] = useState("");
-  const [verificationStatus, setVerificationStatus] =
-    useState<VerificationStatus>({
-      phone: "pending",
-      email: "pending",
-    });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isCheckingExistence, setIsCheckingExistence] = useState(false);
-  const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
-  const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
-  const [isVerifyingPhoneOtp, setIsVerifyingPhoneOtp] = useState(false);
-  const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    gender: "male",
-    dob: "",
-    phone: "",
-    email: "",
-    city: "",
-    motherTongue: "",
-    knownLanguages: [],
-    password: "",
-    confirmPassword: "",
-  });
-  const [otpSessionId, setOtpSessionId] = useState<string | null>(null);
+    // --- State Management (Combined) ---
+    const navigate = useNavigate();
+    const [step, setStep] = useState<Step>(1);
+    const [phoneOtp, setPhoneOtp] = useState("");
+    const [emailOtp, setEmailOtp] = useState("");
+    const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({ phone: "pending", email: "pending" });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isCheckingExistence, setIsCheckingExistence] = useState(false);
+    const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
+    const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
+    const [isVerifyingPhoneOtp, setIsVerifyingPhoneOtp] = useState(false);
+    const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
+    const [formData, setFormData] = useState<FormData>({ name: "", gender: "male", dob: "", phone: "", email: "", city: "", motherTongue: "", knownLanguages: [], password: "", confirmPassword: "" });
+    
+  
+    const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
 
-  // Phone number validation
-  const validatePhoneNumber = (phone: string) => {
-    const phoneRegex = /^[6-9]\d{9}$/;
-    return phoneRegex.test(phone);
-  };
-
-  // Check if user already exists with phone or email
-  const checkUserExistence = async (phone: string, email: string) => {
-    try {
-      // Create request body with only the fields that have values
-      const requestBody: { phoneNo?: string; email?: string } = {};
-
-      if (phone) requestBody.phoneNo = phone;
-      if (email) requestBody.email = email;
-
-      // If neither phone nor email is provided, return false
-      if (!phone && !email) {
-        return false;
-      }
-
-      console.log("Checking user existence with:", requestBody);
-      const response = await axios.post(
-        "/users/check-user-existence",
-        requestBody
-      );
-
-      console.log("User existence response:", response.data);
-
-      // If we get a 200 response, user exists
-      if (response.status === 200) {
-        return true; // User exists
-      }
-
-      return false;
-    } catch (error: any) {
-      console.log("User existence check error:", error.response?.data);
-      // Handle 404 - user not found (this is expected behavior)
-      if (error.response?.status === 404) {
-        return false; // User doesn't exist
-      }
-
-      // Handle other errors (network issues, server errors, etc.)
-      console.log("Error checking user existence:", error.message);
-      throw error; // Re-throw to be handled by the calling function
-    }
-  };
-
-  const handleSendPhoneOtp = async () => {
-    if (!formData.phone) {
-      toast.error("Please enter phone number");
-      return;
-    }
-
-    if (!validatePhoneNumber(formData.phone)) {
-      toast.error(
-        "Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9"
-      );
-      return;
-    }
-
-    setIsSendingPhoneOtp(true);
-    try {
-      // API call to send OTP
-      const res = await axios.post("/users/send-phone-otp-register", {
-        phoneNo: formData.phone,
-      });
-
-      // Update verification status
-      setVerificationStatus((prev) => ({ ...prev, phone: "sent" }));
-      toast.success("OTP sent to your phone!");
-    } catch (error: any) {
-      console.log("Phone OTP error:", error.response?.data);
-      if (
-        error?.response?.status === 400 &&
-        error?.response?.data?.message?.includes("already registered")
-      ) {
-        toast.error(
-          "This phone number is already registered. Please use a different number or try logging in."
-        );
-        setVerificationStatus((prev) => ({ ...prev, phone: "pending" }));
-      } else {
-        toast.error(error?.response?.data?.message || "Failed to send OTP");
-      }
-    } finally {
-      setIsSendingPhoneOtp(false);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async () => {
-    if (!phoneOtp) {
-      toast.error("Please enter OTP");
-      return;
-    }
-
-    setIsVerifyingPhoneOtp(true);
-    try {
-      // API call to verify phone OTP
-      const response = await axios.post("/users/verify-phone-otp", {
-        phoneNo: formData.phone,
-        otp: phoneOtp,
-      });
-
-      // Update verification status
-      setVerificationStatus((prev) => ({ ...prev, phone: "verified" }));
-      toast.success("Phone number verified!");
-    } catch (error: any) {
-      console.log("Phone OTP verification error:", error.response?.data);
-      toast.error(error?.response?.data?.message || "Invalid OTP");
-    } finally {
-      setIsVerifyingPhoneOtp(false);
-    }
-  };
-
-  const handleSendEmailOtp = async () => {
-    if (!formData.email) {
-      toast.error("Please enter email address");
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-
-    setIsSendingEmailOtp(true);
-    try {
-      // API call to send email verification
-      const res = await axios.post("/users/send-verification-code", {
-        email: formData.email,
-      });
-      setVerificationStatus((prev) => ({ ...prev, email: "sent" }));
-      toast.success("Verification email sent!");
-      // // Show verification code in alert if present in response
-      // if (res.data.data && res.data.data.code) {
-      //   window.alert(`Your email verification code is: ${res.data.data.code}`);
-      // }
-    } catch (error: any) {
-      console.log("Email OTP error:", error.response?.data);
-      if (
-        error?.response?.status === 400 &&
-        error?.response?.data?.message?.includes("already registered")
-      ) {
-        toast.error(
-          "This email is already registered. Please use a different email or try logging in."
-        );
-        setVerificationStatus((prev) => ({ ...prev, email: "pending" }));
-      } else {
-        toast.error(
-          error?.response?.data?.message || "Failed to send verification email"
-        );
-      }
-    } finally {
-      setIsSendingEmailOtp(false);
-    }
-  };
-
-  const handleVerifyEmailOtp = async () => {
-    if (!emailOtp) {
-      toast.error("Please enter verification code");
-      return;
-    }
-    setIsVerifyingEmailOtp(true);
-    try {
-      const response = await axios.post("/users/verify-email-code", {
-        email: formData.email,
-        code: emailOtp,
-      });
-      setVerificationStatus((prev) => ({ ...prev, email: "verified" }));
-      toast.success("Email verified!");
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Invalid verification code"
-      );
-    } finally {
-      setIsVerifyingEmailOtp(false);
-    }
-  };
-
-  const canProceedToStep2 = () => {
-    const { phone, email, password, confirmPassword, motherTongue } = formData;
-
-    // Check if passwords match
-    if (password !== confirmPassword) {
-      toast.error(
-        "Passwords do not match! Please make sure both password fields are identical."
-      );
-      return false;
-    }
-
-    if (password.length < 6) {
-      toast.error("Password should be at least 6 characters");
-      return false;
-    }
-
-    // Both phone and email are required for registration
-    if (!phone) {
-      toast.error("Please provide phone number");
-      return false;
-    }
-
-    if (!validatePhoneNumber(phone)) {
-      toast.error(
-        "Please enter a valid 10-digit phone number starting with 6, 7, 8, or 9"
-      );
-      return false;
-    }
-
-    if (!email) {
-      toast.error("Please provide email address");
-      return false;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email address");
-      return false;
-    }
-
-    if (!motherTongue) {
-      toast.error("Please select your mother tongue");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleNext = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!canProceedToStep2()) return;
-
-    // Check if user already exists before proceeding to verification step
-    setIsCheckingExistence(true);
-
-    try {
-      // Try to check user existence using a dedicated endpoint if available
-      const userExists = await checkUserExistence(
-        formData.phone,
-        formData.email
-      );
-
-      if (userExists) {
-        toast.error(
-          "A user with this phone number or email already exists. Please use different credentials or try logging in."
-        );
-        setIsCheckingExistence(false);
-        return;
-      }
-
-      // If no user exists, proceed to step 2
-      setStep(2);
-    } catch (error: any) {
-      // If checking fails, we'll still proceed but the OTP functions will handle existence checking
-      console.log("User existence check failed, proceeding to step 2");
-      toast(
-        "Proceeding to verification step. If you encounter issues, please try again."
-      );
-      setStep(2);
-    } finally {
-      setIsCheckingExistence(false);
-    }
-  };
-
-  const canCreateAccount = () => {
-    const hasVerifiedPhone = verificationStatus.phone === "verified";
-    const hasVerifiedEmail = verificationStatus.email === "verified";
-
-    if (!hasVerifiedPhone) {
-      toast.error("Please verify your phone number to create an account");
-      return false;
-    }
-
-    if (!hasVerifiedEmail) {
-      toast.error("Please verify your email address to create an account");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!canCreateAccount()) return;
-
-    try {
-      // Prepare the registration data
-      const registrationData = {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        gender: formData.gender,
-        dob: formData.dob,
-        phoneNo: formData.phone, // map phone to phoneNo
-        city: formData.city,
-        motherTongue: formData.motherTongue,
-        knownLanguages: formData.knownLanguages.join(","), // convert array to string
-      };
-
-      // API call to create account
-      const response = await axios.post("/users/register", registrationData);
-
-      // Handle successful registration
-      toast.success("Account created successfully!");
-      navigate("/dashboard");
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      if (error?.response?.status === 400) {
-        const errorMessage =
-          error?.response?.data?.message || "Registration failed";
-
-        if (
-          errorMessage.includes("already exists") ||
-          errorMessage.includes("already registered")
-        ) {
-          toast.error(
-            "A user with this email or phone number already exists. Please use different credentials or try logging in."
-          );
-        } else {
-          toast.error(errorMessage);
+    const checkUserExistence = async (phone: string, email: string) => {
+        try {
+            const requestBody: { phoneNo?: string; email?: string } = {};
+            if (phone) requestBody.phoneNo = phone;
+            if (email) requestBody.email = email;
+            if (!phone && !email) return false;
+            const response = await axios.post("/users/check-user-existence", requestBody);
+            return response.status === 200;
+        } catch (error: any) {
+            if (error.response?.status === 404) return false;
+            throw error;
         }
-      } else {
-        toast.error("Failed to create account. Please try again.");
-      }
-    }
-  };
+    };
 
-  return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white py-20">
-      <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <h1 className="text-4xl font-bold mb-4">Join TatvamAI</h1>
-            <p className="text-gray-300">
-              Help us build India's most powerful voice dataset
-            </p>
-          </motion.div>
+    const handleSendPhoneOtp = async () => {
+        if (!formData.phone || !validatePhoneNumber(formData.phone)) { toast.error("Please enter a valid 10-digit phone number."); return; }
+        setIsSendingPhoneOtp(true);
+        try {
+            await axios.post("/users/send-phone-otp-register", { phoneNo: formData.phone });
+            setVerificationStatus((prev) => ({ ...prev, phone: "sent" }));
+            toast.success("OTP sent to your phone!");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setIsSendingPhoneOtp(false);
+        }
+    };
 
-          {/* Progress Steps */}
-          <div className="flex justify-center mb-12">
-            <div className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= 1 ? "bg-blue-600" : "bg-gray-700"
-                }`}
-              >
-                1
-              </div>
-              <div
-                className={`w-16 h-1 ${
-                  step >= 2 ? "bg-blue-600" : "bg-gray-700"
-                }`}
-              />
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step >= 2 ? "bg-blue-600" : "bg-gray-700"
-                }`}
-              >
-                2
-              </div>
-            </div>
-          </div>
+    const handleVerifyPhoneOtp = async () => {
+        if (!phoneOtp) { toast.error("Please enter OTP"); return; }
+        setIsVerifyingPhoneOtp(true);
+        try {
+            await axios.post("/users/verify-phone-otp", { phoneNo: formData.phone, otp: phoneOtp });
+            setVerificationStatus((prev) => ({ ...prev, phone: "verified" }));
+            toast.success("Phone number verified!");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Invalid OTP");
+        } finally {
+            setIsVerifyingPhoneOtp(false);
+        }
+    };
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-gray-800 p-8 rounded-xl"
-          >
-            {step === 1 ? (
-              <form onSubmit={handleNext} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
+    const handleSendEmailOtp = async () => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.email || !emailRegex.test(formData.email)) { toast.error("Please enter a valid email address."); return; }
+        setIsSendingEmailOtp(true);
+        try {
+            await axios.post("/users/send-verification-code", { email: formData.email });
+            setVerificationStatus((prev) => ({ ...prev, email: "sent" }));
+            toast.success("Verification email sent!");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to send verification email");
+        } finally {
+            setIsSendingEmailOtp(false);
+        }
+    };
 
-                  <div>
-                    <label
-                      htmlFor="gender"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Gender *
-                    </label>
-                    <select
-                      id="gender"
-                      value={formData.gender}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          gender: e.target.value as Gender,
-                        })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
+    const handleVerifyEmailOtp = async () => {
+        if (!emailOtp) { toast.error("Please enter verification code"); return; }
+        setIsVerifyingEmailOtp(true);
+        try {
+            await axios.post("/users/verify-email-code", { email: formData.email, code: emailOtp });
+            setVerificationStatus((prev) => ({ ...prev, email: "verified" }));
+            toast.success("Email verified!");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Invalid verification code");
+        } finally {
+            setIsVerifyingEmailOtp(false);
+        }
+    };
 
-                  <div>
-                    <label
-                      htmlFor="dob"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Date of Birth *
-                    </label>
-                    <input
-                      type="date"
-                      id="dob"
-                      value={formData.dob}
-                      onChange={(e) =>
-                        setFormData({ ...formData, dob: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
+    const handleNext = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const { password, confirmPassword, phone, email, motherTongue } = formData;
+        if (password !== confirmPassword) { toast.error("Passwords do not match!"); return; }
+        if (password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
+        if (!phone || !email || !motherTongue) { toast.error("Please fill all required fields."); return; }
+        
+        setIsCheckingExistence(true);
+        try {
+            const userExists = await checkUserExistence(phone, email);
+            if (userExists) {
+                toast.error("User with this phone or email already exists.");
+            } else {
+                setStep(2);
+            }
+        } catch (error) {
+            toast.error("An error occurred while checking. Please try again.");
+        } finally {
+            setIsCheckingExistence(false);
+        }
+    };
 
-                  <div>
-                    <label
-                      htmlFor="city"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) =>
-                        setFormData({ ...formData, city: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (verificationStatus.phone !== "verified" || verificationStatus.email !== "verified") {
+            toast.error("Please verify both phone and email to continue.");
+            return;
+        }
+        try {
+            const { phone, ...restData } = formData;
+            const registrationData = { ...restData, phoneNo: phone, knownLanguages: formData.knownLanguages.join(",") };
+            await axios.post("/users/register", registrationData);
+            toast.success("Account created successfully!");
+            navigate("/dashboard");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to create account.");
+        }
+    };
 
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                      required
-                      placeholder="Enter 10-digit number"
-                      maxLength={10}
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Enter a 10-digit number starting with 6, 7, 8, or 9
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="motherTongue"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Mother Tongue *
-                    </label>
-                    <select
-                      id="motherTongue"
-                      value={formData.motherTongue}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          motherTongue: e.target.value,
-                        })
-                      }
-                      required
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">Select language</option>
-                      {languages.map((lang) => (
-                        <option key={lang} value={lang}>
-                          {lang}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Password *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        id="password"
-                        value={formData.password}
-                        onChange={(e) =>
-                          setFormData({ ...formData, password: e.target.value })
-                        }
-                        required
-                        minLength={6}
-                        className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 pr-10"
-                      />
-                      <span
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
-                      >
-                        {showPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
-                      </span>
+    return (
+        <div style={{ background: 'transparent' }} className="relative min-h-screen flex items-center justify-center p-4">
+            <motion.div
+                className="relative z-10 w-full max-w-2xl"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+                <div className="p-8 md:p-10 rounded-2xl" style={{ background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`, border: `1px solid ${COLORS.cadetGray}20`, backdropFilter: 'blur(12px)', boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50` }}>
+                    <div className="text-center mb-8">
+                        <h1 className="text-4xl font-extrabold mb-2" style={{ color: COLORS.nyanza }}>Join <span style={{ color: COLORS.teaGreen }}>TatvamAI</span></h1>
+                        <p style={{ color: COLORS.cadetGray }}>Help us build India's most powerful voice dataset.</p>
                     </div>
-                  </div>
 
-                  <div>
-                    <label
-                      htmlFor="confirmPassword"
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Confirm Password *
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        id="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            confirmPassword: e.target.value,
-                          })
-                        }
-                        required
-                        minLength={6}
-                        className={`w-full px-4 py-2 rounded-lg bg-gray-700 border focus:outline-none ${
-                          formData.password &&
-                          formData.confirmPassword &&
-                          formData.password !== formData.confirmPassword
-                            ? "border-red-500 focus:border-red-500"
-                            : "border-gray-600 focus:border-blue-500"
-                        } pr-10`}
-                      />
-                      <span
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
-                      </span>
+                    <div className="flex justify-center items-center mb-8">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full font-bold" style={{ background: step >= 1 ? COLORS.teaGreen : `${COLORS.midnightGreen}40`, color: step >= 1 ? COLORS.midnightGreen : COLORS.cadetGray }}>1</div>
+                        <div className="w-16 h-1 mx-2 rounded" style={{ background: step >= 2 ? COLORS.teaGreen : `${COLORS.midnightGreen}40` }} />
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full font-bold" style={{ background: step >= 2 ? COLORS.teaGreen : `${COLORS.midnightGreen}40`, color: step >= 2 ? COLORS.midnightGreen : COLORS.cadetGray }}>2</div>
                     </div>
-                    {formData.password &&
-                      formData.confirmPassword &&
-                      formData.password !== formData.confirmPassword && (
-                        <p className="text-red-400 text-sm mt-1">
-                          Passwords do not match
-                        </p>
-                      )}
-                  </div>
-                </div>
 
-                <div className="text-sm text-gray-400">
-                  * Required fields for account creation.
-                </div>
-
-                <motion.button
-                  type="submit"
-                  disabled={isCheckingExistence}
-                  whileHover={{ scale: isCheckingExistence ? 1 : 1.05 }}
-                  whileTap={{ scale: isCheckingExistence ? 1 : 0.95 }}
-                  className={`w-full text-white px-8 py-3 rounded-lg font-semibold ${
-                    isCheckingExistence
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {isCheckingExistence
-                    ? "Checking..."
-                    : "Next - Verify Contact Details"}
-                </motion.button>
-              </form>
-            ) : (
-              <div className="space-y-8">
-                {/* Phone Verification */}
-                {formData.phone && (
-                  <div className="border border-gray-600 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center">
-                      Phone Verification
-                      {verificationStatus.phone === "verified" && (
-                        <span className="ml-2 text-green-400">✓ Verified</span>
-                      )}
-                    </h3>
-
-                    {verificationStatus.phone === "pending" && (
-                      <div className="flex gap-4">
-                        <button
-                          onClick={handleSendPhoneOtp}
-                          disabled={isSendingPhoneOtp}
-                          className={`px-4 py-2 rounded-lg ${
-                            isSendingPhoneOtp
-                              ? "bg-gray-600 cursor-not-allowed"
-                              : "bg-blue-600 hover:bg-blue-700"
-                          }`}
-                        >
-                          {isSendingPhoneOtp ? "Sending..." : "Send OTP"}
-                        </button>
-                      </div>
-                    )}
-
-                    {verificationStatus.phone === "sent" && (
-                      <div className="space-y-4">
-                        <input
-                          type="text"
-                          value={phoneOtp}
-                          onChange={(e) => setPhoneOtp(e.target.value)}
-                          placeholder="Enter OTP"
-                          maxLength={6}
-                          className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                        />
-                        <div className="flex gap-4">
-                          <button
-                            onClick={handleVerifyPhoneOtp}
-                            disabled={isVerifyingPhoneOtp}
-                            className={`px-4 py-2 rounded-lg ${
-                              isVerifyingPhoneOtp
-                                ? "bg-gray-600 cursor-not-allowed"
-                                : "bg-green-600 hover:bg-green-700"
-                            }`}
-                          >
-                            {isVerifyingPhoneOtp
-                              ? "Verifying..."
-                              : "Verify OTP"}
-                          </button>
-                          <button
-                            onClick={handleSendPhoneOtp}
-                            disabled={isSendingPhoneOtp}
-                            className={`px-4 py-2 rounded-lg ${
-                              isSendingPhoneOtp
-                                ? "bg-gray-600 cursor-not-allowed"
-                                : "bg-gray-600 hover:bg-gray-700"
-                            }`}
-                          >
-                            {isSendingPhoneOtp ? "Sending..." : "Resend OTP"}
-                          </button>
+                    {step === 1 ? (
+                        <form onSubmit={handleNext} className="space-y-6">
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <StyledInput type="text" placeholder="Full Name *" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                                <StyledSelect value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })} required>
+                                    <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
+                                </StyledSelect>
+                                <StyledInput type="date" placeholder="Date of Birth *" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} required />
+                                <StyledInput type="text" placeholder="City *" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} required />
+                                <StyledInput type="tel" placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required maxLength={10} />
+                                <StyledInput type="email" placeholder="Email Address *" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                                <StyledSelect value={formData.motherTongue} onChange={(e) => setFormData({ ...formData, motherTongue: e.target.value })} required>
+                                    <option value="">Select Mother Tongue *</option>
+                                    {languages.map((lang) => <option key={lang} value={lang}>{lang}</option>)}
+                                </StyledSelect>
+                                <div /> {/* Spacer */}
+                                <div className="relative">
+                                    <StyledInput type={showPassword ? "text" : "password"} placeholder="Password *" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required minLength={6} />
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center"><EyeOff size={20} style={{color: COLORS.cadetGray}} /></button>
+                                </div>
+                                <div className="relative">
+                                    <StyledInput type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password *" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} required minLength={6} />
+                                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center"><Eye size={20} style={{color: COLORS.cadetGray}} /></button>
+                                </div>
+                            </div>
+                            <button type="submit" disabled={isCheckingExistence} className="w-full py-3 rounded-xl font-semibold transition-all" style={{ background: COLORS.teaGreen, color: COLORS.midnightGreen, opacity: isCheckingExistence ? 0.7 : 1 }}>
+                                {isCheckingExistence ? "Checking..." : "Next - Verify Contact"}
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="space-y-6">
+                            <div className="p-4 rounded-xl" style={{background: `${COLORS.midnightGreen}20`}}>
+                                <h3 className="font-semibold mb-3 flex items-center" style={{color: COLORS.nyanza}}>Phone Verification {verificationStatus.phone === "verified" && <span className="ml-2 text-xs font-bold" style={{color: COLORS.teaGreen}}>✓ VERIFIED</span>}</h3>
+                                {verificationStatus.phone !== 'verified' && (
+                                    verificationStatus.phone === 'pending' ? <button onClick={handleSendPhoneOtp} disabled={isSendingPhoneOtp} className="px-4 py-2 text-sm rounded-lg font-semibold" style={{background: COLORS.teaGreen, color: COLORS.midnightGreen}}>{isSendingPhoneOtp ? "Sending..." : "Send OTP"}</button>
+                                    : <div className="flex gap-4"><StyledInput type="text" placeholder="Enter OTP" value={phoneOtp} onChange={(e) => setPhoneOtp(e.target.value)} maxLength={6} /><button onClick={handleVerifyPhoneOtp} disabled={isVerifyingPhoneOtp} className="px-4 py-2 text-sm rounded-lg font-semibold" style={{background: COLORS.teaGreen, color: COLORS.midnightGreen}}>{isVerifyingPhoneOtp ? "Verifying..." : "Verify"}</button></div>
+                                )}
+                            </div>
+                            <div className="p-4 rounded-xl" style={{background: `${COLORS.midnightGreen}20`}}>
+                                <h3 className="font-semibold mb-3 flex items-center" style={{color: COLORS.nyanza}}>Email Verification {verificationStatus.email === "verified" && <span className="ml-2 text-xs font-bold" style={{color: COLORS.teaGreen}}>✓ VERIFIED</span>}</h3>
+                                {verificationStatus.email !== 'verified' && (
+                                    verificationStatus.email === 'pending' ? <button onClick={handleSendEmailOtp} disabled={isSendingEmailOtp} className="px-4 py-2 text-sm rounded-lg font-semibold" style={{background: COLORS.teaGreen, color: COLORS.midnightGreen}}>{isSendingEmailOtp ? "Sending..." : "Send Code"}</button>
+                                    : <div className="flex gap-4"><StyledInput type="text" placeholder="Enter Code" value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} maxLength={6} /><button onClick={handleVerifyEmailOtp} disabled={isVerifyingEmailOtp} className="px-4 py-2 text-sm rounded-lg font-semibold" style={{background: COLORS.teaGreen, color: COLORS.midnightGreen}}>{isVerifyingEmailOtp ? "Verifying..." : "Verify"}</button></div>
+                                )}
+                            </div>
+                            <div>
+                                <h3 className="font-semibold mb-3" style={{color: COLORS.nyanza}}>Known Languages</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm" style={{color: COLORS.cadetGray}}>
+                                    {languages.map((lang) => (<label key={lang} className="flex items-center gap-2"><input type="checkbox" checked={formData.knownLanguages.includes(lang)} onChange={(e) => setFormData({...formData, knownLanguages: e.target.checked ? [...formData.knownLanguages, lang] : formData.knownLanguages.filter((l) => l !== lang)})} className="rounded bg-transparent border-2" style={{borderColor: `${COLORS.cadetGray}40`, accentColor: COLORS.teaGreen}}/>{lang}</label>))}
+                                </div>
+                            </div>
+                            <div className="flex gap-4 pt-4">
+                                <button onClick={() => setStep(1)} className="w-full py-3 rounded-xl font-semibold" style={{background: `${COLORS.cadetGray}20`, color: COLORS.nyanza}}>Back</button>
+                                <button onClick={handleSubmit} className="w-full py-3 rounded-xl font-semibold" style={{background: COLORS.teaGreen, color: COLORS.midnightGreen}}>Create Account</button>
+                            </div>
                         </div>
-                      </div>
                     )}
-                  </div>
-                )}
-
-                {/* Email Verification */}
-                {formData.email && (
-                  <div className="border border-gray-600 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center">
-                      Email Verification
-                      {verificationStatus.email === "verified" && (
-                        <span className="ml-2 text-green-400">✓ Verified</span>
-                      )}
-                    </h3>
-
-                    {verificationStatus.email === "pending" && (
-                      <div className="flex gap-4">
-                        <button
-                          onClick={handleSendEmailOtp}
-                          disabled={isSendingEmailOtp}
-                          className={`px-4 py-2 rounded-lg ${
-                            isSendingEmailOtp
-                              ? "bg-gray-600 cursor-not-allowed"
-                              : "bg-blue-600 hover:bg-blue-700"
-                          }`}
-                        >
-                          {isSendingEmailOtp
-                            ? "Sending..."
-                            : "Send Verification Email"}
-                        </button>
-                      </div>
-                    )}
-
-                    {verificationStatus.email === "sent" && (
-                      <div className="space-y-4">
-                        <input
-                          type="text"
-                          value={emailOtp}
-                          onChange={(e) => setEmailOtp(e.target.value)}
-                          placeholder="Enter verification code"
-                          maxLength={6}
-                          className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500"
-                        />
-                        <div className="flex gap-4">
-                          <button
-                            onClick={handleVerifyEmailOtp}
-                            disabled={isVerifyingEmailOtp}
-                            className={`px-4 py-2 rounded-lg ${
-                              isVerifyingEmailOtp
-                                ? "bg-gray-600 cursor-not-allowed"
-                                : "bg-green-600 hover:bg-green-700"
-                            }`}
-                          >
-                            {isVerifyingEmailOtp
-                              ? "Verifying..."
-                              : "Verify Email"}
-                          </button>
-                          <button
-                            onClick={handleSendEmailOtp}
-                            disabled={isSendingEmailOtp}
-                            className={`px-4 py-2 rounded-lg ${
-                              isSendingEmailOtp
-                                ? "bg-gray-600 cursor-not-allowed"
-                                : "bg-gray-600 hover:bg-gray-700"
-                            }`}
-                          >
-                            {isSendingEmailOtp ? "Sending..." : "Resend Email"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Language Information */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Known Languages
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      {languages.map((lang) => (
-                        <label
-                          key={lang}
-                          className="flex items-center space-x-2"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={formData.knownLanguages.includes(lang)}
-                            onChange={(e) => {
-                              const updatedLangs = e.target.checked
-                                ? [...formData.knownLanguages, lang]
-                                : formData.knownLanguages.filter(
-                                    (l) => l !== lang
-                                  );
-                              setFormData({
-                                ...formData,
-                                knownLanguages: updatedLangs,
-                              });
-                            }}
-                            className="rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span>{lang}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <motion.button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold"
-                    >
-                      Back
-                    </motion.button>
-                    <motion.button
-                      type="submit"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-                    >
-                      Create Account
-                    </motion.button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="text-center mt-8 text-gray-400"
-          >
-            Already have an account?{" "}
-            <Link to="/auth/signin" className="text-blue-400 hover:underline">
-              Sign in
-            </Link>
-          </motion.p>
+                </div>
+                <p className="text-center mt-8" style={{ color: COLORS.cadetGray }}>Already have an account?{' '}<Link to="/auth/signin" className="font-semibold hover:underline" style={{ color: COLORS.teaGreen }}>Sign in</Link></p>
+            </motion.div>
         </div>
-      </div>
-    </main>
-  );
+    );
 }

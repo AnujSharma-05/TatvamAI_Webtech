@@ -2,41 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-
-// --- Color Palette ---
-const COLORS = {
-  lightYellow: '#ffffe3',
-  midnightGreen: '#003642',
-  teaGreen: '#d0e6a5',
-  nyanza: '#f1ffe3',
-  cadetGray: '#83a0a0',
-};
-
+import { COLORS } from '@/config/theme'; 
 const Home = () => {
   return (
-    <div
-      className="relative flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden"
-      style={{ backgroundColor: COLORS.midnightGreen }}
-    >
-      {/* --- Animated Gradient Background Orbs --- */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
-        <div
-          className="absolute w-[40vw] h-[40vw] rounded-full filter blur-3xl opacity-30 revolve-1"
-          style={{ backgroundColor: COLORS.teaGreen }}
-        />
-        <div
-          className="absolute w-[30vw] h-[30vw] rounded-full filter blur-3xl opacity-20 revolve-2"
-          style={{ backgroundColor: COLORS.cadetGray }}
-        />
-        <div
-          className="absolute w-[25vw] h-[25vw] rounded-full filter blur-2xl opacity-10 revolve-3"
-          style={{ backgroundColor: COLORS.lightYellow }}
-        />
-      </div>
-
-      {/* --- Main Content --- */}
+    <div className="relative flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
       <div className="relative z-10 flex flex-col items-center text-center">
-        {/* Animated, Gradient-Clipped Text */}
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -51,7 +21,6 @@ const Home = () => {
           TatvamAI
         </motion.h1>
         
-        {/* --- ADDED: The Slogan --- */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -62,7 +31,6 @@ const Home = () => {
           Democratizing Voice-Tech in India
         </motion.p>
 
-        {/* Explore Products Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

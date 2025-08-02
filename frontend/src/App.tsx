@@ -19,19 +19,27 @@ import SignUpPage from './pages/auth/signup/SignUp';
 import Recording from './pages/CrowdSourceRecording';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
-import NotFound from './pages/NotFound'; // Optional 404
-import Profile from './pages/Profile'; // Create this page if not present
+import NotFound from './pages/NotFound'; 
+import Profile from './pages/Profile'; 
 import FAQ from './pages/FAQs';
 import Documentation from './pages/Documentation';
 import Careers from './pages/Careers';
 
 import CustomCursor from './components/CustomCursor';
+import AnimatedBlobBackground from './components/Blobbg'; 
+
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background hide-default-cursor  " 
+        style={{ backgroundColor: '#003642' }} >
+        <CustomCursor />
         <Navbar />
+        <AnimatedBlobBackground />
+        
+        {/* --- Main Application Routes --- */}
+        
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
