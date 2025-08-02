@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom"; // 1. Import useLocation
 import { FaCoins } from "react-icons/fa";
 import { isAuthenticated, logout } from "../utils/auth";
+import { COLORS } from "../config/theme"; 
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -10,11 +11,6 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation(); // 2. Get the current location object
 
-  const COLORS = {
-    midnightGreen: "#003642",
-    teaGreen: "#d0e6a5",
-    lightYellow: "#ffffe3",
-  };
 
   useEffect(() => {
     const checkAuth = async () => {

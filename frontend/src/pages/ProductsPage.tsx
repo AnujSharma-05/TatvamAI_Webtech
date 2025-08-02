@@ -102,7 +102,7 @@ const ProductsPage = () => {
   ];
 
   return (
-    <div style={{ background: COLORS.midnightGreen, color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
+    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
    
 
       {/* --- Main Content Wrapper --- */}

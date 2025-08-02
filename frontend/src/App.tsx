@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import DhvaniShilp from './pages/DhvaniShilp';
-import About from './pages/About';
+import About from './components/AboutDhvaniShilpContent';
 import Contact from './pages/Contact';
 import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
