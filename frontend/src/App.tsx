@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import DhvaniShilp from './pages/DhvaniShilp';
 import About from './components/AboutDhvaniShilpContent';
 import Contact from './pages/Contact';
@@ -34,6 +35,7 @@ import AboutTatvamPage from './pages/AboutTatvam';
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-background  " 
         style={{ backgroundColor: '#003642' }} >
         {/* <CustomCursor /> */}
