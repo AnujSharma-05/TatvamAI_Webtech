@@ -159,13 +159,8 @@ export default function SignInPage() {
   };
 
   return (
-    <div
-      style={{ background: COLORS.midnightGreen }}
-      className="relative min-h-screen flex items-center justify-center p-4 hide-default-cursor overflow-hidden"
-    >
-      <CustomCursor />
-      <AnimatedBlobBackground />
-
+    <div style={{ background: COLORS.midnightGreen }} className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+  
       <motion.div
         className="relative z-10 w-full max-w-md"
         initial={{ opacity: 0, y: 30 }}

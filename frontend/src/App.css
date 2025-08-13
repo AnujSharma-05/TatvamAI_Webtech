@@ -336,43 +336,53 @@
 
 
 
-/* This class hides the default system cursor */
+/* Custom cursor disabled - using normal cursor */
+/*
 .hide-default-cursor {
   cursor: none;
 }
+*/
 
-/* Base styles for both cursor elements */
+/* Base styles for both cursor elements - DISABLED */
+/*
 .custom-cursor-glow,
 .custom-cursor-dot {
-  position: fixed; /* Use fixed positioning to place it relative to the viewport */
+  position: fixed;
   top: 0;
   left: 0;
   border-radius: 50%;
-  pointer-events: none; /* This is VERY important. It allows you to click "through" the cursor */
-  transform: translate(-50%, -50%); /* This centers the div on the actual cursor position */
-  z-index: 9999; /* Ensure the cursor is on top of everything else */
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
 }
+*/
 
-/* Styles for the outer "glow" element */
+/* Styles for the outer "glow" element - DISABLED */
+/*
 .custom-cursor-glow {
   width: 40px;
   height: 40px;
-  background-color: #d0e6a5; /* Using your teaGreen color */
-  filter: blur(20px); /* This creates the beautiful glow effect */
+  background-color: #d0e6a5;
+  filter: blur(20px);
   opacity: 0.5;
 }
+*/
 
-/* Styles for the inner "dot" element */
+/* Styles for the inner "dot" element - DISABLED */
+/*
 .custom-cursor-dot {
   width: 8px;
   height: 8px;
-  background-color: #f1ffe3; /* Using your nyanza color */
-  transition: transform 0.15s ease-in-out; /* Adds a subtle, smooth follow effect */
+  background-color: #f1ffe3;
+  transition: transform 0.15s ease-in-out;
 }
+*/
 
-/* Optional: Make the cursor react to hovering over buttons or links */
+/* Optional: Make the cursor react to hovering over buttons or links - DISABLED */
+/*
 .hide-default-cursor a:hover ~ .custom-cursor-glow,
 .hide-default-cursor button:hover ~ .custom-cursor-glow {
   transform: translate(-50%, -50%) scale(1.5);
   opacity: 0.7;
 }
+*/
