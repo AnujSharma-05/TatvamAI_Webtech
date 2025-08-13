@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "../../../config/axios";
 import { Eye, EyeOff } from "lucide-react";
 import { COLORS } from "@/config/theme";
+import { setAuthTokens } from "../../../utils/auth";
 
 const StyledInput = React.forwardRef<HTMLInputElement, any>(
   ({ ...props }, ref) => (
@@ -23,15 +24,24 @@ const StyledInput = React.forwardRef<HTMLInputElement, any>(
   )
 );
 
-const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...props }, ref) => (
-    <select ref={ref} {...props} className="w-full px-4 py-3 border rounded-xl appearance-none focus:outline-none focus:ring-2" style={{ 
-        borderColor: `${COLORS.cadetGray}30`, 
-        color: COLORS.nyanza, 
-        backgroundColor: `${COLORS.midnightGreen}80`,
-        '--tw-ring-color': COLORS.teaGreen 
-    } as React.CSSProperties}>
-        <style dangerouslySetInnerHTML={{
-            __html: `
+const StyledSelect = React.forwardRef<HTMLSelectElement, any>(
+  ({ children, ...props }, ref) => (
+    <select
+      ref={ref}
+      {...props}
+      className="w-full px-4 py-3 border rounded-xl appearance-none focus:outline-none focus:ring-2"
+      style={
+        {
+          borderColor: `${COLORS.cadetGray}30`,
+          color: COLORS.nyanza,
+          backgroundColor: `${COLORS.midnightGreen}80`,
+          "--tw-ring-color": COLORS.teaGreen,
+        } as React.CSSProperties
+      }
+    >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
                 select option {
                     background-color: ${COLORS.midnightGreen} !important;
                     color: ${COLORS.nyanza} !important;
@@ -46,9 +56,10 @@ const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...pr
                     background-color: ${COLORS.teaGreen} !important;
                     color: ${COLORS.midnightGreen} !important;
                 }
-            `
-        }} />
-        {children}
+            `,
+        }}
+      />
+      {children}
     </select>
   )
 );
@@ -85,48 +96,66 @@ const languages = [
 ];
 
 export default function SignUpPage() {
-    // --- State Management (Combined) ---
-    const navigate = useNavigate();
-    const [step, setStep] = useState<Step>(1);
-    const [phoneOtp, setPhoneOtp] = useState("");
-    const [emailOtp, setEmailOtp] = useState("");
-    const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({ phone: "pending", email: "pending" });
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isCheckingExistence, setIsCheckingExistence] = useState(false);
-    const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
-    const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
-    const [isVerifyingPhoneOtp, setIsVerifyingPhoneOtp] = useState(false);
-    const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
-    const [formData, setFormData] = useState<FormData>({ name: "", gender: "male", dob: "", phone: "", email: "", city: "", motherTongue: "", knownLanguages: [], password: "", confirmPassword: "" });
-    
-  
-    const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
+  // --- State Management (Combined) ---
+  const navigate = useNavigate();
+  const [step, setStep] = useState<Step>(1);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [verificationStatus, setVerificationStatus] =
+    useState<VerificationStatus>({ phone: "pending", email: "pending" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCheckingExistence, setIsCheckingExistence] = useState(false);
+  const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
+  const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
+  const [isVerifyingPhoneOtp, setIsVerifyingPhoneOtp] = useState(false);
+  const [isVerifyingEmailOtp, setIsVerifyingEmailOtp] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    gender: "male",
+    dob: "",
+    phone: "",
+    email: "",
+    city: "",
+    motherTongue: "",
+    knownLanguages: [],
+    password: "",
+    confirmPassword: "",
+  });
 
-    const validateAge = (dob: string) => {
-        if (!dob) return false;
-        const today = new Date();
-        const birthDate = new Date(dob);
-        
-        // Check if date is in the future
-        if (birthDate > today) return false;
-        
-        // Calculate age
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        
-        return age >= 18;
-    };
+  const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
 
-    const getMaxDate = () => {
-        const today = new Date();
-        const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-        return eighteenYearsAgo.toISOString().split('T')[0];
-    };
+  const validateAge = (dob: string) => {
+    if (!dob) return false;
+    const today = new Date();
+    const birthDate = new Date(dob);
+
+    // Check if date is in the future
+    if (birthDate > today) return false;
+
+    // Calculate age
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age >= 18;
+  };
+
+  const getMaxDate = () => {
+    const today = new Date();
+    const eighteenYearsAgo = new Date(
+      today.getFullYear() - 18,
+      today.getMonth(),
+      today.getDate()
+    );
+    return eighteenYearsAgo.toISOString().split("T")[0];
+  };
 
   const checkUserExistence = async (phone: string, email: string) => {
     try {
@@ -228,33 +257,43 @@ export default function SignUpPage() {
     }
   };
 
-    const handleNext = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const { password, confirmPassword, phone, email, motherTongue, dob } = formData;
-        
-        if (password !== confirmPassword) { toast.error("Passwords do not match!"); return; }
-        if (password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
-        if (!phone || !email || !motherTongue || !dob) { toast.error("Please fill all required fields."); return; }
-        
-        if (!validateAge(dob)) {
-            toast.error("You must be at least 18 years old to sign up.");
-            return;
-        }
-        
-        setIsCheckingExistence(true);
-        try {
-            const userExists = await checkUserExistence(phone, email);
-            if (userExists) {
-                toast.error("User with this phone or email already exists.");
-            } else {
-                setStep(2);
-            }
-        } catch (error) {
-            toast.error("An error occurred while checking. Please try again.");
-        } finally {
-            setIsCheckingExistence(false);
-        }
-    };
+  const handleNext = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { password, confirmPassword, phone, email, motherTongue, dob } =
+      formData;
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    if (!phone || !email || !motherTongue || !dob) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+
+    if (!validateAge(dob)) {
+      toast.error("You must be at least 18 years old to sign up.");
+      return;
+    }
+
+    setIsCheckingExistence(true);
+    try {
+      const userExists = await checkUserExistence(phone, email);
+      if (userExists) {
+        toast.error("User with this phone or email already exists.");
+      } else {
+        setStep(2);
+      }
+    } catch (error) {
+      toast.error("An error occurred while checking. Please try again.");
+    } finally {
+      setIsCheckingExistence(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,9 +315,11 @@ export default function SignUpPage() {
 
       // Handle automatic login after registration
       if (response.data.data.accessToken && response.data.data.refreshToken) {
-        // Store tokens in localStorage
-        localStorage.setItem("accessToken", response.data.data.accessToken);
-        localStorage.setItem("refreshToken", response.data.data.refreshToken);
+        // Store tokens using auth utility (this will trigger authStateChanged event)
+        setAuthTokens({
+          accessToken: response.data.data.accessToken,
+          refreshToken: response.data.data.refreshToken,
+        });
 
         toast.success("Account created and logged in successfully!");
 

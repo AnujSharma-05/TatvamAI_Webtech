@@ -9,6 +9,7 @@ import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
 import QR from './pages/QR';
 import Demo from './pages/Demo';
+import AdminDashboard from './pages/AdminDashboard';
 
 import ProductsPage from "./pages/ProductsPage";
 
