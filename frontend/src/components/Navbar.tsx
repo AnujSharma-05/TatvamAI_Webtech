@@ -32,8 +32,17 @@ export const Navbar = () => {
     };
 
     checkAuth();
+
+    // Listen for storage changes from other tabs
     window.addEventListener("storage", checkAuth);
-    return () => window.removeEventListener("storage", checkAuth);
+
+    // Listen for custom authentication events (for same-tab updates)
+    window.addEventListener("authStateChanged", checkAuth);
+
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authStateChanged", checkAuth);
+    };
   }, []);
 
   useEffect(() => {

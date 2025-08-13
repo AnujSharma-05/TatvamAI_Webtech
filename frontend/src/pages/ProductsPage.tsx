@@ -15,7 +15,7 @@ const ProductsPage = () => {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 }
+      transition: { delayChildren: 0.3 }
     }
   };
 
@@ -102,7 +102,7 @@ const ProductsPage = () => {
   ];
 
   return (
-    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 hide-default-cursor overflow-hidden">
+    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen p-8 md:p-16 overflow-hidden">
    
 
       {/* --- Main Content Wrapper --- */}

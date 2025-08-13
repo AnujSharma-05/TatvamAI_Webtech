@@ -6,6 +6,9 @@ export interface AuthTokens {
 export const setAuthTokens = (tokens: AuthTokens) => {
   localStorage.setItem('accessToken', tokens.accessToken);
   localStorage.setItem('refreshToken', tokens.refreshToken);
+  
+  // Dispatch custom event to notify components of auth state change
+  window.dispatchEvent(new CustomEvent('authStateChanged'));
 };
 
 export const getAuthTokens = (): AuthTokens | null => {
@@ -22,6 +25,9 @@ export const getAuthTokens = (): AuthTokens | null => {
 export const clearAuthTokens = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  
+  // Dispatch custom event to notify components of auth state change
+  window.dispatchEvent(new CustomEvent('authStateChanged'));
 };
 
 export const isAuthenticated = (): boolean => {

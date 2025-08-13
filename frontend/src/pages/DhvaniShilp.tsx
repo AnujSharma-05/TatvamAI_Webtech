@@ -7,7 +7,8 @@ import AboutDhvaniShilpContent from '@/components/AboutDhvaniShilpContent';
 
 // --- HeroSlide, AnimatedSlide, Card, HorizontalMarquee components remain unchanged ---
 const HeroSlide = ({ scrollYProgress, onNavigate }) => {
-  const opacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  // Very strict fade-out: only fade at the very end (from 12% to 15%)
+  const opacity = useTransform(scrollYProgress, [0, 0.12, 0.15], [1, 1, 0]);
   const y = useTransform(scrollYProgress, [0, 0.2], [0, '-50vh']);
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.2 } } };
   const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } } };
@@ -18,7 +19,10 @@ const HeroSlide = ({ scrollYProgress, onNavigate }) => {
 const AnimatedSlide = ({ scrollYProgress, children, range }) => {
   const start = range[0], end = range[1], mid = start + (end - start) / 2;
   const y = useTransform(scrollYProgress, [start, mid, end], ['50vh', '0vh', '-50vh']);
-  const opacity = useTransform(scrollYProgress, [start, start + 0.05, end - 0.05, end], [0, 1, 1, 0]);
+  // Very strict fade: minimal fade-in/out zones for maximum visibility
+  const fadeInEnd = start + 0.015; // Only 1.5% for fade-in
+  const fadeOutStart = end - 0.015; // Only 1.5% for fade-out
+  const opacity = useTransform(scrollYProgress, [start, fadeInEnd, fadeOutStart, end], [0, 1, 1, 0]);
   const pointerEvents = useTransform(scrollYProgress, (pos) => (pos >= start && pos <= end ? 'auto' : 'none'));
   return ( <motion.div style={{ y, opacity, pointerEvents }} className="w-full h-full absolute flex items-center justify-center px-6"> {children} </motion.div> );
 };

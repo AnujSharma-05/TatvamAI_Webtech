@@ -107,9 +107,23 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "User creation failed");
   }
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, createdUser, "User registered successfully"));
+  // Generate access and refresh tokens for automatic login
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  // Return user data with tokens for automatic login
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        user: createdUser,
+        accessToken,
+        refreshToken,
+      },
+      "User registered and logged in successfully"
+    )
+  );
 });
 
 // otp for verification
@@ -236,11 +250,7 @@ const sendEmailVerificationCode = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
-  await sendEmail(
-    email,
-    "Tatvam_AI Email Verification Code",
-    `Your Tatvam_AI email verification code is: ${code}`
-  );
+  await sendEmail(email, "Tatvam_AI Email Verification Code", code);
 
   res
     .status(200)
