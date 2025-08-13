@@ -11,7 +11,30 @@ const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) 
 ));
 
 const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...props }, ref) => (
-    <select ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl appearance-none focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}>
+    <select ref={ref} {...props} className="w-full px-4 py-3 border rounded-xl appearance-none focus:outline-none focus:ring-2" style={{ 
+        borderColor: `${COLORS.cadetGray}30`, 
+        color: COLORS.nyanza, 
+        backgroundColor: `${COLORS.midnightGreen}80`,
+        '--tw-ring-color': COLORS.teaGreen 
+    } as React.CSSProperties}>
+        <style dangerouslySetInnerHTML={{
+            __html: `
+                select option {
+                    background-color: ${COLORS.midnightGreen} !important;
+                    color: ${COLORS.nyanza} !important;
+                    padding: 8px !important;
+                    border: none !important;
+                }
+                select option:hover {
+                    background-color: ${COLORS.teaGreen}40 !important;
+                    color: ${COLORS.nyanza} !important;
+                }
+                select option:checked {
+                    background-color: ${COLORS.teaGreen} !important;
+                    color: ${COLORS.midnightGreen} !important;
+                }
+            `
+        }} />
         {children}
     </select>
 ));
@@ -40,6 +63,31 @@ export default function SignUpPage() {
     
   
     const validatePhoneNumber = (phone: string) => /^[6-9]\d{9}$/.test(phone);
+
+    const validateAge = (dob: string) => {
+        if (!dob) return false;
+        const today = new Date();
+        const birthDate = new Date(dob);
+        
+        // Check if date is in the future
+        if (birthDate > today) return false;
+        
+        // Calculate age
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        return age >= 18;
+    };
+
+    const getMaxDate = () => {
+        const today = new Date();
+        const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        return eighteenYearsAgo.toISOString().split('T')[0];
+    };
 
     const checkUserExistence = async (phone: string, email: string) => {
         try {
@@ -114,10 +162,16 @@ export default function SignUpPage() {
 
     const handleNext = async (e: React.FormEvent) => {
         e.preventDefault();
-        const { password, confirmPassword, phone, email, motherTongue } = formData;
+        const { password, confirmPassword, phone, email, motherTongue, dob } = formData;
+        
         if (password !== confirmPassword) { toast.error("Passwords do not match!"); return; }
         if (password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
-        if (!phone || !email || !motherTongue) { toast.error("Please fill all required fields."); return; }
+        if (!phone || !email || !motherTongue || !dob) { toast.error("Please fill all required fields."); return; }
+        
+        if (!validateAge(dob)) {
+            toast.error("You must be at least 18 years old to sign up.");
+            return;
+        }
         
         setIsCheckingExistence(true);
         try {
@@ -178,7 +232,7 @@ export default function SignUpPage() {
                                 <StyledSelect value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })} required>
                                     <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
                                 </StyledSelect>
-                                <StyledInput type="date" placeholder="Date of Birth *" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} required />
+                                <StyledInput type="date" placeholder="Date of Birth *" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} max={getMaxDate()} required />
                                 <StyledInput type="text" placeholder="City *" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} required />
                                 <StyledInput type="tel" placeholder="Phone Number *" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required maxLength={10} />
                                 <StyledInput type="email" placeholder="Email Address *" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />

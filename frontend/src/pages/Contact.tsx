@@ -53,7 +53,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div style={{ background: 'transparent' }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
+    <div style={{ background: 'transparent' }} className="relative min-h-screen flex items-center justify-center p-8 overflow-hidden">
 
 
       <motion.div

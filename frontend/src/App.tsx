@@ -25,7 +25,7 @@ import FAQ from './pages/FAQs';
 import Documentation from './pages/Documentation';
 import Careers from './pages/Careers';
 
-import CustomCursor from './components/CustomCursor';
+// import CustomCursor from './components/CustomCursor';
 import AnimatedBlobBackground from './components/Blobbg'; 
 
 import AboutTatvamPage from './pages/AboutTatvam';
@@ -34,9 +34,9 @@ import AboutTatvamPage from './pages/AboutTatvam';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-background hide-default-cursor  " 
+      <div className="min-h-screen bg-background  " 
         style={{ backgroundColor: '#003642' }} >
-        <CustomCursor />
+        {/* <CustomCursor /> */}
         <Navbar />
         <AnimatedBlobBackground />
         

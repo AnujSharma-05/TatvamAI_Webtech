@@ -22,7 +22,7 @@ const CareersPage = () => {
   ];
 
   return (
-    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen flex items-center justify-center p-8 hide-default-cursor overflow-hidden">
+    <div style={{ background: 'transparent', color: COLORS.nyanza }} className="relative min-h-screen flex items-center justify-center p-8 overflow-hidden">
 
       <motion.div
         className="relative z-10 max-w-4xl w-full text-center p-10 md:p-16 rounded-2xl"
