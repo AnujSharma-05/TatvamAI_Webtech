@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const base = "https://tatvamai-webtech.onrender.com";
+const base = "http://localhost:3000";
 
 const instance: AxiosInstance = axios.create({
   baseURL: base ? `${base}/api/v1` : 'http://localhost:3000/api/v1',
