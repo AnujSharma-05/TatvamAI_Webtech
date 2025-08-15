@@ -22,6 +22,9 @@ const uploadRecording = asyncHandler(async (req, res) => {
   // Upload to S3 (assuming your uploadFileToS3 expects (file, key))
   const s3Result = await uploadFileToS3(req.file, s3Key);
 
+  console.log("S3 Upload Result:", s3Result);
+  console.log("S3 URL will be:", s3Result.Location);
+
   const newRecording = await Recording.create({
     userId: req.user._id,
     recordingUrl: s3Result.Location, // S3 URL
@@ -109,11 +112,44 @@ const evaluateRecording = asyncHandler(async (req, res) => {
   // Extract the S3 key from the URL
   let s3Key;
   try {
-    const s3Url = new URL(recording.recordingUrl);
-    s3Key = decodeURIComponent(s3Url.pathname.slice(1)); // Remove leading slash
+    console.log("Recording URL:", recording.recordingUrl);
+
+    // Check if URL is valid before parsing
+    if (!recording.recordingUrl || typeof recording.recordingUrl !== "string") {
+      throw new Error("Recording URL is missing or invalid");
+    }
+
+    // Handle different S3 URL formats
+    let urlToParse = recording.recordingUrl;
+
+    // If it's already just an S3 key (not a full URL), use it directly
+    if (!recording.recordingUrl.startsWith("http")) {
+      s3Key = recording.recordingUrl;
+      console.log("Using direct S3 key:", s3Key);
+    } else {
+      // Parse as full URL
+      const s3Url = new URL(urlToParse);
+      s3Key = decodeURIComponent(s3Url.pathname.slice(1)); // Remove leading slash
+      console.log("Extracted S3 key from URL:", s3Key);
+    }
+
+    // Alternative: If URL parsing fails, try to extract key from common S3 URL patterns
+    if (!s3Key && recording.recordingUrl.includes(".amazonaws.com/")) {
+      const parts = recording.recordingUrl.split(".amazonaws.com/");
+      if (parts.length > 1) {
+        s3Key = parts[1];
+        console.log("Extracted S3 key using string split:", s3Key);
+      }
+    }
+
+    // Validate that we have a proper S3 key
+    if (!s3Key || s3Key.length === 0) {
+      throw new Error("Could not extract S3 key from URL");
+    }
   } catch (err) {
-    console.error("S3 URL Error: ", err);
-    throw new ApiError(400, "Invalid recording URL");
+    console.error("S3 URL Error:", err);
+    console.error("Recording URL that failed:", recording.recordingUrl);
+    throw new ApiError(400, `Invalid recording URL: ${err.message}`);
   }
   console.log("SR key:", s3Key);
 
