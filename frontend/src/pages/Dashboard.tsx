@@ -11,6 +11,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 
 // --- Main Dashboard Component ---
@@ -96,7 +97,31 @@ const Dashboard = () => {
       }
     };
 
+    // Load data initially
     loadData();
+
+    // Listen for recording evaluation completion events
+    const handleRecordingEvaluated = (event: CustomEvent) => {
+      console.log(
+        "Recording evaluation completed, refreshing dashboard:",
+        event.detail
+      );
+      // Refresh dashboard data when evaluation completes
+      loadData();
+    };
+
+    window.addEventListener(
+      "recordingEvaluated",
+      handleRecordingEvaluated as EventListener
+    );
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        "recordingEvaluated",
+        handleRecordingEvaluated as EventListener
+      );
+    };
   }, []);
 
   // Pagination logic
@@ -138,6 +163,27 @@ const Dashboard = () => {
       (t) => t.recordingId?.toString() === recordingId?.toString()
     );
     return tokenDoc ? tokenDoc.amount : "--";
+  };
+
+  const getRecordingStatus = (recording) => {
+    // Check if recording has been evaluated by looking for tokens
+    const tokenDoc = incentives.find(
+      (t) => t.recordingId?.toString() === recording._id?.toString()
+    );
+
+    if (tokenDoc || recording.quality) {
+      return {
+        status: "Evaluated",
+        color: COLORS.teaGreen,
+        bgColor: `${COLORS.teaGreen}10`,
+      };
+    }
+
+    return {
+      status: "Pending",
+      color: "#fbbf24",
+      bgColor: "#fbbf2410",
+    };
   };
 
   if (loading) {
@@ -285,12 +331,23 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <h2
-            className="text-2xl font-bold mb-6"
-            style={{ color: COLORS.nyanza }}
-          >
-            Recent Recordings
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold" style={{ color: COLORS.nyanza }}>
+              Recent Recordings
+            </h2>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105"
+              style={{
+                background: `${COLORS.teaGreen}20`,
+                color: COLORS.teaGreen,
+                border: `1px solid ${COLORS.teaGreen}30`,
+              }}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
+          </div>
           {recordings.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg mb-6" style={{ color: COLORS.cadetGray }}>
@@ -381,15 +438,20 @@ const Dashboard = () => {
                     {secondsToMMSS(rec.duration)}
                   </div>
                   <div className="md:col-span-1 text-left md:text-center">
-                    <span
-                      className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        background: `${COLORS.teaGreen}10`,
-                        color: COLORS.teaGreen,
-                      }}
-                    >
-                      Pending
-                    </span>
+                    {(() => {
+                      const status = getRecordingStatus(rec);
+                      return (
+                        <span
+                          className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                          style={{
+                            background: status.bgColor,
+                            color: status.color,
+                          }}
+                        >
+                          {status.status}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div
                     className="md:col-span-1 text-left md:text-right font-bold"
