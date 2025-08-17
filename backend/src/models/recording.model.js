@@ -32,7 +32,7 @@ const recordingSchema = new mongoose.Schema({
     },
     quality: { // will be set after the model processes the recording
         type: String,
-        enum: ['bad', 'average', 'good', 'excellent'],
+        enum: ["excellent", "good", "average", "below_average", "poor"],
     },
     transcription: {
         type: String, // will store the transcription text after processing
