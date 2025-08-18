@@ -7,7 +7,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { COLORS } from "@/config/theme";
 import { setAuthTokens } from "../../../utils/auth";
 
-<<<<<<< HEAD
 const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
     <input ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: '#ffffff', '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}/>
 ));
@@ -21,43 +20,6 @@ const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...pr
     } as React.CSSProperties}>
         <style dangerouslySetInnerHTML={{
             __html: `
-=======
-const StyledInput = React.forwardRef<HTMLInputElement, any>(
-  ({ ...props }, ref) => (
-    <input
-      ref={ref}
-      {...props}
-      className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2"
-      style={
-        {
-          borderColor: `${COLORS.cadetGray}30`,
-          color: COLORS.nyanza,
-          "--tw-ring-color": COLORS.teaGreen,
-        } as React.CSSProperties
-      }
-    />
-  )
-);
-
-const StyledSelect = React.forwardRef<HTMLSelectElement, any>(
-  ({ children, ...props }, ref) => (
-    <select
-      ref={ref}
-      {...props}
-      className="w-full px-4 py-3 border rounded-xl appearance-none focus:outline-none focus:ring-2"
-      style={
-        {
-          borderColor: `${COLORS.cadetGray}30`,
-          color: COLORS.nyanza,
-          backgroundColor: `${COLORS.midnightGreen}80`,
-          "--tw-ring-color": COLORS.teaGreen,
-        } as React.CSSProperties
-      }
-    >
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
->>>>>>> 3646d2ef6d7fa6a36b3950aa98700e9dfd40c9b0
                 select option {
                     background-color: ${COLORS.midnightGreen} !important;
                     color: #ffffff !important;

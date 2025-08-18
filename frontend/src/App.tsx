@@ -17,7 +17,7 @@ import Home from "./pages/Home";
 
 // import Contributor from './pages/Contributor';
 import SignInPage from "./pages/auth/signin/SignIn";
-import SignUpPage from "./pages/auth/signup/SignUp";
+import SignUpPage from "./pages/auth/signup/SignUp.tsx";
 import Recording from "./pages/CrowdSourceRecording";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
