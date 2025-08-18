@@ -57,7 +57,11 @@ const AboutTatvamPage = () => {
         variants={containerVariants}
       >
         <div 
+<<<<<<< HEAD
           className="grid md:grid-cols-5 gap-12  my-10 items-center p-10 md:p-16 rounded-2xl"
+=======
+          className="grid md:grid-cols-5 gap-12 my-10 items-center p-10 md:p-16 rounded-2xl"
+>>>>>>> 3646d2ef6d7fa6a36b3950aa98700e9dfd40c9b0
           style={{
               background: `linear-gradient(145deg, ${COLORS.midnightGreen}40, #002a3580)`,
               border: `1px solid ${COLORS.cadetGray}20`,

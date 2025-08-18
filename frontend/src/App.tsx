@@ -9,28 +9,29 @@ import Blogs from './pages/Blogs';
 import Dashboard from './pages/Dashboard';
 import QR from './pages/QR';
 import Demo from './pages/Demo';
+import AdminDashboard from './pages/AdminDashboard';
 
-import ProductsPage from './pages/ProductsPage';
+import ProductsPage from "./pages/ProductsPage";
 
-import Home from './pages/Home';
+import Home from "./pages/Home";
 
 // import Contributor from './pages/Contributor';
-import SignInPage from './pages/auth/signin/SignIn';
-import SignUpPage from './pages/auth/signup/SignUp';
-import Recording from './pages/CrowdSourceRecording';
-import ProtectedRoute from './components/ProtectedRoute';
-import Auth from './pages/Auth';
-import NotFound from './pages/NotFound'; 
-import Profile from './pages/Profile'; 
-import FAQ from './pages/FAQs';
-import Documentation from './pages/Documentation';
-import Careers from './pages/Careers';
+import SignInPage from "./pages/auth/signin/SignIn";
+import SignUpPage from "./pages/auth/signup/SignUp";
+import Recording from "./pages/CrowdSourceRecording";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import FAQ from "./pages/FAQs";
+import Documentation from "./pages/Documentation";
+import Careers from "./pages/Careers";
 
 // import CustomCursor from './components/CustomCursor';
 import AnimatedBlobBackground from './components/Blobbg'; 
 
-import AboutTatvamPage from './pages/AboutTatvam';
-
+import AboutTatvamPage from "./pages/AboutTatvam";
 
 function App() {
   return (
@@ -41,9 +42,9 @@ function App() {
         {/* <CustomCursor /> */}
         <Navbar />
         <AnimatedBlobBackground />
-        
+
         {/* --- Main Application Routes --- */}
-        
+
         <main>
           <Routes>
             {/* --- Public Routes --- */}
@@ -58,7 +59,6 @@ function App() {
             <Route path="/docs" element={<Documentation />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/about-tatvam" element={<AboutTatvamPage />} />
-            
 
             {/* 🔐 Protected Routes */}
             <Route
@@ -67,6 +67,14 @@ function App() {
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboard />
+                </AdminProtectedRoute>
               }
             />
             <Route
