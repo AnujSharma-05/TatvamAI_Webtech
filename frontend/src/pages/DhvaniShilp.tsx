@@ -142,7 +142,7 @@ const DhvaniShilp = () => {
                       <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: COLORS.cadetGray }}>
                           Your voice matters. Join our community and help build the future of AI.
                       </p>
-                      <button onClick={() => navigate("/qr-recording")} className="flex items-center mx-auto px-10 py-5 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-transform transform hover:scale-105" style={{ background: COLORS.nyanza, color: COLORS.midnightGreen }}>
+                      <button onClick={() => navigate("/signin")} className="flex items-center mx-auto px-10 py-5 text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-transform transform hover:scale-105" style={{ background: COLORS.nyanza, color: COLORS.midnightGreen }}>
                           Get Started Now <ChevronRight className="w-6 h-6 ml-2" />
                       </button>
                   </div>

@@ -68,13 +68,13 @@ const ProductsPage = () => {
     {
       name: "Swarin",
       icon: <GitBranch size={32} style={{ color: COLORS.teaGreen }} />,
-      tagline: "AI-Powered Translation & Dubbing",
-      description: "Swarin leverages our extensive voice datasets to offer state-of-the-art translation and dubbing services. Preserve the original emotion and context of your content while reaching a global audience with natural-sounding voiceovers.",
+      tagline: "India-First Voice AI Platform",
+      description: "An advanced voice AI platform with human-like naturalness, hyper-personalized for India. Swarin creates intelligent interactions that build deep user connections – like a super-smart companion over chai. Multi-modal, multi-lingual, and multi-LLM voicebot that truly understands Indian users.",
       features: [
-        "Context-aware AI translation",
-        "Emotion-preserving speech synthesis",
-        "Supports 10+ Indian languages",
-        "Seamless API for easy integration"
+        "Understands Indian languages and code-mixing",
+        "Cultural nuances and intent recognition",
+        "Curated suite of LLMs for optimal responses",
+        "Human-like quality and accuracy"
       ],
       cta: {
         text: "Learn More",
@@ -83,19 +83,19 @@ const ProductsPage = () => {
       isComingSoon: false,
     },
     {
-      name: "ProductX",
+      name: "Spokn",
       icon: <Settings size={32} style={{ color: COLORS.teaGreen }} />,
-      tagline: "Your Custom Voice Solution",
-      description: "Have a unique challenge that requires a voice-based solution? ProductX offers bespoke services, from developing custom speech models to creating specialized voice applications tailored to your specific business needs.",
+      tagline: "Your Voice, Perfectly Typed",
+      description: "Turn your speech into contextually formatted text anywhere – instantly. Press a hotkey in any app, speak naturally in your language, and watch it format and structure your words in real-time, as per the application's need. Works perfectly with Indian languages and code-mixing.",
       features: [
-        "Custom speech model development",
-        "Voice-enabled application design",
-        "On-premise or cloud deployment",
-        "Dedicated technical support"
+        "Context-aware formatting for any app",
+        "Supports Indian languages and code-mixing",
+        "Real-time structured text output",
+        "Works with emails, docs, to-do lists"
       ],
       cta: {
         text: "Coming Soon",
-        path: "#"
+        path: "/spokn"
       },
       isComingSoon: true,
     }
@@ -172,18 +172,17 @@ const ProductsPage = () => {
               </div>
 
               <button
-                onClick={() => !product.isComingSoon && navigate(product.cta.path)}
-                disabled={product.isComingSoon}
+                onClick={() => navigate(product.cta.path)}
                 className="mt-auto w-full flex items-center justify-center px-6 py-4 text-lg font-semibold rounded-full transition-all"
                 style={{ 
                   background: product.isComingSoon ? COLORS.cadetGray : COLORS.teaGreen, 
                   color: COLORS.midnightGreen,
-                  cursor: product.isComingSoon ? 'not-allowed' : 'pointer',
-                  opacity: product.isComingSoon ? 0.6 : 1,
+                  cursor: 'pointer',
+                  opacity: product.isComingSoon ? 0.8 : 1,
                 }}
               >
                 {product.cta.text} 
-                {!product.isComingSoon && <ChevronRight className="w-5 h-5 ml-2" />}
+                <ChevronRight className="w-5 h-5 ml-2" />
               </button>
             </motion.div>
           ))}

@@ -7,13 +7,13 @@ import { Eye, EyeOff } from "lucide-react";
 import { COLORS } from "@/config/theme"; 
 
 const StyledInput = React.forwardRef<HTMLInputElement, any>(({ ...props }, ref) => (
-    <input ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: COLORS.nyanza, '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}/>
+    <input ref={ref} {...props} className="w-full px-4 py-3 bg-transparent border rounded-xl placeholder:text-slate-500 focus:outline-none focus:ring-2" style={{ borderColor: `${COLORS.cadetGray}30`, color: '#ffffff', '--tw-ring-color': COLORS.teaGreen } as React.CSSProperties}/>
 ));
 
 const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...props }, ref) => (
     <select ref={ref} {...props} className="w-full px-4 py-3 border rounded-xl appearance-none focus:outline-none focus:ring-2" style={{ 
         borderColor: `${COLORS.cadetGray}30`, 
-        color: COLORS.nyanza, 
+        color: '#ffffff', 
         backgroundColor: `${COLORS.midnightGreen}80`,
         '--tw-ring-color': COLORS.teaGreen 
     } as React.CSSProperties}>
@@ -21,13 +21,13 @@ const StyledSelect = React.forwardRef<HTMLSelectElement, any>(({ children, ...pr
             __html: `
                 select option {
                     background-color: ${COLORS.midnightGreen} !important;
-                    color: ${COLORS.nyanza} !important;
+                    color: #ffffff !important;
                     padding: 8px !important;
                     border: none !important;
                 }
                 select option:hover {
                     background-color: ${COLORS.teaGreen}40 !important;
-                    color: ${COLORS.nyanza} !important;
+                    color: #ffffff !important;
                 }
                 select option:checked {
                     background-color: ${COLORS.teaGreen} !important;

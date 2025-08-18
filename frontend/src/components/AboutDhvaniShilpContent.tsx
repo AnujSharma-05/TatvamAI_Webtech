@@ -4,7 +4,7 @@ import { Hexagon, Coins, ShieldCheck, UserX } from 'lucide-react';
 import { COLORS } from '@/config/theme';
 
 // Helper component for the card to avoid repetition
-const Card = ({ content }: { content: { title: string; content: string } }) => (
+const Card = ({ content }: { content: { title: string; content: string; isClickable?: boolean; link?: string } }) => (
     <div
         className="p-8 rounded-2xl"
         style={{
@@ -13,7 +13,19 @@ const Card = ({ content }: { content: { title: string; content: string } }) => (
             boxShadow: `0 8px 32px 0 ${COLORS.midnightGreen}50`
         }}
     >
-        <h2 className="text-3xl font-bold mb-3" style={{ color: COLORS.nyanza }}>{content.title}</h2>
+        <h2 className="text-3xl font-bold mb-3" style={{ color: COLORS.nyanza }}>
+            {content.isClickable && content.link ? (
+                <button 
+                    onClick={() => window.open(content.link, '_blank')}
+                    className="hover:underline transition-colors duration-300 cursor-pointer text-left"
+                    style={{ color: COLORS.teaGreen, background: 'none', border: 'none', padding: 0, font: 'inherit' }}
+                >
+                    {content.title}
+                </button>
+            ) : (
+                content.title
+            )}
+        </h2>
         <p className="text-base" style={{ color: COLORS.cadetGray }}>{content.content}</p>
     </div>
 );
@@ -35,7 +47,9 @@ const AboutDhvaniShilpContent = () => {
     {
       icon: <ShieldCheck size={24} />,
       title: 'DPDP Act Compliant',
-      content: "We are fully compliant with the Digital Personal Data Protection (DPDP) Act, 2025. Your data is processed with the highest standards of security, legality, and transparency."
+      content: "We are fully compliant with the Digital Personal Data Protection (DPDP) Act, 2025. Your data is processed with the highest standards of security, legality, and transparency.",
+      isClickable: true,
+      link: "https://www.dpdpa.in/dpdpa_rules_2025/dpdpa_draft_rules_english_.pdf"
     },
     {
       icon: <UserX size={24} />,
