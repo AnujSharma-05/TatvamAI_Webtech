@@ -108,11 +108,11 @@ The following screenshots highlight the public-facing platform experience.
 
 ### Homepage Hero
 
-![TatvamAI homepage hero](frontend/public/Github%20Screenshots/image.png)
+<img src="frontend/public/Github%20Screenshots/image.png" alt="TatvamAI homepage hero" width="100%" />
 
 ### Landing Page Overview
 
-![TatvamAI landing page overview](frontend/public/Github%20Screenshots/Screenshot%202026-04-08%20105412.png)
+<img src="frontend/public/Github%20Screenshots/Screenshot%202026-04-08%20105412.png" alt="TatvamAI landing page overview" width="100%" />
 
 ## System Architecture
 
