@@ -16,7 +16,7 @@ The system is designed around a simple principle:
 5. The backend converts the evaluation into a quality label and reward token amount.
 6. The contributor sees the result in their dashboard.
 
-The code in this repository implements the web platform and backend orchestration. The audio-scoring service is invoked through `PYTHON_SERVER_URL` and is not part of this workspace.
+The code in this repository implements the web platform and backend orchestration.
 
 ## What This Product Does
 
@@ -66,7 +66,7 @@ TatvamAI is built for dataset creation and contributor management in a voice-tec
 
 - AWS S3 for raw audio storage
 - MongoDB for application data
-- A Python analysis API exposed at `PYTHON_SERVER_URL` for recording evaluation
+- A separate analysis API for recording evaluation
 - Google Gemini API for paragraph generation
 - Gmail SMTP for email verification
 - Renflair SMS API for phone OTP delivery
@@ -101,6 +101,18 @@ TatvamAI is built for dataset creation and contributor management in a voice-tec
 - evaluate pending recordings
 - inspect platform statistics
 - manage user list and admin dashboards
+
+## Screenshots
+
+The following screenshots highlight the public-facing platform experience.
+
+### Homepage Hero
+
+![TatvamAI homepage hero](frontend/public/Github%20Screenshots/image.png)
+
+### Landing Page Overview
+
+![TatvamAI landing page overview](frontend/public/Github%20Screenshots/Screenshot%202026-04-08%20105412.png)
 
 ## System Architecture
 
@@ -177,7 +189,7 @@ On successful login, the backend issues:
 - access token for API authorization
 - refresh token for session renewal
 
-The frontend stores both tokens in `localStorage` and sends the access token on each request through the Axios interceptor.
+The frontend maintains the authenticated session after login and automatically attaches credentials to protected API calls.
 
 ### 3. Contribution and Recording Flow
 
@@ -281,7 +293,7 @@ Authentication is JWT-based.
 - `authorizeRoles` restricts admin routes.
 - Access tokens are short-lived.
 - Refresh tokens are persisted in the user document.
-- The frontend stores tokens in `localStorage` and updates UI state through custom events.
+- The frontend updates UI state through custom events after authentication changes.
 
 ### Data Storage Model
 
@@ -341,7 +353,46 @@ Used for temporary OTP and email verification codes.
 - The platform currently uses Renflair for SMS OTP delivery, even though an older utility also references 2Factor.
 - Email verification uses Gmail SMTP through Nodemailer.
 - Paragraph generation uses the Gemini API.
-- The evaluation step expects a Python service at `PYTHON_SERVER_URL` with an `/analyze` endpoint.
+- The evaluation step is handled by a separate analysis service behind the backend orchestration layer.
+
+## AWS Pipeline
+
+TatvamAI’s infrastructure story is centered on a simple AWS pipeline: S3 stores the raw asset, Lambda-style compute evaluates or dispatches work, and MongoDB preserves the application state that ties everything together.
+
+### Why S3 Matters
+
+S3 is not just a file bucket in this system. It is the durable storage layer for contributor audio.
+
+- Audio blobs stay outside MongoDB, which keeps the database lean and query-friendly.
+- The recording document stores the S3 object URL, making metadata searchable without duplicating the file itself.
+- S3 gives the platform durability, versioning options, lifecycle policies, and predictable scale for large audio datasets.
+- Because raw voice data can grow quickly, external object storage avoids document-size pressure and keeps upload handling simpler.
+
+### Why Lambda Matters
+
+Lambda is the natural fit for the compute side of an event-driven audio pipeline.
+
+- It lets the platform react to uploads or processing triggers without keeping servers hot all the time.
+- It reduces the need for a permanently running worker fleet when evaluation can be broken into short-lived tasks.
+- It fits the pattern of "upload once, process later," which is ideal for crowdsourced voice contributions.
+- It helps isolate the scoring pipeline from the web API, so the core app can remain responsive while analysis happens asynchronously.
+
+### Practical Implications
+
+- Uploads should be treated as idempotent events because retries are normal in distributed pipelines.
+- The API should never assume scoring is instantaneous; the user interface should be prepared for a pending state.
+- S3 object naming should be deterministic enough to trace a recording, but not so brittle that it breaks future migrations.
+- Lambda introduces cold starts, time limits, and memory constraints, so long-running transcription or analysis work should be split carefully.
+- Any queue or event trigger around Lambda should account for duplicate delivery and retries.
+- The database remains the source of truth for business state, while S3 remains the source of truth for the binary audio asset.
+
+### Recommended AWS Mental Model
+
+Think of the pipeline in three layers:
+
+1. Ingress: browser upload reaches the backend.
+2. Persistence: S3 stores the audio, MongoDB stores the record.
+3. Processing: Lambda or external compute evaluates the file and writes the result back into the application model.
 
 ## Frontend Architecture
 
@@ -616,16 +667,14 @@ npm run dev
 - QR scanning relies on webcam permission.
 - Admin routes require both a valid JWT and the `admin` role.
 
-## Known Implementation Details
+## Deployment View
 
-- The backend codebase is organized for a serverless-friendly split, but this repository itself only contains the API and browser applications, not the external Python analyzer implementation.
-- The reward algorithm is intentionally probabilistic inside score bands. That means two recordings with the same quality score can receive different token amounts.
-- The frontend currently uses `localStorage` for tokens, so a 401 response forces re-authentication.
-- The repository contains a legacy `structure.txt` that still references Cloudinary and older filenames. The actual implementation in this workspace uses AWS S3 and the current `src/` structure.
+The operational deployment should be read as a separation of concerns:
 
-## Suggested Next Steps
+- the frontend renders the contributor and admin experience
+- the backend owns authentication, persistence, and orchestration
+- S3 stores the audio payloads
+- Lambda or external compute handles evaluation work
+- MongoDB stores the canonical business state
 
-1. Add API request and response examples for every route.
-2. Add a deployment section for the backend, frontend, and Python analyzer separately.
-3. Add screenshots or GIFs for signup, recording, dashboard, and admin workflows.
-4. Add an architecture decision log if you want this README to evolve with the product.
+That separation is what lets TatvamAI scale from a small pilot to a high-volume contributor platform without rewriting the entire product model.
